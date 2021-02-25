@@ -40,7 +40,7 @@ const App = () => {
     const nx = 1200;
     const ny = 700;
     const nz = ny;
-    const d = 50;
+    const d = 20;
 
     const xyzs = []
     for (let i = 0; i < 2; i++) {
