@@ -7,7 +7,7 @@ const Dot = ({ x, y, d, dashed }) => {
             height:`${d}px`,
             left: `${x - d / 2}px`,
             top: `${y - d / 2}px`,
-            borderStyle: `${dashed ? "none" : "solid"}`
+            borderStyle: `${dashed ? "dashed" : "solid"}`
         }}/>
     )
 }

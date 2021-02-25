@@ -5,3 +5,9 @@
     position: absolute;
     border-radius: 50%;
 }
+.line {
+    box-sizing: border-box;
+    border-top: solid 1px black;
+    position: absolute;
+    height: 0px;
+}

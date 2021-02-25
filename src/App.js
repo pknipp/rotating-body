@@ -1,13 +1,11 @@
 import React, { useState } from "react";
 import Dot from "./Dot";
 import Slider from "./Slider";
+import Line from "./Line";
 
 const App = () => {
     const getSet = [useState(0), useState(0), useState(0)];
-    const sliderHandler = e => {
-        console.log(e.target.name);
-        getSet[Number(e.target.name)][1](Number(e.target.value));
-    }
+    const sliderHandler = e => getSet[Number(e.target.name)][1](Number(e.target.value));
     const mult2 = (arr1, arr2) => {
         let arr3 = [];
         for (let i = 0; i < 3; i++) {
@@ -51,7 +49,7 @@ const App = () => {
             let y = (-1 + 2 * j) * (ny / 4);
             for (let k = 0; k < 2; k++) {
                 let z = (-1 + 2 * k) * (nz / 4)
-                xyzs.push([x, y, z]);
+                xyzs.push([x, y, z, i, j, k]);
             }
         }
     }
@@ -71,8 +69,13 @@ const App = () => {
         <Slider n={1} maxVal={2 * Math.PI} stepSize={0.1} quantity={getSet[1][0]} handler={sliderHandler} />
         <Slider n={2} maxVal={2 * Math.PI} stepSize={0.1} quantity={getSet[2][0]} handler={sliderHandler} />
         <div className="container" style={{height:`${ny}px`, width:`${nx}px`}}>
-            {   xyzs.map(xyz => <Dot x={xyz[0] + nx / 2} y={xyz[1] + ny / 2} d={d} dashed={true} />)}
+            {/* {   xyzs.map(xyz => <Dot x={xyz[0] + nx / 2} y={xyz[1] + ny / 2} d={d} dashed={true} />)} */}
             {newXyzs.map(newXyz => <Dot x={newXyz[0] + nx / 2} y={newXyz[1] + ny / 2} d={d} dashed={newXyz[3]} />)}
+            {newXyzs.map(xyz0 => {
+                return newXyzs.map(xyz1 => {
+                    return <Line xi={xyz0[0] + nx / 2} yi={xyz0[1] + ny / 2} xf={xyz1[0] + nx / 2} yf={xyz1[1] + ny / 2} />
+                })
+            })}
         </div>
         </>
     )
