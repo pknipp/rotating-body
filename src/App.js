@@ -49,20 +49,23 @@ const App = () => {
             let y = (-1 + 2 * j) * (ny / 4);
             for (let k = 0; k < 2; k++) {
                 let z = (-1 + 2 * k) * (nz / 4)
-                xyzs.push([x, y, z, i, j, k]);
+                xyzs.push([[x, y, z], [i, j, k]]);
             }
         }
     }
-    let newXyzs = xyzs.map(xyz => mult1(mult2(mult2(zRot(getSet[0][0]), xRot(getSet[1][0])),zRot(getSet[2][0])), xyz));
+    let newXyzs = xyzs.map(xyz => {
+        xyz[0] = mult1(mult2(mult2(zRot(getSet[0][0]), xRot(getSet[1][0])),zRot(getSet[2][0])), xyz[0]);
+        return xyz;
+    });
     let zMin = Infinity;
     let iMin = -1;
     newXyzs.forEach((xyz, i) => {
-        if (xyz[2] < zMin) {
+        if (xyz[0][2] < zMin) {
             iMin = i;
-            zMin = xyz[2];
+            zMin = xyz[0][2];
         }
     });
-    newXyzs[iMin][3] = true;
+    newXyzs[iMin][2] = true;
     return (
         <>
         <Slider n={0} maxVal={2 * Math.PI} stepSize={0.1} quantity={getSet[0][0]} handler={sliderHandler} />
@@ -70,11 +73,34 @@ const App = () => {
         <Slider n={2} maxVal={2 * Math.PI} stepSize={0.1} quantity={getSet[2][0]} handler={sliderHandler} />
         <div className="container" style={{height:`${ny}px`, width:`${nx}px`}}>
             {/* {   xyzs.map(xyz => <Dot x={xyz[0] + nx / 2} y={xyz[1] + ny / 2} d={d} dashed={true} />)} */}
-            {newXyzs.map(newXyz => <Dot x={newXyz[0] + nx / 2} y={newXyz[1] + ny / 2} d={d} dashed={newXyz[3]} />)}
-            {newXyzs.map(xyz0 => {
-                return newXyzs.map(xyz1 => {
-                    return <Line xi={xyz0[0] + nx / 2} yi={xyz0[1] + ny / 2} xf={xyz1[0] + nx / 2} yf={xyz1[1] + ny / 2} />
-                })
+            {newXyzs.map((newXyz, index) => (
+                <Dot
+                    key={index}
+                    x={newXyz[0][0] + nx / 2}
+                    y={newXyz[0][1] + ny / 2}
+                    d={d}
+                    dashed={newXyz[2]}
+                />
+            ))}
+            {newXyzs.map((xyz0, index0) => {
+                return newXyzs.filter(xyz1 => {
+                    let d = [];
+                    for (let i = 0; i < 3; i++) d.push(Math.abs(xyz0[1][i] - xyz1[1][i]));
+                    // console.log(d);
+                    let neighbor = false;
+                    for (let i = 0; i < 3; i++) {
+                        neighbor = neighbor || (d[i] === 1 && !d[(i + 1) % 3] && !d[(i + 2) % 3]);
+                    }
+                    return neighbor;
+                }).map((xyz1, index1) => (
+                    <Line
+                        key={String(index0) + String(index1)}
+                        xi={xyz0[0][0] + nx / 2}
+                        yi={xyz0[0][1] + ny / 2}
+                        xf={xyz1[0][0] + nx / 2}
+                        yf={xyz1[0][1] + ny / 2}
+                    />
+                ))
             })}
         </div>
         </>
