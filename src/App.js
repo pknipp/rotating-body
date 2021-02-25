@@ -56,6 +56,15 @@ const App = () => {
         }
     }
     let newXyzs = xyzs.map(xyz => mult1(mult2(mult2(zRot(getSet[0][0]), xRot(getSet[1][0])),zRot(getSet[2][0])), xyz));
+    let zMin = Infinity;
+    let iMin = -1;
+    newXyzs.forEach((xyz, i) => {
+        if (xyz[2] < zMin) {
+            iMin = i;
+            zMin = xyz[2];
+        }
+    });
+    newXyzs[iMin][3] = true;
     return (
         <>
         <Slider n={0} maxVal={2 * Math.PI} stepSize={0.1} quantity={getSet[0][0]} handler={sliderHandler} />
@@ -63,7 +72,7 @@ const App = () => {
         <Slider n={2} maxVal={2 * Math.PI} stepSize={0.1} quantity={getSet[2][0]} handler={sliderHandler} />
         <div className="container" style={{height:`${ny}px`, width:`${nx}px`}}>
             {   xyzs.map(xyz => <Dot x={xyz[0] + nx / 2} y={xyz[1] + ny / 2} d={d} dashed={true} />)}
-            {newXyzs.map(newXyz => <Dot x={newXyz[0] + nx / 2} y={newXyz[1] + ny / 2} d={d} />)}
+            {newXyzs.map(newXyz => <Dot x={newXyz[0] + nx / 2} y={newXyz[1] + ny / 2} d={d} dashed={newXyz[3]} />)}
         </div>
         </>
     )
