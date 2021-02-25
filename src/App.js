@@ -40,8 +40,9 @@ const App = () => {
     }
 
 
-    const nx = 1400;
+    const nx = 1200;
     const ny = 700;
+    const nz = ny;
     const d = 50;
 
     // const mat0 = zRot(th0);
@@ -53,22 +54,21 @@ const App = () => {
         let x = (-1 + 2 * i) * (nx / 4);
         for (let j = 0; j < 2; j++) {
             let y = (-1 + 2 * j) * (ny / 4);
-            xyzs.push([x, y, 0]);
+            for (let k = 0; k < 2; k++) {
+                let z = (-1 + 2 * k) * (nz / 4)
+                xyzs.push([x, y, z]);
+            }
         }
     }
+    let newXyzs = xyzs.map(xyz => mult1(mult2(mult2(zRot(getSet.th0[0]), xRot(getSet.th1[0])),zRot(getSet.th2[0])), xyz));
     return (
         <>
         <Slider name={"th0"} maxVal={2 * Math.PI} stepSize={0.1} quantity={getSet.th0[0]} handler={sliderHandler} />
         <Slider name={"th1"} maxVal={2 * Math.PI} stepSize={0.1} quantity={getSet.th1[0]} handler={sliderHandler} />
         <Slider name={"th2"} maxVal={2 * Math.PI} stepSize={0.1} quantity={getSet.th2[0]} handler={sliderHandler} />
         <div className="container" style={{height:`${ny}px`, width:`${nx}px`}}>
-            {xyzs.map(xyz => <Dot x={xyz[0] + nx / 2} y={xyz[1] + ny / 2} z={xyz[2]} d={d} />)}
-            {xyzs.map(xyz => {
-                // console.log("Inside return says that xyz = ", xyz);
-                let newXyz = mult1(mult2(mult2(zRot(getSet.th0[0]), xRot(getSet.th1[0])),zRot(getSet.th2[0])), xyz);
-                // let newXy = mult1(zRot(getSet.th0[0]), xy);
-                return <Dot x={newXyz[0] + nx / 2} y={newXyz[1] + ny / 2} z={newXyz[2]} d={d} dashed={true} />
-            })}
+            {   xyzs.map(xyz => <Dot x={xyz[0] + nx / 2} y={xyz[1] + ny / 2} d={d} dashed={true} />)}
+            {newXyzs.map(newXyz => <Dot x={newXyz[0] + nx / 2} y={newXyz[1] + ny / 2} d={d} />)}
         </div>
         </>
     )
