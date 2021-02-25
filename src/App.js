@@ -1,11 +1,29 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Dot from "./Dot";
-import Slider from "./Slider";
+import Input from "./Input";
 import Line from "./Line";
 
 const App = () => {
-    const getSet = [useState(0), useState(0), useState(0)];
-    const sliderHandler = e => getSet[Number(e.target.name)][1](Number(e.target.value));
+    const getSetTh = [useState(0), useState(0), useState(0)];
+    const getSetOm = [useState(0), useState(0), useState(0)];
+    const [xyzs0, setXyzs0] = useState([]);
+    const [xyzs, setXyzs] = useState([]);
+    const [running, setRunning] = useState(false);
+    const [time, setTime] = useState(0);
+    const handlerTh = e => {
+        let xyOrZ = Number(e.target.name);
+        let th =  Number(e.target.value);
+        let newGetSetTh = JSON.parse(JSON.stringify(getSetTh));
+        getSetTh[xyOrZ][1](th);
+        newGetSetTh[xyOrZ][0] = th;
+        let newXyzs = JSON.parse(JSON.stringify(xyzs0));
+        xyzs0.forEach((xyz, i) => {
+            newXyzs[i][0] = mult1(mult2(mult2(zRot(newGetSetTh[0][0]), xRot(newGetSetTh[1][0])),zRot(newGetSetTh[2][0])), xyz[0]);
+        });
+        setXyzs(newXyzs);
+    };
+    const handlerOm = e => getSetOm[Number(e.target.name)][1](Number(e.target.value));
+
     const mult2 = (arr1, arr2) => {
         let arr3 = [];
         for (let i = 0; i < 3; i++) {
@@ -41,49 +59,98 @@ const App = () => {
     const ny = 700;
     const nz = ny;
     const d = 20;
-
-    const xyzs = []
-    for (let i = 0; i < 2; i++) {
-        let x = (-1 + 2 * i) * (nx / 4);
-        for (let j = 0; j < 2; j++) {
-            let y = (-1 + 2 * j) * (ny / 4);
-            for (let k = 0; k < 2; k++) {
-                let z = (-1 + 2 * k) * (nz / 4)
-                xyzs.push([[x, y, z], [i, j, k]]);
+    useEffect(() => {
+        const firstXyzs = []
+        for (let i = 0; i < 2; i++) {
+            let x = (-1 + 2 * i) * (nx / 4);
+            for (let j = 0; j < 2; j++) {
+                let y = (-1 + 2 * j) * (ny / 4);
+                for (let k = 0; k < 2; k++) {
+                    let z = (-1 + 2 * k) * (nz / 4)
+                    firstXyzs.push([[x, y, z], [i, j, k]]);
+                }
             }
         }
-    }
-    let newXyzs = xyzs.map(xyz => {
-        xyz[0] = mult1(mult2(mult2(zRot(getSet[0][0]), xRot(getSet[1][0])),zRot(getSet[2][0])), xyz[0]);
-        return xyz;
-    });
-    let zMin = Infinity;
-    let iMin = -1;
-    newXyzs.forEach((xyz, i) => {
-        if (xyz[0][2] < zMin) {
-            iMin = i;
-            zMin = xyz[0][2];
+        setXyzs0(firstXyzs);
+        let newXyzs = JSON.parse(JSON.stringify(firstXyzs));
+        // firstXyzs.forEach((xyz, i) => {
+        //     newXyzs[i][0] = mult1(mult2(mult2(zRot(getSetTh[0][0]), xRot(getSetTh[1][0])),zRot(getSetTh[2][0])), xyz[0]);
+        // });
+        setXyzs(newXyzs);
+    }, []);
+
+    // let newXyzs = xyzs.map(xyz => {
+    //     xyz[0] = mult1(mult2(mult2(zRot(getSetTh[0][0]), xRot(getSetTh[1][0])),zRot(getSetTh[2][0])), xyz[0]);
+    //     return xyz;
+    // });
+    // let zMin = Infinity;
+    // let iMin = -1;
+    // newXyzs.forEach((xyz, i) => {
+    //     if (xyz[0][2] < zMin) {
+    //         iMin = i;
+    //         zMin = xyz[0][2];
+    //     }
+    // });
+    // console.log(iMin, zMin);
+    // newXyzs[iMin][2] = true;
+
+    useEffect(() => {
+        let interval = null;
+        if (running) {
+            interval = setInterval(() => {
+                setTime(time + 0.1);
+                getSetTh[0][1](getSetTh[0][0] + getSetOm[0][0] * 0.01);
+                getSetTh[2][1](getSetTh[2][0] + getSetOm[2][0] * 0.01);
+                let newXyzs = JSON.parse(JSON.stringify(xyzs0));
+                xyzs0.forEach((xyz, i) => {
+                    newXyzs[i][0] = mult1(mult2(mult2(zRot(getSetTh[0][0]), xRot(getSetTh[1][0])),zRot(getSetTh[2][0])), xyz[0]);
+                });
+                // console.log(newXyzs[0][0])
+                setXyzs(newXyzs);
+            }, 10);
+        } else if (!running && time !== 0) {
+            clearInterval(interval);
         }
-    });
-    newXyzs[iMin][2] = true;
+        return () => clearInterval(interval);
+      }, [running, time, xyzs0]);
+
+    const toggle = () => setRunning(!running);
+    // debugger;
+
     return (
         <>
-        <Slider n={0} maxVal={2 * Math.PI} stepSize={0.1} quantity={getSet[0][0]} handler={sliderHandler} />
-        <Slider n={1} maxVal={2 * Math.PI} stepSize={0.1} quantity={getSet[1][0]} handler={sliderHandler} />
-        <Slider n={2} maxVal={2 * Math.PI} stepSize={0.1} quantity={getSet[2][0]} handler={sliderHandler} />
+        <button onClick={toggle}>{running ? "Stop" : "Start"}</button>
+        <button onClick={() => setTime(0)}>Reset</button>
+        Time = {time.toFixed(2)} s
+        <div>
+            <span>
+                Initial angles:
+                <Input n={0} quantity={getSetTh[0][0]} handler={handlerTh} />
+                <Input n={1} quantity={getSetTh[1][0]} handler={handlerTh} />
+                <Input n={2} quantity={getSetTh[2][0]} handler={handlerTh} />
+            </span>
+        </div>
+        <div>
+            <span>
+                Angular speeds:
+                <Input n={0} quantity={getSetOm[0][0]} handler={handlerOm} />
+                <Input n={1} quantity={getSetOm[1][0]} handler={handlerOm} />
+                <Input n={2} quantity={getSetOm[2][0]} handler={handlerOm} />
+            </span>
+        </div>
         <div className="container" style={{height:`${ny}px`, width:`${nx}px`}}>
             {/* {   xyzs.map(xyz => <Dot x={xyz[0] + nx / 2} y={xyz[1] + ny / 2} d={d} dashed={true} />)} */}
-            {newXyzs.map((newXyz, index) => (
+            {xyzs.map((xyz, index) => (
                 <Dot
                     key={index}
-                    x={newXyz[0][0] + nx / 2}
-                    y={newXyz[0][1] + ny / 2}
+                    x={xyz[0][0] + nx / 2}
+                    y={xyz[0][1] + ny / 2}
                     d={d}
-                    dashed={newXyz[2]}
+                    // dashed={newXyz[2]}
                 />
             ))}
-            {newXyzs.map((xyz0, index0) => {
-                return newXyzs.filter(xyz1 => {
+            {xyzs.map((xyz0, index0) => {
+                return xyzs.filter(xyz1 => {
                     let d = [];
                     for (let i = 0; i < 3; i++) d.push(Math.abs(xyz0[1][i] - xyz1[1][i]));
                     // console.log(d);
