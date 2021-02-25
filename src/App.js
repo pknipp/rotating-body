@@ -4,13 +4,24 @@ import Input from "./Input";
 import Line from "./Line";
 
 const App = () => {
-    const getSetTh = [useState(0.1), useState(0.2), useState(0.3)];
-    const getSetOm = [useState(0.4), useState(0.5), useState(0.6)];
+    const getSetTh = [useState(0), useState(0), useState(0)];
+    const getSetOm = [useState(0), useState(0), useState(0)];
     const [xyzs0, setXyzs0] = useState([]);
     const [xyzs, setXyzs] = useState([]);
     const [running, setRunning] = useState(false);
     const [time, setTime] = useState(0);
-    const handlerTh = e => getSetTh[Number(e.target.name)][1](Number(e.target.value));
+    const handlerTh = e => {
+        let xyOrZ = Number(e.target.name);
+        let th =  Number(e.target.value);
+        let newGetSetTh = JSON.parse(JSON.stringify(getSetTh));
+        getSetTh[xyOrZ][1](th);
+        newGetSetTh[xyOrZ][0] = th;
+        let newXyzs = JSON.parse(JSON.stringify(xyzs0));
+        xyzs0.forEach((xyz, i) => {
+            newXyzs[i][0] = mult1(mult2(mult2(zRot(newGetSetTh[0][0]), xRot(newGetSetTh[1][0])),zRot(newGetSetTh[2][0])), xyz[0]);
+        });
+        setXyzs(newXyzs);
+    };
     const handlerOm = e => getSetOm[Number(e.target.name)][1](Number(e.target.value));
 
     const mult2 = (arr1, arr2) => {
@@ -62,9 +73,9 @@ const App = () => {
         }
         setXyzs0(firstXyzs);
         let newXyzs = JSON.parse(JSON.stringify(firstXyzs));
-        firstXyzs.forEach((xyz, i) => {
-            newXyzs[i][0] = mult1(mult2(mult2(zRot(getSetTh[0][0]), xRot(getSetTh[1][0])),zRot(getSetTh[2][0])), xyz[0]);
-        });
+        // firstXyzs.forEach((xyz, i) => {
+        //     newXyzs[i][0] = mult1(mult2(mult2(zRot(getSetTh[0][0]), xRot(getSetTh[1][0])),zRot(getSetTh[2][0])), xyz[0]);
+        // });
         setXyzs(newXyzs);
     }, []);
 
@@ -88,15 +99,15 @@ const App = () => {
         if (running) {
             interval = setInterval(() => {
                 setTime(time + 0.1);
-                getSetTh[0][1](getSetTh[0][0] + getSetOm[0][0] * 0.1);
-                getSetTh[2][1](getSetTh[2][0] + getSetOm[2][0] * 0.1);
+                getSetTh[0][1](getSetTh[0][0] + getSetOm[0][0] * 0.01);
+                getSetTh[2][1](getSetTh[2][0] + getSetOm[2][0] * 0.01);
                 let newXyzs = JSON.parse(JSON.stringify(xyzs0));
                 xyzs0.forEach((xyz, i) => {
                     newXyzs[i][0] = mult1(mult2(mult2(zRot(getSetTh[0][0]), xRot(getSetTh[1][0])),zRot(getSetTh[2][0])), xyz[0]);
                 });
                 // console.log(newXyzs[0][0])
                 setXyzs(newXyzs);
-            }, 100);
+            }, 10);
         } else if (!running && time !== 0) {
             clearInterval(interval);
         }
