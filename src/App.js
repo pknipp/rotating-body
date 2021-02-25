@@ -72,54 +72,31 @@ const App = () => {
             }
         }
         setXyzs0(firstXyzs);
-        let newXyzs = JSON.parse(JSON.stringify(firstXyzs));
-        // firstXyzs.forEach((xyz, i) => {
-        //     newXyzs[i][0] = mult1(mult2(mult2(zRot(getSetTh[0][0]), xRot(getSetTh[1][0])),zRot(getSetTh[2][0])), xyz[0]);
-        // });
-        setXyzs(newXyzs);
+        setXyzs(firstXyzs);
     }, []);
-
-    // let newXyzs = xyzs.map(xyz => {
-    //     xyz[0] = mult1(mult2(mult2(zRot(getSetTh[0][0]), xRot(getSetTh[1][0])),zRot(getSetTh[2][0])), xyz[0]);
-    //     return xyz;
-    // });
-    // let zMin = Infinity;
-    // let iMin = -1;
-    // newXyzs.forEach((xyz, i) => {
-    //     if (xyz[0][2] < zMin) {
-    //         iMin = i;
-    //         zMin = xyz[0][2];
-    //     }
-    // });
-    // console.log(iMin, zMin);
-    // newXyzs[iMin][2] = true;
 
     useEffect(() => {
         let interval = null;
         if (running) {
             interval = setInterval(() => {
                 setTime(time + 0.1);
-                getSetTh[0][1](getSetTh[0][0] + getSetOm[0][0] * 0.01);
-                getSetTh[2][1](getSetTh[2][0] + getSetOm[2][0] * 0.01);
+                getSetTh[0][1](Math.round(100 * (getSetTh[0][0] + getSetOm[0][0] * 0.01)) / 100);
+                getSetTh[2][1](Math.round(100 * (getSetTh[2][0] + getSetOm[2][0] * 0.01)) / 100);
                 let newXyzs = JSON.parse(JSON.stringify(xyzs0));
                 xyzs0.forEach((xyz, i) => {
                     newXyzs[i][0] = mult1(mult2(mult2(zRot(getSetTh[0][0]), xRot(getSetTh[1][0])),zRot(getSetTh[2][0])), xyz[0]);
                 });
-                // console.log(newXyzs[0][0])
                 setXyzs(newXyzs);
-            }, 10);
+            }, 100);
         } else if (!running && time !== 0) {
             clearInterval(interval);
         }
         return () => clearInterval(interval);
       }, [running, time, xyzs0]);
 
-    const toggle = () => setRunning(!running);
-    // debugger;
-
     return (
         <>
-        <button onClick={toggle}>{running ? "Stop" : "Start"}</button>
+        <button onClick={() => setRunning(!running)}>{running ? "Stop" : "Start"}</button>
         <button onClick={() => setTime(0)}>Reset</button>
         Time = {time.toFixed(2)} s
         <div>
@@ -139,7 +116,6 @@ const App = () => {
             </span>
         </div>
         <div className="container" style={{height:`${ny}px`, width:`${nx}px`}}>
-            {/* {   xyzs.map(xyz => <Dot x={xyz[0] + nx / 2} y={xyz[1] + ny / 2} d={d} dashed={true} />)} */}
             {xyzs.map((xyz, index) => (
                 <Dot
                     key={index}
@@ -153,7 +129,7 @@ const App = () => {
                 return xyzs.filter(xyz1 => {
                     let d = [];
                     for (let i = 0; i < 3; i++) d.push(Math.abs(xyz0[1][i] - xyz1[1][i]));
-                    // console.log(d);
+                    // replace the following via the use of d.reduce((neighbor, di) => ?
                     let neighbor = false;
                     for (let i = 0; i < 3; i++) {
                         neighbor = neighbor || (d[i] === 1 && !d[(i + 1) % 3] && !d[(i + 2) % 3]);
