@@ -8,8 +8,10 @@ const App = () => {
     const [ths, setThs] = useState([0, 0, 0]);
     const [moms, setMoms] = useState([1, 1, 1]);
     const [oms, setOms] = useState([0, 0, 0]);
+    const [Ls, setLs] = useState([0, 0, 0]);
     const [om2, setOm2] = useState(0);
-    const [torques, setTorques] = useState([0, 0, 0]);
+    const [L2, setL2] = useState(0);
+    // const [torques, setTorques] = useState([0, 0, 0]);
     const [xyzs0, setXyzs0] = useState([]);
     const [xyzs, setXyzs] = useState([]);
     const [running, setRunning] = useState(false);
@@ -128,11 +130,12 @@ const App = () => {
         // newOms = newOms.map(elem => -elem);
         setOms(newOms);
         setOm2(newOms.reduce((om2, om) => om2 + om * om, 0));
-        let newTorques = [];
-        newTorques[0] = moms[0] * Fs[0] - (moms[1] - moms[2]) * oms[1] * oms[2];
-        newTorques[1] = moms[1] * Fs[1] - (moms[2] - moms[0]) * oms[2] * oms[0];
-        newTorques[2] = moms[2] * Fs[2] - (moms[0] - moms[1]) * oms[0] * oms[1];
-        setTorques(newTorques);
+        let newLs = [...Ls];
+        newLs[0] = moms[0] * (Fs[0] * ss[1] * ss[2] + Fs[1] * cs[2]);
+        newLs[1] = moms[1] * (Fs[0] * ss[1] * cs[2] - Fs[1] * ss[2]);
+        newLs[2] = moms[2] * (Fs[0] * cs[1] + Fs[2]);
+        setLs(newLs);
+        setL2(newLs.reduce((L2, L) => L2 + L * L, 0));
         return Fs;
     }
 
@@ -177,6 +180,10 @@ const App = () => {
             <div>{oms[1]}</div>
             <div>{oms[2]}</div>
             <div>{om2}</div>
+            <div>{Ls[0]}</div>
+            <div>{Ls[1]}</div>
+            <div>{Ls[2]}</div>
+            <div>{L2}</div>
             <div className="container" style={{height:`${ny}px`, width:`${nx}px`}}>
                 {xyzs.map((xyz, index) => (
                     <Dot
