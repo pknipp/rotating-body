@@ -68,7 +68,7 @@ const App = () => {
     const nz = ny;
     const d = 20;
 
-    const dt = 10;
+    const dt = 20;
 
     useEffect(() => {
         const firstXyzs = []
@@ -91,10 +91,6 @@ const App = () => {
         if (running) {
             interval = setInterval(() => {
                 setTime(time + dt/1000);
-                // let newThs = [...ths];
-                // newThs[0] += oms[0] * dt / 1000;
-                // newThs[2] += oms[2] * dt / 1000;
-                // setThs(newThs);
                 nextThs();
                 let newXyzs = JSON.parse(JSON.stringify(xyzs0));
                 xyzs0.forEach((xyz, i) => {
