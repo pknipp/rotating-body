@@ -6,7 +6,7 @@ import Line from "./Line";
 const App = () => {
     const [h, setH] = useState(1);
     const [ths, setThs] = useState([0, 0, 0]);
-    const [oms, setOms] = useState([0, 0, 0]);
+    const [moms, setMoms] = useState([1, 1, 1]);
     const [xyzs0, setXyzs0] = useState([]);
     const [xyzs, setXyzs] = useState([]);
     const [running, setRunning] = useState(false);
@@ -24,12 +24,12 @@ const App = () => {
         });
         setXyzs(newXyzs);
     };
-    const handlerOm = e => {
+    const handlerMom = e => {
         let xyOrZ = Number(e.target.name);
-        let om = Number(e.target.value);
-        let newOms = [...oms];
-        newOms[xyOrZ] = om;
-        setOms(newOms);
+        let mom = Number(e.target.value);
+        let newMoms = [...moms];
+        newMoms[xyOrZ] = mom;
+        setMoms(newMoms);
     };
 
     const mult2 = (arr1, arr2) => {
@@ -68,6 +68,7 @@ const App = () => {
     const nz = ny;
     const d = 20;
 
+    // ODE-solver timestep, in ms
     const dt = 20;
 
     useEffect(() => {
@@ -96,7 +97,6 @@ const App = () => {
                 xyzs0.forEach((xyz, i) => {
                     newXyzs[i][0] = mult1(mult2(mult2(zRot(ths[0]), xRot(ths[1])),zRot(ths[2])), xyz[0]);
                 });
-                console.log("bottom of useEffect")
                 setXyzs(newXyzs);
             }, dt);
         } else if (!running && time !== 0) {
@@ -106,20 +106,28 @@ const App = () => {
     }, [running, time, xyzs0]);
 
     const Fs = ths => {
-        console.log("top of Fs")
-        let Fs = [oms[0], 0, oms[2]];
+        // Following was used for symmetric rotor.
+        // let Fs = [oms[0], 0, oms[2]];
+        let cs = [];
+        let ss = [];
+        for (const th of ths) {
+            cs.push(Math.cos(th));
+            ss.push(Math.sin(th));
+        };
+        let Fs = []
+        Fs[0] = h * (cs[2] * cs[2] / moms[1] + ss[2] * ss[2] / moms[0]);
+        Fs[1] = h * (1 / moms[0] - 1 / moms[2]) * ss[1] * ss[2] * cs[2];
+        Fs[2] = h * (1 / moms[2] - cs[2] * cs[2] / moms[1] - ss[2] * ss[2] / moms[0]) * cs[1];
         return Fs;
     }
 
     const nextFs = (intFs, m) => {
-        console.log("top of nextFs");
         let newThs = [...ths];
         for (let i = 0; i < 3; i++) ths[i] += intFs[i] * dt / 1000 / m;
         return Fs(ths);
     }
 
     const nextThs = _ => {
-        console.log("top of nextThs")
         let Fs1 = Fs(ths);
         let Fs2 = nextFs(Fs1, 2);
         let Fs3 = nextFs(Fs2, 2);
@@ -144,10 +152,10 @@ const App = () => {
         </div>
         <div>
             <span>
-                Angular speeds:
-                <Input n={0} quantity={oms[0]} handler={handlerOm} />
-                <Input n={1} quantity={oms[1]} handler={handlerOm} />
-                <Input n={2} quantity={oms[2]} handler={handlerOm} />
+                Moments of inertia:
+                <Input n={0} quantity={moms[0]} handler={handlerMom} />
+                <Input n={1} quantity={moms[1]} handler={handlerMom} />
+                <Input n={2} quantity={moms[2]} handler={handlerMom} />
             </span>
         </div>
         <div className="container" style={{height:`${ny}px`, width:`${nx}px`}}>
