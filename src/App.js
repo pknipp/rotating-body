@@ -4,8 +4,8 @@ import Input from "./Input";
 import Line from "./Line";
 
 const App = () => {
-    const getSetTh = [useState(0), useState(0), useState(0)];
-    const getSetOm = [useState(0), useState(0), useState(0)];
+    const [ths, setThs] = useState([0, 0, 0]);
+    const [oms, setOms] = useState([0, 0, 0]);
     const [xyzs0, setXyzs0] = useState([]);
     const [xyzs, setXyzs] = useState([]);
     const [running, setRunning] = useState(false);
@@ -13,16 +13,23 @@ const App = () => {
     const handlerTh = e => {
         let xyOrZ = Number(e.target.name);
         let th =  Number(e.target.value);
-        let newGetSetTh = JSON.parse(JSON.stringify(getSetTh));
-        getSetTh[xyOrZ][1](th);
-        newGetSetTh[xyOrZ][0] = th;
+        let newThs = [...ths];
+        newThs[xyOrZ] = th;
+        setThs(newThs);
+        // newGetSetTh[xyOrZ][0] = th;
         let newXyzs = JSON.parse(JSON.stringify(xyzs0));
         xyzs0.forEach((xyz, i) => {
-            newXyzs[i][0] = mult1(mult2(mult2(zRot(newGetSetTh[0][0]), xRot(newGetSetTh[1][0])),zRot(newGetSetTh[2][0])), xyz[0]);
+            newXyzs[i][0] = mult1(mult2(mult2(zRot(newThs[0]), xRot(newThs[1])),zRot(newThs[2])), xyz[0]);
         });
         setXyzs(newXyzs);
     };
-    const handlerOm = e => getSetOm[Number(e.target.name)][1](Number(e.target.value));
+    const handlerOm = e => {
+        let xyOrZ = Number(e.target.name);
+        let om = Number(e.target.value);
+        let newOms = [...oms];
+        newOms[xyOrZ] = om;
+        setOms(newOms);
+    };
 
     const mult2 = (arr1, arr2) => {
         let arr3 = [];
@@ -80,11 +87,13 @@ const App = () => {
         if (running) {
             interval = setInterval(() => {
                 setTime(time + 0.1);
-                getSetTh[0][1](Math.round(100 * (getSetTh[0][0] + getSetOm[0][0] * 0.01)) / 100);
-                getSetTh[2][1](Math.round(100 * (getSetTh[2][0] + getSetOm[2][0] * 0.01)) / 100);
+                let newThs = [...ths];
+                newThs[0] += oms[0] * 0.01;
+                newThs[2] += oms[2] * 0.01;
+                setThs(newThs);
                 let newXyzs = JSON.parse(JSON.stringify(xyzs0));
                 xyzs0.forEach((xyz, i) => {
-                    newXyzs[i][0] = mult1(mult2(mult2(zRot(getSetTh[0][0]), xRot(getSetTh[1][0])),zRot(getSetTh[2][0])), xyz[0]);
+                    newXyzs[i][0] = mult1(mult2(mult2(zRot(ths[0]), xRot(ths[1])),zRot(ths[2])), xyz[0]);
                 });
                 setXyzs(newXyzs);
             }, 100);
@@ -102,17 +111,17 @@ const App = () => {
         <div>
             <span>
                 Initial angles:
-                <Input n={0} quantity={getSetTh[0][0]} handler={handlerTh} />
-                <Input n={1} quantity={getSetTh[1][0]} handler={handlerTh} />
-                <Input n={2} quantity={getSetTh[2][0]} handler={handlerTh} />
+                <Input n={0} quantity={ths[0]} handler={handlerTh} />
+                <Input n={1} quantity={ths[1]} handler={handlerTh} />
+                <Input n={2} quantity={ths[2]} handler={handlerTh} />
             </span>
         </div>
         <div>
             <span>
                 Angular speeds:
-                <Input n={0} quantity={getSetOm[0][0]} handler={handlerOm} />
-                <Input n={1} quantity={getSetOm[1][0]} handler={handlerOm} />
-                <Input n={2} quantity={getSetOm[2][0]} handler={handlerOm} />
+                <Input n={0} quantity={oms[0]} handler={handlerOm} />
+                <Input n={1} quantity={oms[1]} handler={handlerOm} />
+                <Input n={2} quantity={oms[2]} handler={handlerOm} />
             </span>
         </div>
         <div className="container" style={{height:`${ny}px`, width:`${nx}px`}}>
