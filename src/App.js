@@ -8,6 +8,7 @@ const App = () => {
     const [ths, setThs] = useState([0, 0, 0]);
     const [moms, setMoms] = useState([1, 1, 1]);
     const [oms, setOms] = useState([0, 0, 0]);
+    const [om2, setOm2] = useState(0);
     const [torques, setTorques] = useState([0, 0, 0]);
     const [xyzs0, setXyzs0] = useState([]);
     const [xyzs, setXyzs] = useState([]);
@@ -22,7 +23,7 @@ const App = () => {
         // newGetSetTh[xyOrZ][0] = th;
         let newXyzs = JSON.parse(JSON.stringify(xyzs0));
         xyzs0.forEach((xyz, i) => {
-            newXyzs[i][0] = mult1(mult2(mult2(zRot(newThs[0]), xRot(newThs[1])),zRot(newThs[2])), xyz[0]);
+            newXyzs[i][0] = mult1(mult2(mult2(zRot(newThs[2]), xRot(newThs[1])),zRot(newThs[0])), xyz[0]);
         });
         setXyzs(newXyzs);
     };
@@ -97,7 +98,7 @@ const App = () => {
                 nextThs();
                 let newXyzs = JSON.parse(JSON.stringify(xyzs0));
                 xyzs0.forEach((xyz, i) => {
-                    newXyzs[i][0] = mult1(mult2(mult2(zRot(ths[0]), xRot(ths[1])),zRot(ths[2])), xyz[0]);
+                    newXyzs[i][0] = mult1(mult2(mult2(zRot(ths[2]), xRot(ths[1])),zRot(ths[0])), xyz[0]);
                 });
                 setXyzs(newXyzs);
             }, dt);
@@ -118,13 +119,15 @@ const App = () => {
         };
         let Fs = []
         Fs[0] = h * (cs[2] * cs[2] / moms[1] + ss[2] * ss[2] / moms[0]);
-        Fs[1] = h * (1 / moms[0] - 1 / moms[2]) * ss[1] * ss[2] * cs[2];
+        Fs[1] = h * (1 / moms[0] - 1 / moms[1   ]) * ss[1] * ss[2] * cs[2];
         Fs[2] = h * (1 / moms[2] - cs[2] * cs[2] / moms[1] - ss[2] * ss[2] / moms[0]) * cs[1];
         let newOms = [];
         newOms[0] = Fs[0] * ss[1] * ss[2] + Fs[1] * cs[2];
         newOms[1] = Fs[0] * ss[1] * cs[2] - Fs[1] * ss[2];
         newOms[2] = Fs[0] * cs[1] + Fs[2];
+        // newOms = newOms.map(elem => -elem);
         setOms(newOms);
+        setOm2(newOms.reduce((om2, om) => om2 + om * om, 0));
         let newTorques = [];
         newTorques[0] = moms[0] * Fs[0] - (moms[1] - moms[2]) * oms[1] * oms[2];
         newTorques[1] = moms[1] * Fs[1] - (moms[2] - moms[0]) * oms[2] * oms[0];
@@ -173,9 +176,7 @@ const App = () => {
             <div>{oms[0]}</div>
             <div>{oms[1]}</div>
             <div>{oms[2]}</div>
-            <div>{torques[0]}</div>
-            <div>{torques[1]}</div>
-            <div>{torques[2]}</div>
+            <div>{om2}</div>
             <div className="container" style={{height:`${ny}px`, width:`${nx}px`}}>
                 {xyzs.map((xyz, index) => (
                     <Dot
