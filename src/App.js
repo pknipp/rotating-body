@@ -4,6 +4,7 @@ import Input from "./Input";
 import Line from "./Line";
 
 const App = () => {
+    const [h, setH] = useState(1);
     const [ths, setThs] = useState([0, 0, 0]);
     const [oms, setOms] = useState([0, 0, 0]);
     const [xyzs0, setXyzs0] = useState([]);
@@ -66,6 +67,9 @@ const App = () => {
     const ny = 700;
     const nz = ny;
     const d = 20;
+
+    const dt = 10;
+
     useEffect(() => {
         const firstXyzs = []
         for (let i = 0; i < 2; i++) {
@@ -88,20 +92,41 @@ const App = () => {
             interval = setInterval(() => {
                 setTime(time + 0.1);
                 let newThs = [...ths];
-                newThs[0] += oms[0] * 0.01;
-                newThs[2] += oms[2] * 0.01;
-                setThs(newThs);
+                // newThs[0] += oms[0] * dt / 1000;
+                // newThs[2] += oms[2] * dt / 1000;
+                // setThs(newThs);
+                setThs(nextThs());
                 let newXyzs = JSON.parse(JSON.stringify(xyzs0));
                 xyzs0.forEach((xyz, i) => {
                     newXyzs[i][0] = mult1(mult2(mult2(zRot(ths[0]), xRot(ths[1])),zRot(ths[2])), xyz[0]);
                 });
                 setXyzs(newXyzs);
-            }, 100);
+            }, dt);
         } else if (!running && time !== 0) {
             clearInterval(interval);
         }
         return () => clearInterval(interval);
-      }, [running, time, xyzs0]);
+    }, [running, time, xyzs0]);
+
+    const Fs = ths => {
+        let Fs = [oms[0], 0, oms[2]];
+        return Fs;
+    }
+
+    const nextFs = (Fs, m) => {
+        let newThs = [...ths];
+        for (let i = 0; i < 3; i++) ths[i] += Fs[i] * dt / 1000 / m;
+        return Fs(ths);
+    }
+
+    const nextThs = _ => {
+        let Fs1 = Fs(ths);
+        let Fs2 = nextFs(Fs1, 2);
+        let Fs3 = nextFs(Fs2, 2);
+        let Fs4 = nextFs(Fs3, 1);
+        let nextThs = [...ths];
+        for (let i = 0; i < 3; i++) nextThs[i] += (Fs1[i] + Fs4[i] + 2 * (Fs2[i] + Fs3[i])) * dt/ 1000 / 6;
+    }
 
     return (
         <>
