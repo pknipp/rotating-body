@@ -7,6 +7,8 @@ const App = () => {
     const [h, setH] = useState(1);
     const [ths, setThs] = useState([0, 0, 0]);
     const [moms, setMoms] = useState([1, 1, 1]);
+    const [oms, setOms] = useState([0, 0, 0]);
+    const [torques, setTorques] = useState([0, 0, 0]);
     const [xyzs0, setXyzs0] = useState([]);
     const [xyzs, setXyzs] = useState([]);
     const [running, setRunning] = useState(false);
@@ -118,6 +120,16 @@ const App = () => {
         Fs[0] = h * (cs[2] * cs[2] / moms[1] + ss[2] * ss[2] / moms[0]);
         Fs[1] = h * (1 / moms[0] - 1 / moms[2]) * ss[1] * ss[2] * cs[2];
         Fs[2] = h * (1 / moms[2] - cs[2] * cs[2] / moms[1] - ss[2] * ss[2] / moms[0]) * cs[1];
+        let newOms = [];
+        newOms[0] = Fs[0] * ss[1] * ss[2] + Fs[1] * cs[2];
+        newOms[1] = Fs[0] * ss[1] * cs[2] - Fs[1] * ss[2];
+        newOms[2] = Fs[0] * cs[1] + Fs[2];
+        setOms(newOms);
+        let newTorques = [];
+        newTorques[0] = moms[0] * Fs[0] - (moms[1] - moms[2]) * oms[1] * oms[2];
+        newTorques[1] = moms[1] * Fs[1] - (moms[2] - moms[0]) * oms[2] * oms[0];
+        newTorques[2] = moms[2] * Fs[2] - (moms[0] - moms[1]) * oms[0] * oms[1];
+        setTorques(newTorques);
         return Fs;
     }
 
@@ -139,56 +151,64 @@ const App = () => {
 
     return (
         <>
-        <button onClick={() => setRunning(!running)}>{running ? "Stop" : "Start"}</button>
-        <button onClick={() => setTime(0)}>Reset</button>
-        Time = {time.toFixed(2)} s
-        <div>
-            <span>
-                Initial angles:
-                <Input n={0} quantity={ths[0]} handler={handlerTh} />
-                <Input n={1} quantity={ths[1]} handler={handlerTh} />
-                <Input n={2} quantity={ths[2]} handler={handlerTh} />
-            </span>
-        </div>
-        <div>
-            <span>
-                Moments of inertia:
-                <Input n={0} quantity={moms[0]} handler={handlerMom} />
-                <Input n={1} quantity={moms[1]} handler={handlerMom} />
-                <Input n={2} quantity={moms[2]} handler={handlerMom} />
-            </span>
-        </div>
-        <div className="container" style={{height:`${ny}px`, width:`${nx}px`}}>
-            {xyzs.map((xyz, index) => (
-                <Dot
-                    key={index}
-                    x={xyz[0][0] + nx / 2}
-                    y={xyz[0][1] + ny / 2}
-                    d={d}
-                    // dashed={newXyz[2]}
-                />
-            ))}
-            {xyzs.map((xyz0, index0) => {
-                return xyzs.filter(xyz1 => {
-                    let d = [];
-                    for (let i = 0; i < 3; i++) d.push(Math.abs(xyz0[1][i] - xyz1[1][i]));
-                    // replace the following via the use of d.reduce((neighbor, di) => ?
-                    let neighbor = false;
-                    for (let i = 0; i < 3; i++) {
-                        neighbor = neighbor || (d[i] === 1 && !d[(i + 1) % 3] && !d[(i + 2) % 3]);
-                    }
-                    return neighbor;
-                }).map((xyz1, index1) => (
-                    <Line
-                        key={String(index0) + String(index1)}
-                        xi={xyz0[0][0] + nx / 2}
-                        yi={xyz0[0][1] + ny / 2}
-                        xf={xyz1[0][0] + nx / 2}
-                        yf={xyz1[0][1] + ny / 2}
+            <button onClick={() => setRunning(!running)}>{running ? "Stop" : "Start"}</button>
+            <button onClick={() => setTime(0)}>Reset</button>
+            Time = {time.toFixed(2)} s
+            <div>
+                <span>
+                    Initial angles:
+                    <Input n={0} quantity={ths[0]} handler={handlerTh} />
+                    <Input n={1} quantity={ths[1]} handler={handlerTh} />
+                    <Input n={2} quantity={ths[2]} handler={handlerTh} />
+                </span>
+            </div>
+            <div>
+                <span>
+                    Moments of inertia:
+                    <Input n={0} quantity={moms[0]} handler={handlerMom} />
+                    <Input n={1} quantity={moms[1]} handler={handlerMom} />
+                    <Input n={2} quantity={moms[2]} handler={handlerMom} />
+                </span>
+            </div>
+            <div>{oms[0]}</div>
+            <div>{oms[1]}</div>
+            <div>{oms[2]}</div>
+            <div>{torques[0]}</div>
+            <div>{torques[1]}</div>
+            <div>{torques[2]}</div>
+            <div className="container" style={{height:`${ny}px`, width:`${nx}px`}}>
+                {xyzs.map((xyz, index) => (
+                    <Dot
+                        key={index}
+                        x={xyz[0][0] + nx / 2}
+                        y={xyz[0][1] + ny / 2}
+                        d={d}
+                        // dashed={newXyz[2]}
                     />
-                ))
-            })}
-        </div>
+                ))}
+                {xyzs.map((xyz0, index0) => {
+                    return xyzs.filter(xyz1 => {
+                        let d = [];
+                        for (let i = 0; i < 3; i++) d.push(Math.abs(xyz0[1][i] - xyz1[1][i]));
+                        // replace the following via the use of d.reduce((neighbor, di) => ?
+                        let neighbor = false;
+                        for (let i = 0; i < 3; i++) {
+                            neighbor = neighbor || (d[i] === 1 && !d[(i + 1) % 3] && !d[(i + 2) % 3]);
+                        }
+                        return neighbor;
+                    }).map((xyz1, index1) => (
+                        <Line
+                            key={String(index0) + String(index1)}
+                            xi={xyz0[0][0] + nx / 2}
+                            yi={xyz0[0][1] + ny / 2}
+                            xf={xyz1[0][0] + nx / 2}
+                            yf={xyz1[0][1] + ny / 2}
+                        />
+                    ))
+
+                })}
+                <Line xi={nx / 2} yi={ny / 2} xf = {nx * oms[0] + nx / 2} yf = {nx * oms[1] + ny / 2} />
+            </div>
         </>
     )
 }
