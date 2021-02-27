@@ -2,7 +2,7 @@ import React from "react";
 
 const Input = ({n, quantity, handler}) => (
     <input
-        type="number"
+        type="text"
         onChange={handler}
         name={`${n}`}
         value={quantity}
