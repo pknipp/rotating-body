@@ -8,8 +8,10 @@ const App = () => {
     const [ths, setThs] = useState([0, 0, 0]);
     const [moms, setMoms] = useState([1, 2, 2.5]);
     const [oms, setOms] = useState([0, 0, 0]);
+    const [omfs, setOmfs] = useState([0, 0, 0]);
     const [Ls, setLs] = useState([0, 0, 0]);
     const [om2, setOm2] = useState(0);
+    const [omf2, setOmf2] = useState(0);
     const [L2, setL2] = useState(0);
     const [K, setK] = useState(0);
     // const [torques, setTorques] = useState([0, 0, 0]);
@@ -137,6 +139,13 @@ const App = () => {
         // newOms = newOms.map(elem => -elem);
         setOms(newOms);
         setOm2(newOms.reduce((om2, om) => om2 + om * om, 0));
+        let newOmfs = [];
+        newOmfs[0] = Fs[2] * ss[1] * ss[2] + Fs[1] * cs[0];
+        newOmfs[1] =-Fs[2] * ss[1] * cs[2] + Fs[1] * ss[0];
+        newOmfs[2] = Fs[2] * cs[1] + Fs[0];
+        // newOms = newOms.map(elem => -elem);
+        setOmfs(newOmfs);
+        setOmf2(newOmfs.reduce((om2, om) => om2 + om * om, 0));
         let newLs = [...Ls];
         newLs[0] = moms[0] * (Fs[0] * ss[1] * ss[2] + Fs[1] * cs[2]);
         newLs[1] = moms[1] * (Fs[0] * ss[1] * cs[2] - Fs[1] * ss[2]);
@@ -168,36 +177,57 @@ const App = () => {
             <button onClick={() => setRunning(!running)}>{running ? "Stop" : "Start"}</button>
             <button onClick={() => setTime(0)}>Reset</button>
             Time = {time.toFixed(2)} s
-            <div>
-                <span>
-                    Initial angles:
-                    <Input n={0} quantity={ths[0]} handler={handlerTh} />
-                    <Input n={1} quantity={ths[1]} handler={handlerTh} />
-                    <Input n={2} quantity={ths[2]} handler={handlerTh} />
-                </span>
-            </div>
-            <div>
-                <span>
-                    Moments of inertia:
-                    <Input n={0} quantity={moms[0]} handler={handlerMom} />
-                    <Input n={1} quantity={moms[1]} handler={handlerMom} />
-                    <Input n={2} quantity={moms[2]} handler={handlerMom} />
-                </span>
-            </div>
-            angular-frequency components:
-            <div>{oms[0]}</div>
-            <div>{oms[1]}</div>
-            <div>{oms[2]}</div>
-            squared magnitude of angular frequency:
-            <div>{om2}</div>
-            angular-momentum components:
-            <div>{Ls[0]}</div>
-            <div>{Ls[1]}</div>
-            <div>{Ls[2]}</div>
-            squared magnitude of angular momentum:
-            <div>{L2}</div>
-            rotational kinetic energy:
-            <div>{K}</div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Quantity</th>
+                        <th>x-comp</th>
+                        <th>y-comp</th>
+                        <th>z-comp</th>
+                        <th>magnit.</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>angles (rad)</td>
+                        <td><Input n={0} quantity={ths[0]} handler={handlerTh} /></td>
+                        <td><Input n={1} quantity={ths[1]} handler={handlerTh} /></td>
+                        <td><Input n={2} quantity={ths[2]} handler={handlerTh} /></td>
+                        <td> - </td>
+                    </tr>
+                    <tr>
+                        <td>moments</td>
+                        <td><Input n={0} quantity={moms[0]} handler={handlerMom} /></td>
+                        <td><Input n={1} quantity={moms[1]} handler={handlerMom} /></td>
+                        <td><Input n={2} quantity={moms[2]} handler={handlerMom} /></td>
+                        <td> - </td>
+                    </tr>
+                    <tr>
+                        <td>(body) omega</td>
+                        <td>{Math.round(oms[0] * 1000) / 1000}</td>
+                        <td>{Math.round(oms[1] * 1000) / 1000}</td>
+                        <td>{Math.round(oms[2] * 1000) / 1000}</td>
+                        <td>{Math.round(Math.sqrt(om2) * 1000) / 1000}</td>
+                    </tr>
+                    <tr>
+                        <td>(fixed) omega</td>
+                        <td>{Math.round(omfs[0] * 1000) / 1000}</td>
+                        <td>{Math.round(omfs[1] * 1000) / 1000}</td>
+                        <td>{Math.round(omfs[2] * 1000) / 1000}</td>
+                        <td>{Math.round(Math.sqrt(omf2) * 1000) / 1000}</td>
+                    </tr>
+                    <tr>
+                        <td>ang. mom</td>
+                        <td>{Math.round(Ls[0] * 1000) / 1000}</td>
+                        <td>{Math.round(Ls[1] * 1000) / 1000}</td>
+                        <td>{Math.round(Ls[2] * 1000) / 1000}</td>
+                        <td>{Math.round(1000 * Math.sqrt(L2) / 1000)}</td>
+                    </tr>
+                    <tr>
+                        <td>KE</td><td></td><td></td><td></td><td>{Math.round(1000 * K) / 1000}</td>
+                    </tr>
+                </tbody>
+            </table>
             <div className="container" style={{height:`${ny}px`, width:`${nx}px`}}>
                 {xyzs.map((xyz, index) => (
                     <Dot
@@ -230,6 +260,7 @@ const App = () => {
 
                 })}
                 <Line xi={nx / 2} yi={ny / 2} xf = {nx * oms[0] + nx / 2} yf = {nx * oms[1] + ny / 2} />
+                <Line xi={nx / 2} yi={ny / 2} xf = {nx * omfs[0] + nx / 2} yf = {nx * omfs[1] + ny / 2} dashed={true} />
             </div>
         </>
     )

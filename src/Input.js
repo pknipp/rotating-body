@@ -5,7 +5,7 @@ const Input = ({n, quantity, handler}) => (
         type="number"
         onChange={handler}
         name={`${n}`}
-        value={quantity}
+        value={Math.round(1000 * quantity) / 1000}
     />
 )
 export default Input;
