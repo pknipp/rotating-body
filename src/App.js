@@ -4,10 +4,10 @@ import Input from "./Input";
 import Line from "./Line";
 
 const App = () => {
-    const [h, setH] = useState(1);
+    const [h, setH] = useState(0.5);
     const [thsInput, setThsInput] = useState(["", "", ""]);
     const [ths, setThs] = useState([0, 0, 0]);
-    const [momsInput, setMomsInput] = useState(["", "", ""]);
+    const [momsInput, setMomsInput] = useState(["1", "1", "1"]);
     const [moms, setMoms] = useState([1, 2, 2.5]);
     const [omsInput, setOmsInput] = useState(["", "", ""]);
     const [oms, setOms] = useState([0, 0, 0]);
@@ -22,6 +22,7 @@ const App = () => {
     const [xyzs, setXyzs] = useState([]);
     const [running, setRunning] = useState(false);
     const [time, setTime] = useState(0);
+
     const handlerTh = e => {
         let xyOrZ = Number(e.target.name);
         let th =  e.target.value;
@@ -97,7 +98,7 @@ const App = () => {
     const d = 20;
 
     // ODE-solver timestep, in ms
-    const dt = 100;
+    const dt = 50;
 
     useEffect(() => {
         const firstXyzs = []
@@ -126,9 +127,17 @@ const App = () => {
                 setTime(time + dt/1000);
                 nextThs();
                 let newXyzs = JSON.parse(JSON.stringify(xyzs0));
+                let iMin = 0;
+                let zMin = newXyzs[iMin][0][2];
                 xyzs0.forEach((xyz, i) => {
                     newXyzs[i][0] = mult1(mult2(mult2(zRot(ths[2]), xRot(ths[1])),zRot(ths[0])), xyz[0]);
+                    newXyzs[i][2] = false;
+                    if (newXyzs[i][0][2] < zMin) {
+                        iMin = i;
+                        zMin = newXyzs[i][0][2];
+                    }
                 });
+                newXyzs[iMin][2] = true;
                 setXyzs(newXyzs);
             }, dt);
         } else if (!running && time !== 0) {
@@ -148,7 +157,7 @@ const App = () => {
         };
         let Fs = []
         Fs[0] = h * (cs[2] * cs[2] / moms[1] + ss[2] * ss[2] / moms[0]);
-        Fs[1] = h * (1 / moms[0] - 1 / moms[1   ]) * ss[1] * ss[2] * cs[2];
+        Fs[1] = h * (1 / moms[0] - 1 / moms[1]) * ss[1] * ss[2] * cs[2];
         Fs[2] = h * (1 / moms[2] - cs[2] * cs[2] / moms[1] - ss[2] * ss[2] / moms[0]) * cs[1];
         let newOms = [];
         newOms[0] = Fs[0] * ss[1] * ss[2] + Fs[1] * cs[2];
@@ -253,7 +262,7 @@ const App = () => {
                         x={xyz[0][0] + nx / 2}
                         y={xyz[0][1] + ny / 2}
                         d={d}
-                        // dashed={newXyz[2]}
+                        dashed={xyz[2]}
                     />
                 ))}
                 {xyzs.map((xyz0, index0) => {
@@ -273,12 +282,13 @@ const App = () => {
                             yi={xyz0[0][1] + ny / 2}
                             xf={xyz1[0][0] + nx / 2}
                             yf={xyz1[0][1] + ny / 2}
+                            dashed={xyz0[2] || xyz1[2]}
                         />
                     ))
 
                 })}
                 <Line xi={nx / 2} yi={ny / 2} xf = {nx * oms[0] + nx / 2} yf = {nx * oms[1] + ny / 2} />
-                <Line xi={nx / 2} yi={ny / 2} xf = {nx * omfs[0] + nx / 2} yf = {nx * omfs[1] + ny / 2} dashed={true} />
+                {/* <Line xi={nx / 2} yi={ny / 2} xf = {nx * omfs[0] + nx / 2} yf = {nx * omfs[1] + ny / 2} dashed={true} /> */}
             </div>
         </>
     )
