@@ -5,7 +5,7 @@ const Input = ({n, quantity, handler}) => (
         type="text"
         onChange={handler}
         name={`${n}`}
-        value={Math.round(1000 * quantity) / 1000}
+        value={typeof(quantity) === "string" ? quantity : Math.round(1000 * quantity) / 1000}
     />
 )
 export default Input;
