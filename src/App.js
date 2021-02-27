@@ -5,8 +5,13 @@ import Line from "./Line";
 
 const App = () => {
     const [h, setH] = useState(1);
+    const [thsInput, setThsInput] = useState(["", "", ""]);
     const [ths, setThs] = useState([0, 0, 0]);
+<<<<<<< HEAD
     const [moms, setMoms] = useState([1, 2, 2.5]);
+=======
+    const [omsInput, setOmsInput] = useState(["", "", ""]);
+>>>>>>> text
     const [oms, setOms] = useState([0, 0, 0]);
     const [omfs, setOmfs] = useState([0, 0, 0]);
     const [Ls, setLs] = useState([0, 0, 0]);
@@ -21,11 +26,18 @@ const App = () => {
     const [time, setTime] = useState(0);
     const handlerTh = e => {
         let xyOrZ = Number(e.target.name);
-        let th =  Number(e.target.value);
+        let th =  e.target.value;
+        let newThsInput = [...thsInput]
         let newThs = [...ths];
-        newThs[xyOrZ] = th;
+        if (th === '-' || th === '.' || th === '-.') {
+            newThsInput[xyOrZ] = th;
+        } else {
+            if (isNaN(Number(th))) return;
+            newThsInput[xyOrZ] = th;
+            newThs[xyOrZ] = Number(th);
+        }
+        setThsInput(newThsInput);
         setThs(newThs);
-        // newGetSetTh[xyOrZ][0] = th;
         let newXyzs = JSON.parse(JSON.stringify(xyzs0));
         xyzs0.forEach((xyz, i) => {
             newXyzs[i][0] = mult1(mult2(mult2(zRot(newThs[2]), xRot(newThs[1])),zRot(newThs[0])), xyz[0]);
@@ -34,10 +46,25 @@ const App = () => {
     };
     const handlerMom = e => {
         let xyOrZ = Number(e.target.name);
+<<<<<<< HEAD
         let mom = Number(e.target.value);
         let newMoms = [...moms];
         newMoms[xyOrZ] = mom;
         setMoms(newMoms);
+=======
+        let om = e.target.value;
+        let newOms = [...oms];
+        let newOmsInput = [...omsInput];
+        if (om === '-' || om === '.' || om === '-.') {
+            newOmsInput[xyOrZ] = om;
+        } else {
+            if (isNaN(Number(om))) return;
+            newOmsInput[xyOrZ] = om;
+            newOms[xyOrZ] = Number(om);
+        }
+        setOmsInput(newOmsInput);
+        setOms(newOms);
+>>>>>>> text
     };
 
     // matrix multiplication: arr1 * arr2
@@ -174,6 +201,7 @@ const App = () => {
 
     return (
         <>
+<<<<<<< HEAD
             <button onClick={() => setRunning(!running)}>{running ? "Stop" : "Start"}</button>
             <button onClick={() => setTime(0)}>Reset</button>
             Time = {time.toFixed(2)} s
@@ -236,6 +264,54 @@ const App = () => {
                         y={xyz[0][1] + ny / 2}
                         d={d}
                         // dashed={newXyz[2]}
+=======
+        <button onClick={() => setRunning(!running)}>{running ? "Stop" : "Start"}</button>
+        <button onClick={() => setTime(0)}>Reset</button>
+        Time = {time.toFixed(2)} s
+        <div>
+            <span>
+                Initial angles:
+                <Input n={0} quantity={thsInput[0]} handler={handlerTh} />
+                <Input n={1} quantity={thsInput[1]} handler={handlerTh} />
+                <Input n={2} quantity={thsInput[2]} handler={handlerTh} />
+            </span>
+        </div>
+        <div>
+            <span>
+                Angular speeds:
+                <Input n={0} quantity={omsInput[0]} handler={handlerOm} />
+                <Input n={1} quantity={omsInput[1]} handler={handlerOm} />
+                <Input n={2} quantity={omsInput[2]} handler={handlerOm} />
+            </span>
+        </div>
+        <div className="container" style={{height:`${ny}px`, width:`${nx}px`}}>
+            {xyzs.map((xyz, index) => (
+                <Dot
+                    key={index}
+                    x={xyz[0][0] + nx / 2}
+                    y={xyz[0][1] + ny / 2}
+                    d={d}
+                    // dashed={newXyz[2]}
+                />
+            ))}
+            {xyzs.map((xyz0, index0) => {
+                return xyzs.filter(xyz1 => {
+                    let d = [];
+                    for (let i = 0; i < 3; i++) d.push(Math.abs(xyz0[1][i] - xyz1[1][i]));
+                    // replace the following via the use of d.reduce((neighbor, di) => ?
+                    let neighbor = false;
+                    for (let i = 0; i < 3; i++) {
+                        neighbor = neighbor || (d[i] === 1 && !d[(i + 1) % 3] && !d[(i + 2) % 3]);
+                    }
+                    return neighbor;
+                }).map((xyz1, index1) => (
+                    <Line
+                        key={String(index0) + String(index1)}
+                        xi={xyz0[0][0] + nx / 2}
+                        yi={xyz0[0][1] + ny / 2}
+                        xf={xyz1[0][0] + nx / 2}
+                        yf={xyz1[0][1] + ny / 2}
+>>>>>>> text
                     />
                 ))}
                 {xyzs.map((xyz0, index0) => {
