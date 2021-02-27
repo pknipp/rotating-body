@@ -5,12 +5,13 @@ import Line from "./Line";
 
 const App = () => {
     const [h, setH] = useState(1);
-    const [ths, setThs] = useState([0, 0, 0]);
-    const [moms, setMoms] = useState([1, 1, 1]);
+    const [ths, setThs] = useState([0.4, 0.6, 0.8]);
+    const [moms, setMoms] = useState([1, 1, 2]);
     const [oms, setOms] = useState([0, 0, 0]);
     const [Ls, setLs] = useState([0, 0, 0]);
     const [om2, setOm2] = useState(0);
     const [L2, setL2] = useState(0);
+    const [K, setK] = useState(0);
     // const [torques, setTorques] = useState([0, 0, 0]);
     const [xyzs0, setXyzs0] = useState([]);
     const [xyzs, setXyzs] = useState([]);
@@ -74,7 +75,7 @@ const App = () => {
     const d = 20;
 
     // ODE-solver timestep, in ms
-    const dt = 20;
+    const dt = 10;
 
     useEffect(() => {
         const firstXyzs = []
@@ -136,6 +137,7 @@ const App = () => {
         newLs[2] = moms[2] * (Fs[0] * cs[1] + Fs[2]);
         setLs(newLs);
         setL2(newLs.reduce((L2, L) => L2 + L * L, 0));
+        setK(newLs.reduce((K, L, i) => K + L * oms[i], 0)/2);
         return Fs;
     }
 
@@ -176,14 +178,20 @@ const App = () => {
                     <Input n={2} quantity={moms[2]} handler={handlerMom} />
                 </span>
             </div>
+            angular-frequency components:
             <div>{oms[0]}</div>
             <div>{oms[1]}</div>
             <div>{oms[2]}</div>
+            squared magnitude of angular frequency:
             <div>{om2}</div>
+            angular-momentum components:
             <div>{Ls[0]}</div>
             <div>{Ls[1]}</div>
             <div>{Ls[2]}</div>
+            squared magnitude of angular momentum:
             <div>{L2}</div>
+            rotational kinetic energy:
+            <div>{K}</div>
             <div className="container" style={{height:`${ny}px`, width:`${nx}px`}}>
                 {xyzs.map((xyz, index) => (
                     <Dot
