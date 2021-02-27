@@ -5,8 +5,8 @@ import Line from "./Line";
 
 const App = () => {
     const [h, setH] = useState(1);
-    const [ths, setThs] = useState([0.4, 0.6, 0.8]);
-    const [moms, setMoms] = useState([1, 1, 2]);
+    const [ths, setThs] = useState([0, 0, 0]);
+    const [moms, setMoms] = useState([1, 2, 2.5]);
     const [oms, setOms] = useState([0, 0, 0]);
     const [Ls, setLs] = useState([0, 0, 0]);
     const [om2, setOm2] = useState(0);
@@ -38,6 +38,7 @@ const App = () => {
         setMoms(newMoms);
     };
 
+    // matrix multiplication: arr1 * arr2
     const mult2 = (arr1, arr2) => {
         let arr3 = [];
         for (let i = 0; i < 3; i++) {
@@ -51,6 +52,7 @@ const App = () => {
         }
         return arr3;
     }
+    // matrix multiplication: arr * vec
     const mult1 = (arr, vec) => {
         let vec2 = [];
         for (let i = 0; i < 3; i++) {
@@ -75,7 +77,7 @@ const App = () => {
     const d = 20;
 
     // ODE-solver timestep, in ms
-    const dt = 10;
+    const dt = 100;
 
     useEffect(() => {
         const firstXyzs = []
@@ -90,7 +92,11 @@ const App = () => {
             }
         }
         setXyzs0(firstXyzs);
-        setXyzs(firstXyzs);
+        let newXyzs = JSON.parse(JSON.stringify(firstXyzs));
+        firstXyzs.forEach((xyz, i) => {
+            newXyzs[i][0] = mult1(mult2(mult2(zRot(ths[2]), xRot(ths[1])),zRot(ths[0])), xyz[0]);
+        });
+        setXyzs(newXyzs);
     }, []);
 
     useEffect(() => {
