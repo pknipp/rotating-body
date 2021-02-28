@@ -152,7 +152,7 @@ const App = () => {
             </span>
         </div>
         <div className="container" style={{height:`${ny}px`, width:`${nx}px`}}>
-            <Square nx={nx} ny={ny} />
+            <Square nx={nx} ny={ny} ths={ths} />
             {xyzs.map((xyz, index) => (
                 <Dot
                     key={index}
