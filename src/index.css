@@ -5,6 +5,7 @@
     position: absolute;
     border-radius: 50%;
 }
+.square {box-sizing: border-box; border: solid 1px dotted; position: absolute; }
 .line {
     box-sizing: border-box;
     border-top: solid 1px black;

@@ -2,11 +2,12 @@ import React, { useState, useEffect } from "react";
 import Dot from "./Dot";
 import Input from "./Input";
 import Line from "./Line";
+import Square from "./Square";
 
 const App = () => {
     const [h, setH] = useState(1);
     const [thsInput, setThsInput] = useState(["0", "0", "0"]);
-    const [ths, setThs] = useState(null);
+    const [ths, setThs] = useState([0, 0, 0]);
     const [momsInput, setMomsInput] = useState(["1", "1", "2"]);
     const [moms, setMoms] = useState(null);
     const [omsInput, setOmsInput] = useState(["", "", ""]);
@@ -19,7 +20,9 @@ const App = () => {
     const [K, setK] = useState(0);
     // const [torques, setTorques] = useState([0, 0, 0]);
     const [xyzs0, setXyzs0] = useState([]);
+    const [mids0, setMids0] = useState([]);
     const [xyzs, setXyzs] = useState([]);
+    const [mids, setMids] = useState([]);
     const [running, setRunning] = useState(false);
     const [time, setTime] = useState(0);
 
@@ -102,7 +105,7 @@ const App = () => {
 
     useEffect(() => {
         setMoms(momsInput.map(mom => Number(mom)));
-        const firstXyzs = []
+        const firstXyzs = [];
         for (let i = 0; i < 2; i++) {
             let x = (-1 + 2 * i) * (nx / 4);
             for (let j = 0; j < 2; j++) {
@@ -114,6 +117,13 @@ const App = () => {
             }
         }
         setXyzs0(firstXyzs);
+        const firstMids = [];
+        for (let i = -1; i < 2; i += 2) {
+            firstMids.push([0, 0, i * nx / 4]);
+            firstMids.push([0, i * nx / 4, 0]);
+            firstMids.push([i * nx / 4, 0, 0]);
+        }
+        setMids0(firstMids);
         let newThs = thsInput.map(th => Number(th));
         setThs(newThs);
         let newXyzs = JSON.parse(JSON.stringify(firstXyzs));
@@ -121,6 +131,11 @@ const App = () => {
             newXyzs[i][0] = mult1(mult2(mult2(zRot(newThs[2]), xRot(newThs[1])),zRot(newThs[0])), xyz[0]);
         });
         setXyzs(newXyzs);
+        let newMids = JSON.parse(JSON.stringify(firstMids));
+        firstMids.forEach((mid, i) => {
+            newMids[i] = mult1(mult2(mult2(zRot(newThs[2]), xRot(newThs[1])),zRot(newThs[0])), mid);
+        });
+        setMids(newMids);
     }, []);
 
     useEffect(() => {
@@ -142,6 +157,11 @@ const App = () => {
                 });
                 newXyzs[iMin][2] = true;
                 setXyzs(newXyzs);
+                let newMids = JSON.parse(JSON.stringify(mids0));
+                mids0.forEach((mid, i) => {
+                    newMids[i] = mult1(mult2(mult2(zRot(ths[2]), xRot(ths[1])),zRot(ths[0])), mid);
+                });
+                setMids(newMids);
             }, dt);
         } else if (!running && time !== 0) {
             clearInterval(interval);
@@ -256,6 +276,7 @@ const App = () => {
                 </tbody>
             </table>
             <div className="container" style={{height:`${ny}px`, width:`${nx}px`}}>
+                {/* <Square className="square" mids={mids[5]} nx={nx} ny={ny} ths={ths} /> */}
                 {xyzs.map((xyz, index) => (
                     <Dot
                         key={index}
@@ -263,6 +284,15 @@ const App = () => {
                         y={xyz[0][1] + ny / 2}
                         d={d}
                         dashed={xyz[2]}
+                    />
+                ))}
+                {mids.map((mid, index) => (
+                    <Dot
+                        key={index}
+                        x={mid[0] + nx / 2}
+                        y={mid[1] + ny / 2}
+                        d={d}
+                        // dashed={xyz[2]}
                     />
                 ))}
                 {xyzs.map((xyz0, index0) => {
