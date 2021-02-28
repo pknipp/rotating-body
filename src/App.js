@@ -4,11 +4,11 @@ import Input from "./Input";
 import Line from "./Line";
 
 const App = () => {
-    const [h, setH] = useState(0.5);
-    const [thsInput, setThsInput] = useState(["", "", ""]);
-    const [ths, setThs] = useState([0, 0, 0]);
-    const [momsInput, setMomsInput] = useState(["1", "1", "1"]);
-    const [moms, setMoms] = useState([1, 2, 2.5]);
+    const [h, setH] = useState(1);
+    const [thsInput, setThsInput] = useState(["0", "0", "0"]);
+    const [ths, setThs] = useState(null);
+    const [momsInput, setMomsInput] = useState(["1", "1", "2"]);
+    const [moms, setMoms] = useState(null);
     const [omsInput, setOmsInput] = useState(["", "", ""]);
     const [oms, setOms] = useState([0, 0, 0]);
     const [omfs, setOmfs] = useState([0, 0, 0]);
@@ -101,6 +101,7 @@ const App = () => {
     const dt = 50;
 
     useEffect(() => {
+        setMoms(momsInput.map(mom => Number(mom)));
         const firstXyzs = []
         for (let i = 0; i < 2; i++) {
             let x = (-1 + 2 * i) * (nx / 4);
@@ -113,9 +114,11 @@ const App = () => {
             }
         }
         setXyzs0(firstXyzs);
+        let newThs = thsInput.map(th => Number(th));
+        setThs(newThs);
         let newXyzs = JSON.parse(JSON.stringify(firstXyzs));
         firstXyzs.forEach((xyz, i) => {
-            newXyzs[i][0] = mult1(mult2(mult2(zRot(ths[2]), xRot(ths[1])),zRot(ths[0])), xyz[0]);
+            newXyzs[i][0] = mult1(mult2(mult2(zRot(newThs[2]), xRot(newThs[1])),zRot(newThs[0])), xyz[0]);
         });
         setXyzs(newXyzs);
     }, []);
@@ -173,10 +176,7 @@ const App = () => {
         // newOms = newOms.map(elem => -elem);
         setOmfs(newOmfs);
         setOmf2(newOmfs.reduce((om2, om) => om2 + om * om, 0));
-        let newLs = [...Ls];
-        newLs[0] = moms[0] * (Fs[0] * ss[1] * ss[2] + Fs[1] * cs[2]);
-        newLs[1] = moms[1] * (Fs[0] * ss[1] * cs[2] - Fs[1] * ss[2]);
-        newLs[2] = moms[2] * (Fs[0] * cs[1] + Fs[2]);
+        let newLs = newOms.map((om, i) => moms[i] * om);
         setLs(newLs);
         setL2(newLs.reduce((L2, L) => L2 + L * L, 0));
         setK(newLs.reduce((K, L, i) => K + L * oms[i], 0)/2);
@@ -288,7 +288,7 @@ const App = () => {
 
                 })}
                 <Line xi={nx / 2} yi={ny / 2} xf = {nx * oms[0] + nx / 2} yf = {nx * oms[1] + ny / 2} />
-                {/* <Line xi={nx / 2} yi={ny / 2} xf = {nx * omfs[0] + nx / 2} yf = {nx * omfs[1] + ny / 2} dashed={true} /> */}
+                <Line xi={nx / 2} yi={ny / 2} xf = {nx * omfs[0] + nx / 2} yf = {nx * omfs[1] + ny / 2} dashed={true} />
             </div>
         </>
     )
