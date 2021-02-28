@@ -15,7 +15,7 @@ const Line = ({ xi, yi, xf, yf, dashed }) => {
             left: `${xi - r / 2}px`,
             top: `${yi}px`,
             transform: `rotate(${angle * 180 / Math.PI}deg) translateX(${r / 2}px)`,
-            borderTopStyle: `${dashed ? "dashed" : "solid"}`,
+            borderTopStyle: `${dashed ? "dashed" : "dotted"}`,
         }}/>
     )
 }

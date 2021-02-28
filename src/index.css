@@ -5,9 +5,10 @@
     position: absolute;
     border-radius: 50%;
 }
+.square { box-sizing: border-box; border: solid 1px red; position: absolute; }
 .line {
     box-sizing: border-box;
-    border-top: solid 1px black;
+    border-top: solid 2px black;
     position: absolute;
     height: 0px;
 }

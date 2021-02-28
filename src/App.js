@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import Dot from "./Dot";
 import Input from "./Input";
 import Line from "./Line";
+import Square from "./Square";
 
 const App = () => {
     const [h, setH] = useState(1);
@@ -151,6 +152,7 @@ const App = () => {
             </span>
         </div>
         <div className="container" style={{height:`${ny}px`, width:`${nx}px`}}>
+            <Square nx={nx} ny={ny} />
             {xyzs.map((xyz, index) => (
                 <Dot
                     key={index}
