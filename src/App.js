@@ -6,12 +6,12 @@ import Square from "./Square";
 
 const App = () => {
     const [h, setH] = useState(1);
-    const [thsInput, setThsInput] = useState(["0", "0", "0"]);
-    const [ths, setThs] = useState([0, 0, 0]);
-    const [momsInput, setMomsInput] = useState(["1", "1", "2"]);
-    const [moms, setMoms] = useState(null);
+    const [thsInput, setThsInput] = useState(["0.5", "0.6", "0"]);
+    const [ths, setThs] = useState(thsInput.map(elem => Number(elem)));
+    const [momsInput, setMomsInput] = useState(["1", "1", "1"]);
+    const [moms, setMoms] = useState(momsInput.map(elem => Number(elem)));
     const [omsInput, setOmsInput] = useState(["", "", ""]);
-    const [oms, setOms] = useState([0, 0, 0]);
+    const [oms, setOms] = useState(omsInput.map(elem => Number(elem)));
     const [omfs, setOmfs] = useState([0, 0, 0]);
     const [Ls, setLs] = useState([0, 0, 0]);
     const [om2, setOm2] = useState(0);
@@ -45,6 +45,11 @@ const App = () => {
             newXyzs[i][0] = mult1(mult2(mult2(zRot(newThs[2]), xRot(newThs[1])),zRot(newThs[0])), xyz[0]);
         });
         setXyzs(newXyzs);
+        let newMids = JSON.parse(JSON.stringify(mids0));
+        mids0.forEach((mid, i) => {
+            newMids[i] = mult1(mult2(mult2(zRot(newThs[2]), xRot(newThs[1])),zRot(newThs[0])), mid);
+        });
+        setMids(newMids);
     };
     const handlerMom = e => {
         let xyOrZ = Number(e.target.name);
@@ -98,10 +103,26 @@ const App = () => {
     const nx = 700;
     const ny = 700;
     const nz = ny;
-    const d = 20;
+    const d = 50;
 
     // ODE-solver timestep, in ms
-    const dt = 50;
+    const dt = 100;
+
+    const rotate = ths => {
+        const mat = mult2(mult2(zRot(ths[2]), xRot(ths[1])), zRot(ths[0]));
+        let trace = mat[0][0] + mat[1][1] + mat[2][2];
+        // if (trace === 3) return [0, [1, 1, 1]];
+        let traceTh = Math.cos(ths[1]) + (1 + Math.cos(ths[1])) * Math.cos(ths[0] + ths[2]);
+        // console.log(trace, traceTh);
+        let angle = Math.acos((trace - 1) / 2);
+        mat.forEach((row, i) => row[i]--);
+        if (mat[1][2] === 0) return [angle, [0, 0, 1]];
+        if (mat[0][1] === 0) return [angle, [1, 0, 0]];
+        let x = (mat[1][1] * mat[0][2] - mat[1][2] * mat[0][1])/
+                (mat[0][0] * mat[1][2] - mat[0][2] * mat[1][0]);
+        let z = -(mat[1][1] + mat[1][0] * x) / mat[1][2];
+        return [angle, [x, 1, z]];
+    }
 
     useEffect(() => {
         setMoms(momsInput.map(mom => Number(mom)));
@@ -119,9 +140,9 @@ const App = () => {
         setXyzs0(firstXyzs);
         const firstMids = [];
         for (let i = -1; i < 2; i += 2) {
-            firstMids.push([0, 0, i * nx / 4]);
-            firstMids.push([0, i * nx / 4, 0]);
             firstMids.push([i * nx / 4, 0, 0]);
+            firstMids.push([0, i * nx / 4, 0]);
+            firstMids.push([0, 0, i * nx / 4]);
         }
         setMids0(firstMids);
         let newThs = thsInput.map(th => Number(th));
@@ -133,6 +154,7 @@ const App = () => {
         setXyzs(newXyzs);
         let newMids = JSON.parse(JSON.stringify(firstMids));
         firstMids.forEach((mid, i) => {
+            console.log("newMids creation #", i);
             newMids[i] = mult1(mult2(mult2(zRot(newThs[2]), xRot(newThs[1])),zRot(newThs[0])), mid);
         });
         setMids(newMids);
@@ -218,7 +240,6 @@ const App = () => {
         for (let i = 0; i < 3; i++) nextThs[i] += (Fs1[i] + Fs4[i] + 2 * (Fs2[i] + Fs3[i])) * dt/ 1000 / 6;
         setThs(nextThs);
     }
-
     return (
         <>
             <button onClick={() => setRunning(!running)}>{running ? "Stop" : "Start"}</button>
@@ -276,7 +297,8 @@ const App = () => {
                 </tbody>
             </table>
             <div className="container" style={{height:`${ny}px`, width:`${nx}px`}}>
-                {/* <Square className="square" mids={mids[5]} nx={nx} ny={ny} ths={ths} /> */}
+                <div>{rotate(ths)}</div>
+                <Square className="square" mid={mids[5]} nx={nx} ny={ny} anglevec={rotate(ths)} />
                 {xyzs.map((xyz, index) => (
                     <Dot
                         key={index}
@@ -287,6 +309,7 @@ const App = () => {
                     />
                 ))}
                 {mids.map((mid, index) => (
+                // filter((mid, index) => index === 5).
                     <Dot
                         key={index}
                         x={mid[0] + nx / 2}
