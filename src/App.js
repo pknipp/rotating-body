@@ -7,9 +7,9 @@ import Square from "./Square";
 
 const App = () => {
     const [h, setH] = useState(1);
-    const [thsInput, setThsInput] = useState(["0.3", "0.6", "0.9"]);
+    const [thsInput, setThsInput] = useState(["0", "0.2", "0"]);
     const [ths, setThs] = useState(thsInput.map(elem => Number(elem)));
-    const [momsInput, setMomsInput] = useState(["1", "2.0", "1.5"]);
+    const [momsInput, setMomsInput] = useState(["1", "1.5", "2"]);
     const [moms, setMoms] = useState(momsInput.map(elem => Number(elem)));
     const [omsInput, setOmsInput] = useState(["", "", ""]);
     const [oms, setOms] = useState(omsInput.map(elem => Number(elem)));
