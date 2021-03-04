@@ -37,7 +37,7 @@ const App = () => {
     const d = 200;
 
     // ODE-solver timestep in ms
-    const dt = 200;
+    const dt = 100;
 
     // matrix multiplication: arr * vec
     const mult1 = (arr, vec) => {
@@ -76,33 +76,35 @@ const App = () => {
 
     const rot = ths => mult2(mult2(zRot(ths[2]), xRot(ths[1])), zRot(ths[0]));
     const invRot=ths=> mult2(mult2(zRot(-ths[0]),xRot(-ths[1])), zRot(-ths[2]));
+    const rotX = [[1, 0, 0], [0, 0, 1], [0, -1, 0]];
+    const rotY = [[0, 0, -1], [0, 1, 0], [1, 0, 0]];
 
-    const rotate = ths => {
-        const mat = rot(ths);
-        let trace = mat[0][0] + mat[1][1] + mat[2][2];
-        // let traceTh = Math.cos(ths[1]) + (1 + Math.cos(ths[1])) * Math.cos(ths[0] + ths[2]);
-        let angle = Math.acos((trace - 1) / 2);
-        let vectors = new EigenvalueDecomposition(new Matrix(mat)).eigenvectorMatrix.data;
-        let axisVector = vectors.map(row => row[2]);
-        let vec = vectors.map(row => row[0]);
-        let rVec = mult1(rot(ths), vec);
-        let rVecCrossVec = [rVec[1] * vec[2] - rVec[2] * vec[1],
-                            rVec[2] * vec[0] - rVec[0] * vec[2],
-                            rVec[0] * vec[1] - rVec[1] * vec[0]];
-        let dot = axisVector.reduce((dot, comp, i) => dot - comp * rVecCrossVec[i], 0);
-        angle *= Math.sign(dot);
-        return [angle, axisVector];
-    }
+    // const rotate = ths => {
+    //     const mat = rot(ths);
+    //     let trace = mat[0][0] + mat[1][1] + mat[2][2];
+    //     // let traceTh = Math.cos(ths[1]) + (1 + Math.cos(ths[1])) * Math.cos(ths[0] + ths[2]);
+    //     let angle = Math.acos((trace - 1) / 2);
+    //     let vectors = new EigenvalueDecomposition(new Matrix(mat)).eigenvectorMatrix.data;
+    //     let axisVector = vectors.map(row => row[2]);
+    //     let vec = vectors.map(row => row[0]);
+    //     let rVec = mult1(rot(ths), vec);
+    //     let rVecCrossVec = [rVec[1] * vec[2] - rVec[2] * vec[1],
+    //                         rVec[2] * vec[0] - rVec[0] * vec[2],
+    //                         rVec[0] * vec[1] - rVec[1] * vec[0]];
+    //     let dot = axisVector.reduce((dot, comp, i) => dot - comp * rVecCrossVec[i], 0);
+    //     angle *= Math.sign(dot);
+    //     return [angle, axisVector];
+    // }
 
-    const determinant = mat => {
-        let det = mat[0][0] * (mat[1][1] * mat[2][2] -
-                           mat[2][1] * mat[1][2]) +
-              mat[0][1] * (mat[1][2] * mat[2][0] -
-                           mat[2][2] * mat[1][0]) +
-              mat[0][2] * (mat[1][0] * mat[2][1] -
-                           mat[2][0] * mat[1][1]);
-        return det;
-    }
+    // const determinant = mat => {
+    //     let det = mat[0][0] * (mat[1][1] * mat[2][2] -
+    //                        mat[2][1] * mat[1][2]) +
+    //           mat[0][1] * (mat[1][2] * mat[2][0] -
+    //                        mat[2][2] * mat[1][0]) +
+    //           mat[0][2] * (mat[1][0] * mat[2][1] -
+    //                        mat[2][0] * mat[1][1]);
+    //     return det;
+    // }
 
     const handlerTh = e => {
         let xyOrZ = Number(e.target.name);
@@ -196,6 +198,7 @@ const App = () => {
                 mids0.forEach((mid, i) => newMids[i] = mult1(rot(ths), mid));
                 setMids(newMids);
 
+                // const mat = mult2(rot(ths), rotY);
                 const mat = rot(ths);
                 let trace = mat[0][0] + mat[1][1] + mat[2][2];
                 let newAngle = Math.acos((trace - 1) / 2);
@@ -273,8 +276,7 @@ const App = () => {
         for (let i = 0; i < 3; i++) nextThs[i] += (Fs1[i] + Fs4[i] + 2 * (Fs2[i] + Fs3[i])) * dt/ 1000 / 6;
         setThs(nextThs);
     }
-    let rotationReturn = rotate(ths);
-    let rotationMatrix = rot(ths);
+
     return (
         <>
             <button onClick={() => setRunning(!running)}>{running ? "Stop" : "Start"}</button>
@@ -332,8 +334,6 @@ const App = () => {
                 </tbody>
             </table>
             <div className="container" style={{height:`${ny}px`, width:`${nx}px`}}>
-                <div>{dAxis}</div>
-                <div>{axisVec.join(', ')}</div>
                 <Square key="green" mid={mids[5]} nx={nx} ny={ny} angle={angle} axisVec={axisVec} />
                 <Square key="red" mid={mids[2]} nx={nx} ny={ny} angle={angle} axisVec={axisVec} flip={true}/>
                 {/* <Square className="square" mid={mids[5]} nx={nx} ny={ny} anglevec={rotate(ths)} flip={true}/> */}
