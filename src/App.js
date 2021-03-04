@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { EigenvalueDecomposition, Matrix } from "ml-matrix";
 import Dot from "./Dot";
 import Input from "./Input";
 import Line from "./Line";
@@ -6,14 +7,15 @@ import Square from "./Square";
 
 const App = () => {
     const [h, setH] = useState(1);
-    const [thsInput, setThsInput] = useState(["0.5", "0.6", "0"]);
+    const [thsInput, setThsInput] = useState(["0.3", "0.6", "0.9"]);
     const [ths, setThs] = useState(thsInput.map(elem => Number(elem)));
-    const [momsInput, setMomsInput] = useState(["1", "1", "1"]);
+    const [momsInput, setMomsInput] = useState(["1", "1.5", "2"]);
     const [moms, setMoms] = useState(momsInput.map(elem => Number(elem)));
     const [omsInput, setOmsInput] = useState(["", "", ""]);
     const [oms, setOms] = useState(omsInput.map(elem => Number(elem)));
     const [omfs, setOmfs] = useState([0, 0, 0]);
     const [Ls, setLs] = useState([0, 0, 0]);
+    const [labLs, setLabLs] = useState([0, 0, 0]);
     const [om2, setOm2] = useState(0);
     const [omf2, setOmf2] = useState(0);
     const [L2, setL2] = useState(0);
@@ -25,6 +27,82 @@ const App = () => {
     const [mids, setMids] = useState([]);
     const [running, setRunning] = useState(false);
     const [time, setTime] = useState(0);
+    const [angle, setAngle] = useState(0);
+    const [axisVec, setAxisVec] = useState([0, 0, 1]);
+    const [dAxis, setDAxis] = useState(9);
+
+    const nx = 700;
+    const ny = 700;
+    const nz = ny;
+    const d = 200;
+
+    // ODE-solver timestep in ms
+    const dt = 200;
+
+    // matrix multiplication: arr * vec
+    const mult1 = (arr, vec) => {
+        let vec2 = [];
+        for (let i = 0; i < 3; i++) {
+            let elem = 0;
+            for (let j = 0; j < 3; j++) elem += arr[i][j] * vec[j];
+            vec2.push(elem);
+        }
+        return vec2;
+    }
+
+    // matrix multiplication: arr1 * arr2
+    const mult2 = (arr1, arr2) => {
+        let arr3 = [];
+        for (let i = 0; i < 3; i++) {
+            let row = [];
+            for (let j = 0; j < 3; j++) {
+                let elem = 0;
+                for (let k = 0; k < 3; k++) elem += arr1[i][k] * arr2[k][j];
+                row.push(elem);
+            }
+            arr3.push(row);
+        }
+        return arr3;
+    }
+
+    const zRot = th => {
+        let [c, s] = [Math.cos(th), Math.sin(th)];
+        return [[c, s, 0], [-s, c, 0], [0, 0, 1]];
+    }
+    const xRot = th => {
+        let [c, s] = [Math.cos(th), Math.sin(th)];
+        return [[1, 0, 0], [0, c, s], [0, -s, c]];
+    }
+
+    const rot = ths => mult2(mult2(zRot(ths[2]), xRot(ths[1])), zRot(ths[0]));
+    const invRot=ths=> mult2(mult2(zRot(-ths[0]),xRot(-ths[1])), zRot(-ths[2]));
+
+    const rotate = ths => {
+        const mat = rot(ths);
+        let trace = mat[0][0] + mat[1][1] + mat[2][2];
+        // let traceTh = Math.cos(ths[1]) + (1 + Math.cos(ths[1])) * Math.cos(ths[0] + ths[2]);
+        let angle = Math.acos((trace - 1) / 2);
+        let vectors = new EigenvalueDecomposition(new Matrix(mat)).eigenvectorMatrix.data;
+        let axisVector = vectors.map(row => row[2]);
+        let vec = vectors.map(row => row[0]);
+        let rVec = mult1(rot(ths), vec);
+        let rVecCrossVec = [rVec[1] * vec[2] - rVec[2] * vec[1],
+                            rVec[2] * vec[0] - rVec[0] * vec[2],
+                            rVec[0] * vec[1] - rVec[1] * vec[0]];
+        let dot = axisVector.reduce((dot, comp, i) => dot - comp * rVecCrossVec[i], 0);
+        angle *= Math.sign(dot);
+        return [angle, axisVector];
+    }
+
+    const determinant = mat => {
+        let det = mat[0][0] * (mat[1][1] * mat[2][2] -
+                           mat[2][1] * mat[1][2]) +
+              mat[0][1] * (mat[1][2] * mat[2][0] -
+                           mat[2][2] * mat[1][0]) +
+              mat[0][2] * (mat[1][0] * mat[2][1] -
+                           mat[2][0] * mat[1][1]);
+        return det;
+    }
 
     const handlerTh = e => {
         let xyOrZ = Number(e.target.name);
@@ -41,16 +119,13 @@ const App = () => {
         setThsInput(newThsInput);
         setThs(newThs);
         let newXyzs = JSON.parse(JSON.stringify(xyzs0));
-        xyzs0.forEach((xyz, i) => {
-            newXyzs[i][0] = mult1(mult2(mult2(zRot(newThs[2]), xRot(newThs[1])),zRot(newThs[0])), xyz[0]);
-        });
+        xyzs0.forEach((xyz, i) => newXyzs[i][0] = mult1(rot(ths), xyz[0]));
         setXyzs(newXyzs);
         let newMids = JSON.parse(JSON.stringify(mids0));
-        mids0.forEach((mid, i) => {
-            newMids[i] = mult1(mult2(mult2(zRot(newThs[2]), xRot(newThs[1])),zRot(newThs[0])), mid);
-        });
+        mids0.forEach((mid, i) => newMids[i] = mult1(rot(ths), mid));
         setMids(newMids);
     };
+
     const handlerMom = e => {
         let xyOrZ = Number(e.target.name);
         let mom = e.target.value;
@@ -66,63 +141,6 @@ const App = () => {
         setMomsInput(newMomsInput);
         setMoms(newMoms);
     };
-
-    // matrix multiplication: arr1 * arr2
-    const mult2 = (arr1, arr2) => {
-        let arr3 = [];
-        for (let i = 0; i < 3; i++) {
-            let row = [];
-            for (let j = 0; j < 3; j++) {
-                let elem = 0;
-                for (let k = 0; k < 3; k++) elem += arr1[i][k] * arr2[k][j];
-                row.push(elem);
-            }
-            arr3.push(row);
-        }
-        return arr3;
-    }
-    // matrix multiplication: arr * vec
-    const mult1 = (arr, vec) => {
-        let vec2 = [];
-        for (let i = 0; i < 3; i++) {
-            let elem = 0;
-            for (let j = 0; j < 3; j++) elem += arr[i][j] * vec[j];
-            vec2.push(elem);
-        }
-        return vec2;
-    }
-    const zRot = th => {
-        let [c, s] = [Math.cos(th), Math.sin(th)];
-        return [[c, s, 0], [-s, c, 0], [0, 0, 1]];
-    }
-    const xRot = th => {
-        let [c, s] = [Math.cos(th), Math.sin(th)];
-        return [[1, 0, 0], [0, c, s], [0, -s, c]];
-    }
-
-    const nx = 700;
-    const ny = 700;
-    const nz = ny;
-    const d = 50;
-
-    // ODE-solver timestep, in ms
-    const dt = 100;
-
-    const rotate = ths => {
-        const mat = mult2(mult2(zRot(ths[2]), xRot(ths[1])), zRot(ths[0]));
-        let trace = mat[0][0] + mat[1][1] + mat[2][2];
-        // if (trace === 3) return [0, [1, 1, 1]];
-        let traceTh = Math.cos(ths[1]) + (1 + Math.cos(ths[1])) * Math.cos(ths[0] + ths[2]);
-        // console.log(trace, traceTh);
-        let angle = Math.acos((trace - 1) / 2);
-        mat.forEach((row, i) => row[i]--);
-        if (mat[1][2] === 0) return [angle, [0, 0, 1]];
-        if (mat[0][1] === 0) return [angle, [1, 0, 0]];
-        let x = (mat[1][1] * mat[0][2] - mat[1][2] * mat[0][1])/
-                (mat[0][0] * mat[1][2] - mat[0][2] * mat[1][0]);
-        let z = -(mat[1][1] + mat[1][0] * x) / mat[1][2];
-        return [angle, [x, 1, z]];
-    }
 
     useEffect(() => {
         setMoms(momsInput.map(mom => Number(mom)));
@@ -148,15 +166,10 @@ const App = () => {
         let newThs = thsInput.map(th => Number(th));
         setThs(newThs);
         let newXyzs = JSON.parse(JSON.stringify(firstXyzs));
-        firstXyzs.forEach((xyz, i) => {
-            newXyzs[i][0] = mult1(mult2(mult2(zRot(newThs[2]), xRot(newThs[1])),zRot(newThs[0])), xyz[0]);
-        });
+        firstXyzs.forEach((xyz, i) => newXyzs[i][0] = mult1(rot(newThs), xyz[0]));
         setXyzs(newXyzs);
         let newMids = JSON.parse(JSON.stringify(firstMids));
-        firstMids.forEach((mid, i) => {
-            console.log("newMids creation #", i);
-            newMids[i] = mult1(mult2(mult2(zRot(newThs[2]), xRot(newThs[1])),zRot(newThs[0])), mid);
-        });
+        firstMids.forEach((mid, i) => newMids[i] = mult1(rot(newThs), mid));
         setMids(newMids);
     }, []);
 
@@ -170,7 +183,7 @@ const App = () => {
                 let iMin = 0;
                 let zMin = newXyzs[iMin][0][2];
                 xyzs0.forEach((xyz, i) => {
-                    newXyzs[i][0] = mult1(mult2(mult2(zRot(ths[2]), xRot(ths[1])),zRot(ths[0])), xyz[0]);
+                    newXyzs[i][0] = mult1(rot(ths), xyz[0]);
                     newXyzs[i][2] = false;
                     if (newXyzs[i][0][2] < zMin) {
                         iMin = i;
@@ -180,10 +193,29 @@ const App = () => {
                 newXyzs[iMin][2] = true;
                 setXyzs(newXyzs);
                 let newMids = JSON.parse(JSON.stringify(mids0));
-                mids0.forEach((mid, i) => {
-                    newMids[i] = mult1(mult2(mult2(zRot(ths[2]), xRot(ths[1])),zRot(ths[0])), mid);
-                });
+                mids0.forEach((mid, i) => newMids[i] = mult1(rot(ths), mid));
                 setMids(newMids);
+
+                const mat = rot(ths);
+                let trace = mat[0][0] + mat[1][1] + mat[2][2];
+                let newAngle = Math.acos((trace - 1) / 2);
+                let vectors = new EigenvalueDecomposition(new Matrix(mat)).eigenvectorMatrix.transpose().data;
+                let dVectors = vectors.map(vector => mult1(mat, vector).map((comp, i) => comp - vector[i]));
+                let mags = dVectors.map(dVector => dVector.reduce((mag, comp) => mag + comp * comp, 0));
+                let min = mags.reduce((min, mag, i) => mag < min[1] ? [i, mag] : min, [-1, Infinity]);
+                let newAxisVec = vectors[min[0]];
+                let vec = vectors[(min[0] + 1) % 3];
+                let rVec = mult1(rot(ths), vec);
+                let rVecCrossVec = [rVec[1] * vec[2] - rVec[2] * vec[1],
+                                    rVec[2] * vec[0] - rVec[0] * vec[2],
+                                    rVec[0] * vec[1] - rVec[1] * vec[0]];
+                let dot = newAxisVec.reduce((dot, comp, i) => dot - comp * rVecCrossVec[i], 0);
+                newAngle *= Math.sign(dot);
+                setAngle(newAngle);
+                setAxisVec(newAxisVec);
+                let newDAxis = newAxisVec.map((comp, i) => mult1(mat, newAxisVec)[i] - comp);
+                newDAxis = newDAxis.reduce((mag2, comp) => mag2 + comp * comp, 0);
+                setDAxis(Math.sqrt(newDAxis));
             }, dt);
         } else if (!running && time !== 0) {
             clearInterval(interval);
@@ -221,6 +253,7 @@ const App = () => {
         let newLs = newOms.map((om, i) => moms[i] * om);
         setLs(newLs);
         setL2(newLs.reduce((L2, L) => L2 + L * L, 0));
+        setLabLs(mult1(invRot(ths), newLs));
         setK(newLs.reduce((K, L, i) => K + L * oms[i], 0)/2);
         return Fs;
     }
@@ -240,6 +273,8 @@ const App = () => {
         for (let i = 0; i < 3; i++) nextThs[i] += (Fs1[i] + Fs4[i] + 2 * (Fs2[i] + Fs3[i])) * dt/ 1000 / 6;
         setThs(nextThs);
     }
+    let rotationReturn = rotate(ths);
+    let rotationMatrix = rot(ths);
     return (
         <>
             <button onClick={() => setRunning(!running)}>{running ? "Stop" : "Start"}</button>
@@ -258,9 +293,9 @@ const App = () => {
                 <tbody>
                     <tr>
                         <td>angles (rad)</td>
-                        <td><Input n={0} quantity={running ? ths[0] : thsInput[0]} handler={handlerTh} /></td>
-                        <td><Input n={1} quantity={running ? ths[1] : thsInput[1]} handler={handlerTh} /></td>
-                        <td><Input n={2} quantity={running ? ths[2] : thsInput[2]} handler={handlerTh} /></td>
+                        <td><Input n={0} quantity={running || time ? ths[0] : thsInput[0]} handler={handlerTh} /></td>
+                        <td><Input n={1} quantity={running || time ? ths[1] : thsInput[1]} handler={handlerTh} /></td>
+                        <td><Input n={2} quantity={running || time ? ths[2] : thsInput[2]} handler={handlerTh} /></td>
                         <td> - </td>
                     </tr>
                     <tr>
@@ -286,9 +321,9 @@ const App = () => {
                     </tr>
                     <tr>
                         <td>ang. mom</td>
-                        <td>{Math.round(Ls[0] * 1000) / 1000}</td>
-                        <td>{Math.round(Ls[1] * 1000) / 1000}</td>
-                        <td>{Math.round(Ls[2] * 1000) / 1000}</td>
+                        <td>{Math.round(labLs[0] * 1000) / 1000}</td>
+                        <td>{Math.round(labLs[1] * 1000) / 1000}</td>
+                        <td>{Math.round(labLs[2] * 1000) / 1000}</td>
                         <td>{Math.round(1000 * Math.sqrt(L2) / 1000)}</td>
                     </tr>
                     <tr>
@@ -297,9 +332,12 @@ const App = () => {
                 </tbody>
             </table>
             <div className="container" style={{height:`${ny}px`, width:`${nx}px`}}>
-                <div>{rotate(ths)}</div>
-                <Square className="square" mid={mids[5]} nx={nx} ny={ny} anglevec={rotate(ths)} />
-                {xyzs.map((xyz, index) => (
+                <div>{dAxis}</div>
+                <div>{axisVec.join(', ')}</div>
+                <Square key="green" mid={mids[5]} nx={nx} ny={ny} angle={angle} axisVec={axisVec} />
+                <Square key="red" mid={mids[2]} nx={nx} ny={ny} angle={angle} axisVec={axisVec} flip={true}/>
+                {/* <Square className="square" mid={mids[5]} nx={nx} ny={ny} anglevec={rotate(ths)} flip={true}/> */}
+                {/* {xyzs.map((xyz, index) => (
                     <Dot
                         key={index}
                         x={xyz[0][0] + nx / 2}
@@ -307,16 +345,19 @@ const App = () => {
                         d={d}
                         dashed={xyz[2]}
                     />
-                ))}
+                ))} */}
                 {mids.map((mid, index) => (
                 // filter((mid, index) => index === 5).
-                    <Dot
+                    <>
+                    {/* <Dot
                         key={index}
                         x={mid[0] + nx / 2}
                         y={mid[1] + ny / 2}
                         d={d}
                         // dashed={xyz[2]}
-                    />
+                    /> */}
+                    {/* <Square key="index" index="index" mid={mids[index]} nx={nx} ny={ny} anglevec={rotate(ths)} /> */}
+                    </>
                 ))}
                 {xyzs.map((xyz0, index0) => {
                     return xyzs.filter(xyz1 => {
@@ -340,8 +381,9 @@ const App = () => {
                     ))
 
                 })}
-                <Line xi={nx / 2} yi={ny / 2} xf = {nx * oms[0] + nx / 2} yf = {nx * oms[1] + ny / 2} />
-                <Line xi={nx / 2} yi={ny / 2} xf = {nx * omfs[0] + nx / 2} yf = {nx * omfs[1] + ny / 2} dashed={true} />
+                {/* <Line xi={nx / 2} yi={ny / 2} xf = {nx * oms[0] + nx / 2} yf = {nx * oms[1] + ny / 2} />
+                <Line xi={nx / 2} yi={ny / 2} xf = {nx * omfs[0] + nx / 2} yf = {nx * omfs[1] + ny / 2} dashed={true} /> */}
+                {/* <Line xi={nx / 2} yi={ny / 2} xf = {nx * axisVec[0] + nx / 2} yf = {ny * axisVec[1] + ny / 2} /> */}
             </div>
         </>
     )
