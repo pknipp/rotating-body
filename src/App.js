@@ -340,7 +340,10 @@ const App = () => {
             </table>
             <div className="container" style={{height:`${ny}px`, width:`${nx}px`}}>
                 {angleVecs.map((angleVec, i) => (
+                    <>
+                    <Square key="i" mid={mids[i]} nx={nx} ny={ny} angleVec={angleVec} color={["red", "green", "blue"][i % 3]} />
                     <Square key="i" mid={mids[i + 3]} nx={nx} ny={ny} angleVec={angleVec} color={["red", "green", "blue"][i % 3]} />
+                    </>
                 ))}
                 {/* <Square key="red" mid={mids[2]} nx={nx} ny={ny} angle={angle} axisVec={axisVec} flip={true}/> */}
                 {/* <Square className="square" mid={mids[5]} nx={nx} ny={ny} anglevec={rotate(ths)} flip={true}/> */}
@@ -353,19 +356,6 @@ const App = () => {
                         dashed={xyz[2]}
                     />
                 ))} */}
-                {mids.map((mid, index) => (
-                // filter((mid, index) => index === 5).
-                    <>
-                    {/* <Dot
-                        key={index}
-                        x={mid[0] + nx / 2}
-                        y={mid[1] + ny / 2}
-                        d={d}
-                        // dashed={xyz[2]}
-                    /> */}
-                    {/* <Square key="index" index="index" mid={mids[index]} nx={nx} ny={ny} anglevec={rotate(ths)} /> */}
-                    </>
-                ))}
                 {xyzs.map((xyz0, index0) => {
                     return xyzs.filter(xyz1 => {
                         let d = [];
