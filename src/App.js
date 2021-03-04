@@ -36,7 +36,7 @@ const App = () => {
     const d = 200;
 
     // ODE-solver timestep in ms
-    const dt = 100;
+    const dt = 50;
 
     // matrix multiplication: arr * vec
     const mult1 = (arr, vec) => {
@@ -94,19 +94,8 @@ const App = () => {
                             rVec[0] * vec[1] - rVec[1] * vec[0]];
         let dot = axisVec.reduce((dot, comp, i) => dot - comp * rVecCrossVec[i], 0);
         angle *= Math.sign(dot);
-        // console.table(axisVec);
         return [angle, axisVec]
     }
-
-    // const determinant = mat => {
-    //     let det = mat[0][0] * (mat[1][1] * mat[2][2] -
-    //                        mat[2][1] * mat[1][2]) +
-    //           mat[0][1] * (mat[1][2] * mat[2][0] -
-    //                        mat[2][2] * mat[1][0]) +
-    //           mat[0][2] * (mat[1][0] * mat[2][1] -
-    //                        mat[2][0] * mat[1][1]);
-    //     return det;
-    // }
 
     const handlerTh = e => {
         let xyOrZ = Number(e.target.name);
@@ -175,6 +164,9 @@ const App = () => {
         let newMids = JSON.parse(JSON.stringify(firstMids));
         firstMids.forEach((mid, i) => newMids[i] = mult1(rot(newThs), mid));
         setMids(newMids);
+
+        let mats = [rotY, rotX, rotZ].map(mat => mult2(rot(newThs), mat));
+        setAngleVecs(mats.map(mat => rotate(mat)));
     }, []);
 
     useEffect(() => {
@@ -200,30 +192,8 @@ const App = () => {
                 mids0.forEach((mid, i) => newMids[i] = mult1(rot(ths), mid));
                 setMids(newMids);
 
-                // const mat = mult2(rot(ths), rotY);
                 let mats = [rotY, rotX, rotZ].map(mat => mult2(rot(ths), mat));
                 setAngleVecs(mats.map(mat => rotate(mat)));
-
-                // let trace = mat[0][0] + mat[1][1] + mat[2][2];
-                // let newAngle = Math.acos((trace - 1) / 2);
-                // let vectors = new EigenvalueDecomposition(new Matrix(mat)).eigenvectorMatrix.transpose().data;
-                // let dVectors = vectors.map(vector => mult1(mat, vector).map((comp, i) => comp - vector[i]));
-                // let mags = dVectors.map(dVector => dVector.reduce((mag, comp) => mag + comp * comp, 0));
-                // let min = mags.reduce((min, mag, i) => mag < min[1] ? [i, mag] : min, [-1, Infinity]);
-                // let newAxisVec = vectors[min[0]];
-                // let vec = vectors[(min[0] + 1) % 3];
-                // // let rVec = mult1(rot(ths), vec);
-                // let rVec = mult1(mat, vec);
-                // let rVecCrossVec = [rVec[1] * vec[2] - rVec[2] * vec[1],
-                //                     rVec[2] * vec[0] - rVec[0] * vec[2],
-                //                     rVec[0] * vec[1] - rVec[1] * vec[0]];
-                // let dot = newAxisVec.reduce((dot, comp, i) => dot - comp * rVecCrossVec[i], 0);
-                // newAngle *= Math.sign(dot);
-                // setAngle(newAngle);
-                // setAxisVec(newAxisVec);
-                // let newDAxis = newAxisVec.map((comp, i) => mult1(mat, newAxisVec)[i] - comp);
-                // newDAxis = newDAxis.reduce((mag2, comp) => mag2 + comp * comp, 0);
-                // setDAxis(Math.sqrt(newDAxis));
             }, dt);
         } else if (!running && time !== 0) {
             clearInterval(interval);
@@ -345,17 +315,6 @@ const App = () => {
                     <Square key="i" mid={mids[i + 3]} nx={nx} ny={ny} angleVec={angleVec} color={["red", "green", "blue"][i % 3]} />
                     </>
                 ))}
-                {/* <Square key="red" mid={mids[2]} nx={nx} ny={ny} angle={angle} axisVec={axisVec} flip={true}/> */}
-                {/* <Square className="square" mid={mids[5]} nx={nx} ny={ny} anglevec={rotate(ths)} flip={true}/> */}
-                {/* {xyzs.map((xyz, index) => (
-                    <Dot
-                        key={index}
-                        x={xyz[0][0] + nx / 2}
-                        y={xyz[0][1] + ny / 2}
-                        d={d}
-                        dashed={xyz[2]}
-                    />
-                ))} */}
                 {xyzs.map((xyz0, index0) => {
                     return xyzs.filter(xyz1 => {
                         let d = [];
@@ -378,9 +337,6 @@ const App = () => {
                     ))
 
                 })}
-                {/* <Line xi={nx / 2} yi={ny / 2} xf = {nx * oms[0] + nx / 2} yf = {nx * oms[1] + ny / 2} />
-                <Line xi={nx / 2} yi={ny / 2} xf = {nx * omfs[0] + nx / 2} yf = {nx * omfs[1] + ny / 2} dashed={true} /> */}
-                {/* <Line xi={nx / 2} yi={ny / 2} xf = {nx * axisVec[0] + nx / 2} yf = {ny * axisVec[1] + ny / 2} /> */}
             </div>
         </>
     )
