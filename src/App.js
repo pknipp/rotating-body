@@ -170,6 +170,7 @@ const App = () => {
 
         let mats = [rotY, rotX, rotZ].map(mat => mult2(rot(newThs), mat));
         setAngleVecs(mats.map(mat => rotate(mat)));
+        setD([nx/4, nx/4, nx/4]);
     }, []);
 
     useEffect(() => {
@@ -320,12 +321,12 @@ const App = () => {
                 ))}
                 {xyzs.map((xyz0, index0) => {
                     return xyzs.filter(xyz1 => {
-                        let d = [];
-                        for (let i = 0; i < 3; i++) d.push(Math.abs(xyz0[1][i] - xyz1[1][i]));
+                        let dis = [];
+                        for (let i = 0; i < 3; i++) dis.push(Math.abs(xyz0[1][i] - xyz1[1][i]));
                         // replace the following via the use of d.reduce((neighbor, di) => ?
                         let neighbor = false;
                         for (let i = 0; i < 3; i++) {
-                            neighbor = neighbor || (d[i] === 1 && !d[(i + 1) % 3] && !d[(i + 2) % 3]);
+                            neighbor = neighbor || (dis[i] === 1 && !dis[(i + 1) % 3] && !dis[(i + 2) % 3]);
                         }
                         return neighbor;
                     }).map((xyz1, index1) => (
