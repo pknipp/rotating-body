@@ -28,12 +28,13 @@ const App = () => {
     const [running, setRunning] = useState(false);
     const [time, setTime] = useState(0);
     const [angleVecs, setAngleVecs] = useState([[]]);
+    const [d, setD] = useState([]);
     // const [dAxis, setDAxis] = useState(0);
 
     const nx = 700;
     const ny = 700;
     const nz = ny;
-    const d = 200;
+    // const d = 200;
 
     // ODE-solver timestep in ms
     const dt = 50;
@@ -133,27 +134,29 @@ const App = () => {
         }
         setMomsInput(newMomsInput);
         setMoms(newMoms);
+        setD([nx/4, nx/4, nx/4]);
     };
 
     useEffect(() => {
         setMoms(momsInput.map(mom => Number(mom)));
         const firstXyzs = [];
         for (let i = 0; i < 2; i++) {
-            let x = (-1 + 2 * i) * (nx / 4);
+            let x = (-1 + 2 * i) * d[0];
             for (let j = 0; j < 2; j++) {
-                let y = (-1 + 2 * j) * (ny / 4);
+                let y = (-1 + 2 * j) * d[1];
                 for (let k = 0; k < 2; k++) {
-                    let z = (-1 + 2 * k) * (nz / 4)
+                    let z = (-1 + 2 * k) * d[2];
                     firstXyzs.push([[x, y, z], [i, j, k]]);
                 }
             }
         }
         setXyzs0(firstXyzs);
+        // consolidate the next 7 lines into 1 or 2
         const firstMids = [];
         for (let i = -1; i < 2; i += 2) {
-            firstMids.push([i * nx / 4, 0, 0]);
-            firstMids.push([0, i * nx / 4, 0]);
-            firstMids.push([0, 0, i * nx / 4]);
+            firstMids.push([i * d[0], 0, 0]);
+            firstMids.push([0, i * d[1], 0]);
+            firstMids.push([0, 0, i * d[2]]);
         }
         setMids0(firstMids);
         let newThs = thsInput.map(th => Number(th));
@@ -311,8 +314,8 @@ const App = () => {
             <div className="container" style={{height:`${ny}px`, width:`${nx}px`}}>
                 {angleVecs.map((angleVec, i) => (
                     <>
-                    <Square key="i" mid={mids[i]} nx={nx} ny={ny} angleVec={angleVec} color={["red", "green", "blue"][i % 3]} />
-                    <Square key="i" mid={mids[i + 3]} nx={nx} ny={ny} angleVec={angleVec} color={["red", "green", "blue"][i % 3]} />
+                    <Square key="i" mid={mids[i]} nx={nx} ny={ny} d={d} angleVec={angleVec} color={["red", "green", "blue"][i % 3]} />
+                    <Square key="i" mid={mids[i + 3]} nx={nx} ny={ny} d={d} angleVec={angleVec} color={["red", "green", "blue"][i % 3]} />
                     </>
                 ))}
                 {xyzs.map((xyz0, index0) => {

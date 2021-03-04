@@ -1,4 +1,4 @@
-const Square = ({ nx, ny, mid, angleVec, flip, color }) => {
+const Square = ({ nx, ny, mid, angleVec, color, d }) => {
     let angle = angleVec[0];
     let axisVec = angleVec.length ? angleVec[1] : [0, 0, 1];
     return (
@@ -6,8 +6,8 @@ const Square = ({ nx, ny, mid, angleVec, flip, color }) => {
         <div className="square" style={{
             width :`${nx / 2}px`,
             height:`${nx / 2}px`,
-            left: `${(nx / 4) + (mid ? mid[0] : 0)}px`,
-            top:  `${(ny / 4) + (mid ? mid[1] : 0)}px`,
+            left: `${(nx / 2 - d[0]) + (mid ? mid[0] : 0)}px`,
+            top:  `${(ny / 2 - d[1]) + (mid ? mid[1] : 0)}px`,
             // borderStyle: `${dashed ? "dashed" : "solid"}`
             borderColor: `black`,
             transform: `rotate3d(${axisVec[0]}, ${axisVec[1]}, ${axisVec[2]},${angle}rad)`,
