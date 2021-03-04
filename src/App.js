@@ -6,6 +6,9 @@ import Line from "./Line";
 import Square from "./Square";
 
 const App = () => {
+    const nx = 700;
+    const ny = 700;
+    const nz = ny;
     const [h, setH] = useState(1);
     const [thsInput, setThsInput] = useState(["0", "0.2", "0"]);
     const [ths, setThs] = useState(thsInput.map(elem => Number(elem)));
@@ -28,12 +31,9 @@ const App = () => {
     const [running, setRunning] = useState(false);
     const [time, setTime] = useState(0);
     const [angleVecs, setAngleVecs] = useState([[]]);
-    const [d, setD] = useState([]);
+    const [d, setD] = useState([nx / 3, nx / 4, nx / 4]);
     // const [dAxis, setDAxis] = useState(0);
 
-    const nx = 700;
-    const ny = 700;
-    const nz = ny;
     // const d = 200;
 
     // ODE-solver timestep in ms
@@ -170,7 +170,7 @@ const App = () => {
 
         let mats = [rotY, rotX, rotZ].map(mat => mult2(rot(newThs), mat));
         setAngleVecs(mats.map(mat => rotate(mat)));
-        setD([nx/4, nx/4, nx/4]);
+        // setD([nx/4, nx/4, nx/4]);
     }, []);
 
     useEffect(() => {
@@ -315,8 +315,8 @@ const App = () => {
             <div className="container" style={{height:`${ny}px`, width:`${nx}px`}}>
                 {angleVecs.map((angleVec, i) => (
                     <>
-                    <Square key="i" mid={mids[i]} nx={nx} ny={ny} d={d} angleVec={angleVec} color={["red", "green", "blue"][i % 3]} />
-                    <Square key="i" mid={mids[i + 3]} nx={nx} ny={ny} d={d} angleVec={angleVec} color={["red", "green", "blue"][i % 3]} />
+                    <Square key={`front${i}`} mid={mids[i]} nx={nx} ny={ny} dx={d[(i + 1) % 3]} dy={d[(i + 2) % 3]} angleVec={angleVec} color={["red", "green", "blue"][i % 3]} />
+                    {/* <Square key={`back${i}`} mid={mids[i + 3]} nx={nx} ny={ny} d={d} angleVec={angleVec} color={["red", "green", "blue"][i % 3]} /> */}
                     </>
                 ))}
                 {xyzs.map((xyz0, index0) => {
