@@ -10,7 +10,7 @@ const Square = ({ nx, ny, mid, angle, axisVec, flip, index }) => {
             // borderStyle: `${dashed ? "dashed" : "solid"}`
             borderColor: `${flip ? "green" : "red"}`,
             transform: `rotate3d(${axisVec[0]}, ${axisVec[1]}, ${axisVec[2]},${angle * (flip ? 1 : 1)}rad)`,
-            backgroundColor: `${flip ? "green" : "red"}`,
+            backgroundColor: `${mid && mid[2] < 0 ? "transparent" : flip ? "green" : "red"}`,
         }}/>
         </>
     )
