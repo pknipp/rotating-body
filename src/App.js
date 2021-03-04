@@ -9,7 +9,7 @@ const App = () => {
     const [h, setH] = useState(1);
     const [thsInput, setThsInput] = useState(["0.3", "0.6", "0.9"]);
     const [ths, setThs] = useState(thsInput.map(elem => Number(elem)));
-    const [momsInput, setMomsInput] = useState(["1", "1.5", "2"]);
+    const [momsInput, setMomsInput] = useState(["1", "2.0", "1.5"]);
     const [moms, setMoms] = useState(momsInput.map(elem => Number(elem)));
     const [omsInput, setOmsInput] = useState(["", "", ""]);
     const [oms, setOms] = useState(omsInput.map(elem => Number(elem)));
@@ -28,8 +28,8 @@ const App = () => {
     const [running, setRunning] = useState(false);
     const [time, setTime] = useState(0);
     const [angle, setAngle] = useState(0);
-    const [axisVec, setAxisVec] = useState([0, 0, 1]);
-    const [dAxis, setDAxis] = useState(9);
+    const [axisVec, setAxisVec] = useState([1, 1, 1]);
+    const [dAxis, setDAxis] = useState(0);
 
     const nx = 700;
     const ny = 700;
@@ -78,6 +78,7 @@ const App = () => {
     const invRot=ths=> mult2(mult2(zRot(-ths[0]),xRot(-ths[1])), zRot(-ths[2]));
     const rotX = [[1, 0, 0], [0, 0, 1], [0, -1, 0]];
     const rotY = [[0, 0, -1], [0, 1, 0], [1, 0, 0]];
+    const rotI = [[1, 0, 0], [0, 1, 0], [0, 0, 1]];
 
     // const rotate = ths => {
     //     const mat = rot(ths);
@@ -199,7 +200,7 @@ const App = () => {
                 setMids(newMids);
 
                 // const mat = mult2(rot(ths), rotY);
-                const mat = rot(ths);
+                const mat = mult2(rot(ths), rotI);
                 let trace = mat[0][0] + mat[1][1] + mat[2][2];
                 let newAngle = Math.acos((trace - 1) / 2);
                 let vectors = new EigenvalueDecomposition(new Matrix(mat)).eigenvectorMatrix.transpose().data;
@@ -208,7 +209,8 @@ const App = () => {
                 let min = mags.reduce((min, mag, i) => mag < min[1] ? [i, mag] : min, [-1, Infinity]);
                 let newAxisVec = vectors[min[0]];
                 let vec = vectors[(min[0] + 1) % 3];
-                let rVec = mult1(rot(ths), vec);
+                // let rVec = mult1(rot(ths), vec);
+                let rVec = mult1(mat, vec);
                 let rVecCrossVec = [rVec[1] * vec[2] - rVec[2] * vec[1],
                                     rVec[2] * vec[0] - rVec[0] * vec[2],
                                     rVec[0] * vec[1] - rVec[1] * vec[0]];
