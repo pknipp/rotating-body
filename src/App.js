@@ -27,9 +27,8 @@ const App = () => {
     const [mids, setMids] = useState([]);
     const [running, setRunning] = useState(false);
     const [time, setTime] = useState(0);
-    const [angle, setAngle] = useState(0);
-    const [axisVec, setAxisVec] = useState([1, 1, 1]);
-    const [dAxis, setDAxis] = useState(0);
+    const [angleVecs, setAngleVecs] = useState([[]]);
+    // const [dAxis, setDAxis] = useState(0);
 
     const nx = 700;
     const ny = 700;
@@ -76,26 +75,28 @@ const App = () => {
 
     const rot = ths => mult2(mult2(zRot(ths[2]), xRot(ths[1])), zRot(ths[0]));
     const invRot=ths=> mult2(mult2(zRot(-ths[0]),xRot(-ths[1])), zRot(-ths[2]));
-    const rotX = [[1, 0, 0], [0, 0, 1], [0, -1, 0]];
-    const rotY = [[0, 0, -1], [0, 1, 0], [1, 0, 0]];
-    const rotI = [[1, 0, 0], [0, 1, 0], [0, 0, 1]];
+    const rotX = [[1, 0, 0], [0, 0, 1], [0,-1, 0]];
+    const rotY = [[0, 0,-1], [0, 1, 0], [1, 0, 0]];
+    const rotZ = [[1, 0, 0], [0, 1, 0], [0, 0, 1]];
 
-    // const rotate = ths => {
-    //     const mat = rot(ths);
-    //     let trace = mat[0][0] + mat[1][1] + mat[2][2];
-    //     // let traceTh = Math.cos(ths[1]) + (1 + Math.cos(ths[1])) * Math.cos(ths[0] + ths[2]);
-    //     let angle = Math.acos((trace - 1) / 2);
-    //     let vectors = new EigenvalueDecomposition(new Matrix(mat)).eigenvectorMatrix.data;
-    //     let axisVector = vectors.map(row => row[2]);
-    //     let vec = vectors.map(row => row[0]);
-    //     let rVec = mult1(rot(ths), vec);
-    //     let rVecCrossVec = [rVec[1] * vec[2] - rVec[2] * vec[1],
-    //                         rVec[2] * vec[0] - rVec[0] * vec[2],
-    //                         rVec[0] * vec[1] - rVec[1] * vec[0]];
-    //     let dot = axisVector.reduce((dot, comp, i) => dot - comp * rVecCrossVec[i], 0);
-    //     angle *= Math.sign(dot);
-    //     return [angle, axisVector];
-    // }
+    const rotate = mat => {
+        let trace = mat[0][0] + mat[1][1] + mat[2][2];
+        let angle = Math.acos((trace - 1) / 2);
+        let vectors = new EigenvalueDecomposition(new Matrix(mat)).eigenvectorMatrix.transpose().data;
+        let dVectors = vectors.map(vector => mult1(mat, vector).map((comp, i) => comp - vector[i]));
+        let mags = dVectors.map(dVector => dVector.reduce((mag, comp) => mag + comp * comp, 0));
+        let min = mags.reduce((min, mag, i) => mag < min[1] ? [i, mag] : min, [-1, Infinity]);
+        let axisVec = vectors[min[0]];
+        let vec = vectors[(min[0] + 1) % 3];
+        let rVec = mult1(mat, vec);
+        let rVecCrossVec = [rVec[1] * vec[2] - rVec[2] * vec[1],
+                            rVec[2] * vec[0] - rVec[0] * vec[2],
+                            rVec[0] * vec[1] - rVec[1] * vec[0]];
+        let dot = axisVec.reduce((dot, comp, i) => dot - comp * rVecCrossVec[i], 0);
+        angle *= Math.sign(dot);
+        // console.table(axisVec);
+        return [angle, axisVec]
+    }
 
     // const determinant = mat => {
     //     let det = mat[0][0] * (mat[1][1] * mat[2][2] -
@@ -200,27 +201,29 @@ const App = () => {
                 setMids(newMids);
 
                 // const mat = mult2(rot(ths), rotY);
-                const mat = mult2(rot(ths), rotI);
-                let trace = mat[0][0] + mat[1][1] + mat[2][2];
-                let newAngle = Math.acos((trace - 1) / 2);
-                let vectors = new EigenvalueDecomposition(new Matrix(mat)).eigenvectorMatrix.transpose().data;
-                let dVectors = vectors.map(vector => mult1(mat, vector).map((comp, i) => comp - vector[i]));
-                let mags = dVectors.map(dVector => dVector.reduce((mag, comp) => mag + comp * comp, 0));
-                let min = mags.reduce((min, mag, i) => mag < min[1] ? [i, mag] : min, [-1, Infinity]);
-                let newAxisVec = vectors[min[0]];
-                let vec = vectors[(min[0] + 1) % 3];
-                // let rVec = mult1(rot(ths), vec);
-                let rVec = mult1(mat, vec);
-                let rVecCrossVec = [rVec[1] * vec[2] - rVec[2] * vec[1],
-                                    rVec[2] * vec[0] - rVec[0] * vec[2],
-                                    rVec[0] * vec[1] - rVec[1] * vec[0]];
-                let dot = newAxisVec.reduce((dot, comp, i) => dot - comp * rVecCrossVec[i], 0);
-                newAngle *= Math.sign(dot);
-                setAngle(newAngle);
-                setAxisVec(newAxisVec);
-                let newDAxis = newAxisVec.map((comp, i) => mult1(mat, newAxisVec)[i] - comp);
-                newDAxis = newDAxis.reduce((mag2, comp) => mag2 + comp * comp, 0);
-                setDAxis(Math.sqrt(newDAxis));
+                let mats = [rotY, rotX, rotZ].map(mat => mult2(rot(ths), mat));
+                setAngleVecs(mats.map(mat => rotate(mat)));
+
+                // let trace = mat[0][0] + mat[1][1] + mat[2][2];
+                // let newAngle = Math.acos((trace - 1) / 2);
+                // let vectors = new EigenvalueDecomposition(new Matrix(mat)).eigenvectorMatrix.transpose().data;
+                // let dVectors = vectors.map(vector => mult1(mat, vector).map((comp, i) => comp - vector[i]));
+                // let mags = dVectors.map(dVector => dVector.reduce((mag, comp) => mag + comp * comp, 0));
+                // let min = mags.reduce((min, mag, i) => mag < min[1] ? [i, mag] : min, [-1, Infinity]);
+                // let newAxisVec = vectors[min[0]];
+                // let vec = vectors[(min[0] + 1) % 3];
+                // // let rVec = mult1(rot(ths), vec);
+                // let rVec = mult1(mat, vec);
+                // let rVecCrossVec = [rVec[1] * vec[2] - rVec[2] * vec[1],
+                //                     rVec[2] * vec[0] - rVec[0] * vec[2],
+                //                     rVec[0] * vec[1] - rVec[1] * vec[0]];
+                // let dot = newAxisVec.reduce((dot, comp, i) => dot - comp * rVecCrossVec[i], 0);
+                // newAngle *= Math.sign(dot);
+                // setAngle(newAngle);
+                // setAxisVec(newAxisVec);
+                // let newDAxis = newAxisVec.map((comp, i) => mult1(mat, newAxisVec)[i] - comp);
+                // newDAxis = newDAxis.reduce((mag2, comp) => mag2 + comp * comp, 0);
+                // setDAxis(Math.sqrt(newDAxis));
             }, dt);
         } else if (!running && time !== 0) {
             clearInterval(interval);
@@ -336,8 +339,10 @@ const App = () => {
                 </tbody>
             </table>
             <div className="container" style={{height:`${ny}px`, width:`${nx}px`}}>
-                <Square key="green" mid={mids[5]} nx={nx} ny={ny} angle={angle} axisVec={axisVec} />
-                <Square key="red" mid={mids[2]} nx={nx} ny={ny} angle={angle} axisVec={axisVec} flip={true}/>
+                {angleVecs.map((angleVec, i) => (
+                    <Square key="i" mid={mids[i + 3]} nx={nx} ny={ny} angleVec={angleVec} color={["red", "green", "blue"][i % 3]} />
+                ))}
+                {/* <Square key="red" mid={mids[2]} nx={nx} ny={ny} angle={angle} axisVec={axisVec} flip={true}/> */}
                 {/* <Square className="square" mid={mids[5]} nx={nx} ny={ny} anglevec={rotate(ths)} flip={true}/> */}
                 {/* {xyzs.map((xyz, index) => (
                     <Dot
