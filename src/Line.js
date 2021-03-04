@@ -9,6 +9,7 @@ const Line = ({ xi, yi, xf, yf, dashed }) => {
     const r = Math.sqrt(dx * dx + dy * dy);
     // "TOA" part of "SOHCAHTOA"
     let angle = Math.atan2(dy, dx);
+    return null;
     return (
         <div className="line" style={{
             width:`${r}px`,
