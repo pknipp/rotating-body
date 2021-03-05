@@ -36,19 +36,10 @@ const App = () => {
 
     // matrix multiplication: array * vector
     const mult1 = (arr, vec) => {
-        let prod = [];
-        for (let i = 0; i < 3; i++) prod.push(arr[i].reduce((dot, elem, i) => dot + elem * vec[i], 0));
-        return prod;
+        return arr.reduce((product, row) => {
+            return [...product, row.reduce((dot, elem, i) => dot + elem * vec[i], 0)];
+        }, []);
     }
-
-
-    // arr.reduce((product, row) => {
-    //     console.log(product);
-    //     console.log(row);
-    //         return [...product,
-    //             row.reduce((dot, elem, i) => dot + elem * vec[i], 0)
-    //         ], []
-    //     });
 
     // matrix multiplication: array1 * array2
     const mult2 = (arr1, arr2) => {
