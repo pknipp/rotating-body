@@ -45,9 +45,7 @@ const App = () => {
         for (let i = 0; i < 3; i++) {
             let row = [];
             for (let j = 0; j < 3; j++) {
-                let elem = 0;
-                for (let k = 0; k < 3; k++) elem += arr1[i][k] * arr2[k][j];
-                row.push(elem);
+                row.push(arr1[i].reduce((dot, elem, k) => dot + elem * arr2[k][j], 0));
             }
             arr3.push(row);
         }
