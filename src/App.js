@@ -35,11 +35,9 @@ const App = () => {
     const dt = 50;
 
     // matrix multiplication: array * vector
-    const mult1 = (arr, vec) => {
-        return arr.reduce((product, row) => {
-            return [...product, row.reduce((dot, elem, i) => dot + elem * vec[i], 0)];
-        }, []);
-    }
+    const mult1 = (arr, vec) => arr.reduce((product, row) => (
+        [...product, row.reduce((dot, elem, i) => dot + elem * vec[i], 0)]
+    ), []);
 
     // matrix multiplication: array1 * array2
     const mult2 = (arr1, arr2) => {
