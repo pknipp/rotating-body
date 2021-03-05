@@ -31,7 +31,7 @@ const App = () => {
     const [running, setRunning] = useState(false);
     const [time, setTime] = useState(0);
     const [angleVecs, setAngleVecs] = useState([[]]);
-    const [d, setD] = useState([nx / 3, nx / 4, nx / 4]);
+    const [d, setD] = useState([nx / 3, nx / 4, nx / 5]);
     // const [dAxis, setDAxis] = useState(0);
 
     // const d = 200;
@@ -39,7 +39,7 @@ const App = () => {
     // ODE-solver timestep in ms
     const dt = 50;
 
-    // matrix multiplication: arr * vec
+    // matrix multiplication: array * vector
     const mult1 = (arr, vec) => {
         let vec2 = [];
         for (let i = 0; i < 3; i++) {
@@ -50,7 +50,7 @@ const App = () => {
         return vec2;
     }
 
-    // matrix multiplication: arr1 * arr2
+    // matrix multiplication: array1 * array2
     const mult2 = (arr1, arr2) => {
         let arr3 = [];
         for (let i = 0; i < 3; i++) {
@@ -315,8 +315,8 @@ const App = () => {
             <div className="container" style={{height:`${ny}px`, width:`${nx}px`}}>
                 {angleVecs.map((angleVec, i) => (
                     <>
-                    <Square key={`front${i}`} mid={mids[i]} nx={nx} ny={ny} dx={d[(i + 1) % 3]} dy={d[(i + 2) % 3]} angleVec={angleVec} color={["red", "green", "blue"][i % 3]} />
-                    {/* <Square key={`back${i}`} mid={mids[i + 3]} nx={nx} ny={ny} d={d} angleVec={angleVec} color={["red", "green", "blue"][i % 3]} /> */}
+                    <Square key={`front${i}`} mids={mids} i={i} nx={nx} ny={ny} d={d} angleVec={angleVec} color={["red", "green", "blue"][i % 3]} />
+                    <Square key={`back${i}`} mids={mids} i={i + 3} nx={nx} ny={ny} d={d} angleVec={angleVec} color={["red", "green", "blue"][i % 3]} />
                     </>
                 ))}
                 {xyzs.map((xyz0, index0) => {
