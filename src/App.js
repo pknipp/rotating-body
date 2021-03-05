@@ -13,7 +13,7 @@ const App = () => {
     const [h, setH] = useState(1);
     const [thsInput, setThsInput] = useState(["0.3", "0.2", "0"]);
     const [ths, setThs] = useState(thsInput.map(elem => Number(elem)));
-    const [momsInput, setMomsInput] = useState(["1", "2", "1.5"]);
+    const [momsInput, setMomsInput] = useState(["1", "3", "2"]);
     const [moms, setMoms] = useState(momsInput.map(elem => Number(elem)));
     const [omsInput, setOmsInput] = useState(["", "", ""]);
     const [oms, setOms] = useState(omsInput.map(elem => Number(elem)));
@@ -34,23 +34,11 @@ const App = () => {
     // ODE-solver timestep in ms
     const dt = 50;
 
-    // matrix multiplication: array * vector
-    const mult1 = (arr, vec) => arr.reduce((product, row) => (
-        [...product, row.reduce((dot, elem, i) => dot + elem * vec[i], 0)]
-    ), []);
-
-    // matrix multiplication: array1 * array2
-    const mult2 = (arr1, arr2) => {
-        let arr3 = [];
-        for (let i = 0; i < 3; i++) {
-            let row = [];
-            for (let j = 0; j < 3; j++) {
-                row.push(arr1[i].reduce((dot, elem, k) => dot + elem * arr2[k][j], 0));
-            }
-            arr3.push(row);
-        }
-        return arr3;
-    }
+    // helpful linear algebra functions:
+    const dotproduct = (vec1, vec2) => vec1.reduce((dot, comp, i) => dot + comp * vec2[i], 0);
+    const mult1 = (mat, vec) => mat.reduce((prod, row, i) => [...prod, dotproduct(row, vec)], []);
+    const transpose = mat => mat[0].map((blah, i) => mat.map(row => row[i]));
+    const mult2 = (mat1, mat2) => mat1.map(x => transpose(mat2).map(y => dotproduct(x, y)));
 
     const zRot = th => {
         let [c, s] = [Math.cos(th), Math.sin(th)];
@@ -78,11 +66,11 @@ const App = () => {
         let axisVec = vectors[min[0]];
         let vec = vectors[(min[0] + 1) % 3];
         let rVec = mult1(mat, vec);
+        // rewrite this using a double loop or double list-comprehension?
         let rVecCrossVec = [rVec[1] * vec[2] - rVec[2] * vec[1],
                             rVec[2] * vec[0] - rVec[0] * vec[2],
                             rVec[0] * vec[1] - rVec[1] * vec[0]];
-        let dot = axisVec.reduce((dot, comp, i) => dot - comp * rVecCrossVec[i], 0);
-        angle *= Math.sign(dot);
+        angle *= -Math.sign(dotproduct(axisVec, rVecCrossVec));
         return [angle, axisVec]
     }
 
