@@ -9,10 +9,11 @@ const App = () => {
     const nx = 700;
     const ny = 700;
     const nz = ny;
+    const xyz = new Array(3);
     const [h, setH] = useState(1);
-    const [thsInput, setThsInput] = useState(["0", "0.2", "0"]);
+    const [thsInput, setThsInput] = useState(["0.3", "0.2", "0"]);
     const [ths, setThs] = useState(thsInput.map(elem => Number(elem)));
-    const [momsInput, setMomsInput] = useState(["1", "1", "1"]);
+    const [momsInput, setMomsInput] = useState(["1", "2", "1.5"]);
     const [moms, setMoms] = useState(momsInput.map(elem => Number(elem)));
     const [omsInput, setOmsInput] = useState(["", "", ""]);
     const [oms, setOms] = useState(omsInput.map(elem => Number(elem)));
@@ -23,30 +24,31 @@ const App = () => {
     const [omf2, setOmf2] = useState(0);
     const [L2, setL2] = useState(0);
     const [K, setK] = useState(0);
-    // const [torques, setTorques] = useState([0, 0, 0]);
     const [mids0, setMids0] = useState([]);
     const [mids, setMids] = useState([]);
     const [running, setRunning] = useState(false);
     const [time, setTime] = useState(0);
     const [angleVecs, setAngleVecs] = useState([[]]);
     const [d, setD] = useState([nx / 4, nx / 4, nx / 4]);
-    // const [dAxis, setDAxis] = useState(0);
-
-    // const d = 200;
 
     // ODE-solver timestep in ms
     const dt = 50;
 
     // matrix multiplication: array * vector
     const mult1 = (arr, vec) => {
-        let vec2 = [];
-        for (let i = 0; i < 3; i++) {
-            let elem = 0;
-            for (let j = 0; j < 3; j++) elem += arr[i][j] * vec[j];
-            vec2.push(elem);
-        }
-        return vec2;
+        let prod = [];
+        for (let i = 0; i < 3; i++) prod.push(arr[i].reduce((dot, elem, i) => dot + elem * vec[i], 0));
+        return prod;
     }
+
+
+    // arr.reduce((product, row) => {
+    //     console.log(product);
+    //     console.log(row);
+    //         return [...product,
+    //             row.reduce((dot, elem, i) => dot + elem * vec[i], 0)
+    //         ], []
+    //     });
 
     // matrix multiplication: array1 * array2
     const mult2 = (arr1, arr2) => {
@@ -82,6 +84,7 @@ const App = () => {
         let trace = mat[0][0] + mat[1][1] + mat[2][2];
         let angle = Math.acos((trace - 1) / 2);
         let vectors = new EigenvalueDecomposition(new Matrix(mat)).eigenvectorMatrix.transpose().data;
+        // Determine which eigenvector has eigenvalue = 1 (ie, is rotation axis)
         let dVectors = vectors.map(vector => mult1(mat, vector).map((comp, i) => comp - vector[i]));
         let mags = dVectors.map(dVector => dVector.reduce((mag, comp) => mag + comp * comp, 0));
         let min = mags.reduce((min, mag, i) => mag < min[1] ? [i, mag] : min, [-1, Infinity]);
@@ -96,6 +99,7 @@ const App = () => {
         return [angle, axisVec]
     }
 
+    // consolidate following two event handlers?
     const handlerTh = e => {
         let xyOrZ = Number(e.target.name);
         let th =  e.target.value;
@@ -135,19 +139,17 @@ const App = () => {
 
     useEffect(() => {
         // consolidate the next 7 lines into 1 or 2
-        const firstMids = [];
+        const newMids0 = [];
         for (let i = -1; i < 2; i += 2) {
-            firstMids.push([i * d[0], 0, 0]);
-            firstMids.push([0, i * d[1], 0]);
-            firstMids.push([0, 0, i * d[2]]);
+            newMids0.push([i * d[0], 0, 0]);
+            newMids0.push([0, i * d[1], 0]);
+            newMids0.push([0, 0, i * d[2]]);
         }
-        setMids0(firstMids);
-        let newMids = JSON.parse(JSON.stringify(firstMids));
-        firstMids.forEach((mid, i) => newMids[i] = mult1(rot(ths), mid));
-        setMids(newMids);
+        setMids0(newMids0);
+        setMids(newMids0.map((mid, i) => mult1(rot(ths), mid)));
         let mats = [rotY, rotX, rotZ].map(mat => mult2(rot(ths), mat));
         setAngleVecs(mats.map(mat => rotate(mat)));
-    }, [d]);
+    }, [d, ths]);
 
     useEffect(() => {
         let interval = null;
@@ -155,11 +157,6 @@ const App = () => {
             interval = setInterval(() => {
                 setTime(time + dt/1000);
                 nextThs();
-                let newMids = JSON.parse(JSON.stringify(mids0));
-                mids0.forEach((mid, i) => newMids[i] = mult1(rot(ths), mid));
-                setMids(newMids);
-                let mats = [rotY, rotX, rotZ].map(mat => mult2(rot(ths), mat));
-                setAngleVecs(mats.map(mat => rotate(mat)));
             }, dt);
         } else if (!running && time !== 0) {
             clearInterval(interval);

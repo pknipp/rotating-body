@@ -10,6 +10,6 @@ Consolidate functionalities of two ue's, but retain two ue invocations.
 Insert slider for controlling time-step (and anything else, such as [Lx, Ly, Lz]?).
 Tabulate things better.
 Consider doing this with quaternions.
-Procure a favicon, and insert meta-tags.
+Insert meta-tags.
 Put this in physics-sims project?
 Incorporate this technology into "Asteroid Field" sim?
