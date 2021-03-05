@@ -1,5 +1,5 @@
 const Square = ({ nx, ny, mids, angleVec, color, d, i }) => {
-    let is = [[2, 1], [0, 2], [0, 1]][i % 3];
+    let is = [[2, 1], [0, 2], [0, 1]][Math.floor(i / 2)];
     let angle = angleVec[0];
     let axisVec = angleVec.length ? angleVec[1] : [0, 0, 1];
     return (

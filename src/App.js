@@ -9,11 +9,12 @@ const App = () => {
     const nx = 700;
     const ny = 700;
     const nz = ny;
-    const xyz = new Array(3);
+    const xyz = new Array(3).fill(0);
+    const colors = ["red", "green", "blue"];
     const [h, setH] = useState(1);
     const [thsInput, setThsInput] = useState(["0.3", "0.2", "0"]);
     const [ths, setThs] = useState(thsInput.map(elem => Number(elem)));
-    const [momsInput, setMomsInput] = useState(["1", "3", "2"]);
+    const [momsInput, setMomsInput] = useState(["1", "1", "1"]);
     const [moms, setMoms] = useState(momsInput.map(elem => Number(elem)));
     const [omsInput, setOmsInput] = useState(["", "", ""]);
     const [oms, setOms] = useState(omsInput.map(elem => Number(elem)));
@@ -29,7 +30,7 @@ const App = () => {
     const [running, setRunning] = useState(false);
     const [time, setTime] = useState(0);
     const [angleVecs, setAngleVecs] = useState([[]]);
-    const [d, setD] = useState([nx / 4, nx / 4, nx / 4]);
+    const [d, setD] = useState([nx / 3, nx / 3, nx / 3]);
 
     // ODE-solver timestep in ms
     const dt = 50;
@@ -108,23 +109,28 @@ const App = () => {
         }
         setMomsInput(newMomsInput);
         setMoms(newMoms);
-        let factor = Math.sqrt(newMoms.reduce((momMax, mom) => Math.max(momMax, mom), 0));
-        setD(newMoms.map(mom => Math.round(nx * Math.sqrt(mom)/factor/3)));
+        // let factor = Math.sqrt(newMoms.reduce((momMax, mom) => Math.max(momMax, mom), 0));
+        // setD(newMoms.map(mom => Math.round(nx * Math.sqrt(mom)/factor/3)));
     };
 
     useEffect(() => {
-        // consolidate the next 7 lines into 1 or 2
+        let factor = Math.sqrt(moms.reduce((momMax, mom) => Math.max(momMax, mom), 0));
+        let newD = moms.map(mom => Math.round(nx * Math.sqrt(mom)/factor/3));
+        setD(newD);
+        // replace this using reduce?
         const newMids0 = [];
-        for (let i = -1; i < 2; i += 2) {
-            newMids0.push([i * d[0], 0, 0]);
-            newMids0.push([0, i * d[1], 0]);
-            newMids0.push([0, 0, i * d[2]]);
-        }
+        xyz.forEach((row, i) => {
+            let mid1 = [...xyz];
+            mid1[i] = newD[i];
+            let mid2 = [...xyz];
+            mid2[i] = -newD[i];
+            newMids0.push(mid1, mid2);
+        })
         setMids0(newMids0);
         setMids(newMids0.map((mid, i) => mult1(rot(ths), mid)));
         let mats = [rotY, rotX, rotZ].map(mat => mult2(rot(ths), mat));
         setAngleVecs(mats.map(mat => rotate(mat)));
-    }, [d, ths]);
+    }, [moms, ths]);
 
     useEffect(() => {
         let interval = null;
@@ -249,8 +255,8 @@ const App = () => {
             <div className="container" style={{height:`${ny}px`, width:`${nx}px`}}>
                 {angleVecs.map((angleVec, i) => (
                     <>
-                    <Square key={`front${i}`} mids={mids} i={i} nx={nx} ny={ny} d={d} angleVec={angleVec} color={["red", "green", "blue"][i % 3]} />
-                    <Square key={`back${i}`} mids={mids} i={i + 3} nx={nx} ny={ny} d={d} angleVec={angleVec} color={["red", "green", "blue"][i % 3]} />
+                    <Square key={`front${i}`} mids={mids} i={2 * i} nx={nx} ny={ny} d={d} angleVec={angleVec} color={colors[i]} />
+                    <Square key={`back${i}`} mids={mids} i={2 * i + 1} nx={nx} ny={ny} d={d} angleVec={angleVec} color={colors[i]} />
                     </>
                 ))}
             </div>

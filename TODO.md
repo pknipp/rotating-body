@@ -6,7 +6,6 @@ Render lines which represent omega and L.
 Allow user to adjust L?
 Implement a lagrangian and/or hamiltonian version of this?
 Implement a version which'll allow setting of initial omegas?
-Consolidate functionalities of two ue's, but retain two ue invocations.
 Insert slider for controlling time-step (and anything else, such as [Lx, Ly, Lz]?).
 Tabulate things better.
 Consider doing this with quaternions.
