@@ -7,8 +7,7 @@ Allow user to adjust L?
 Implement a lagrangian and/or hamiltonian version of this?
 Implement a version which'll allow setting of initial omegas?
 Consolidate functionalities of two ue's, but retain two ue invocations.
-Render box so that dimensions correlate with principle moments of inertia.
-Insert slider for controlling time-step (and anything else, and as [Lx, Ly, Lz]?).
+Insert slider for controlling time-step (and anything else, such as [Lx, Ly, Lz]?).
 Tabulate things better.
 Consider doing this with quaternions.
 Procure a favicon, and insert meta-tags.
