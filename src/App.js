@@ -255,8 +255,8 @@ const App = () => {
             <div className="container" style={{height:`${ny}px`, width:`${nx}px`}}>
                 {angleVecs.map((angleVec, i) => (
                     <>
-                    <Square key={`front${i}`} mids={mids} i={2 * i} nx={nx} ny={ny} d={d} angleVec={angleVec} color={colors[i]} />
-                    <Square key={`back${i}`} mids={mids} i={2 * i + 1} nx={nx} ny={ny} d={d} angleVec={angleVec} color={colors[i]} />
+                        <Square key={`front${i}`} mids={mids} i={2 * i} nx={nx} ny={ny} d={d} angleVec={angleVec} color={colors[i]} />
+                        <Square key={`back${i}`} mids={mids} i={2*i+ 1} nx={nx} ny={ny} d={d} angleVec={angleVec} color={colors[i]} />
                     </>
                 ))}
             </div>
