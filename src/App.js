@@ -12,9 +12,9 @@ const App = () => {
     const xyz = new Array(3).fill(0);
     const colors = ["red", "green", "blue"];
     const [h, setH] = useState(1);
-    const [thsInput, setThsInput] = useState(["0.3", "0.2", "0"]);
+    const [thsInput, setThsInput] = useState(["0", "0.1", "0"]);
     const [ths, setThs] = useState(thsInput.map(elem => Number(elem)));
-    const [momsInput, setMomsInput] = useState(["1", "3", "2"]);
+    const [momsInput, setMomsInput] = useState(["1", "1", "1"]);
     const [moms, setMoms] = useState(momsInput.map(elem => Number(elem)));
     const [omsInput, setOmsInput] = useState(["", "", ""]);
     const [oms, setOms] = useState(omsInput.map(elem => Number(elem)));
@@ -40,6 +40,11 @@ const App = () => {
     const mult1 = (mat, vec) => mat.reduce((prod, row, i) => [...prod, dotproduct(row, vec)], []);
     const transpose = mat => mat[0].map((blah, i) => mat.map(row => row[i]));
     const mult2 = (mat1, mat2) => mat1.map(x => transpose(mat2).map(y => dotproduct(x, y)));
+    const det = mat => {
+        return mat[0][0] * (mat[1][1] * mat[2][2] - mat[1][2] * mat[2][1]) +
+               mat[0][1] * (mat[1][2] * mat[2][0] - mat[1][0] * mat[2][2]) +
+               mat[0][2] * (mat[1][0] * mat[2][1] - mat[1][1] * mat[2][0]);
+    }
 
     const zRot = th => {
         let [c, s] = [Math.cos(th), Math.sin(th)];
@@ -52,9 +57,31 @@ const App = () => {
 
     const rot = ths => mult2(mult2(zRot(ths[2]), xRot(ths[1])), zRot(ths[0]));
     const invRot=ths=> mult2(mult2(zRot(-ths[0]),xRot(-ths[1])), zRot(-ths[2]));
-    const rotX = [[1, 0, 0], [0, 0, 1], [0,-1, 0]];
+    const rotX = [[1, 0, 0], [0, 0,-1], [0, 1, 0]];
     const rotY = [[0, 0,-1], [0, 1, 0], [1, 0, 0]];
     const rotZ = [[1, 0, 0], [0, 1, 0], [0, 0, 1]];
+
+    useEffect(() => {
+        let factor = Math.sqrt(moms.reduce((momMax, mom) => Math.max(momMax, mom), 0));
+        let newD = moms.map(mom => Math.round(nx * Math.sqrt(mom)/factor/3));
+        setD(newD);
+        // replace this using reduce?
+        const newMids0 = [];
+        xyz.forEach((row, i) => {
+            let mid1 = [...xyz];
+            mid1[i] = newD[i];
+            let mid2 = [...xyz];
+            mid2[i] = -newD[i];
+            newMids0.push(mid1, mid2);
+        })
+        setMids0(newMids0);
+        setMids(newMids0.map((mid, i) => mult1(rot(ths), mid)));
+        let mats = [rotY, rotX, rotZ].map(mat => mult2(rot(ths), mat));
+        setAngleVecs(mats.map((mat, i) => {
+            // console.log("det for i = ", i, " = ", det(mat));
+            return rotate(mat);
+        }));
+    }, [moms, ths]);
 
     const rotate = mat => {
         let trace = mat[0][0] + mat[1][1] + mat[2][2];
@@ -113,24 +140,7 @@ const App = () => {
         // setD(newMoms.map(mom => Math.round(nx * Math.sqrt(mom)/factor/3)));
     };
 
-    useEffect(() => {
-        let factor = Math.sqrt(moms.reduce((momMax, mom) => Math.max(momMax, mom), 0));
-        let newD = moms.map(mom => Math.round(nx * Math.sqrt(mom)/factor/3));
-        setD(newD);
-        // replace this using reduce?
-        const newMids0 = [];
-        xyz.forEach((row, i) => {
-            let mid1 = [...xyz];
-            mid1[i] = newD[i];
-            let mid2 = [...xyz];
-            mid2[i] = -newD[i];
-            newMids0.push(mid1, mid2);
-        })
-        setMids0(newMids0);
-        setMids(newMids0.map((mid, i) => mult1(rot(ths), mid)));
-        let mats = [rotY, rotX, rotZ].map(mat => mult2(rot(ths), mat));
-        setAngleVecs(mats.map(mat => rotate(mat)));
-    }, [moms, ths]);
+
 
     useEffect(() => {
         let interval = null;
