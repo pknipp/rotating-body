@@ -26,7 +26,9 @@ const App = () => {
     const [L2, setL2] = useState(0);
     const [K, setK] = useState(0);
     const [mids0, setMids0] = useState([]);
+    const [xyzs0, setXyzs0] = useState([]);
     const [mids, setMids] = useState([]);
+    const [xyzs, setXyzs] = useState([]);
     const [running, setRunning] = useState(false);
     const [time, setTime] = useState(0);
     const [angleVecs, setAngleVecs] = useState([[]]);
@@ -38,8 +40,8 @@ const App = () => {
     // helpful linear algebra functions:
     const dotproduct = (vec1, vec2) => vec1.reduce((dot, comp, i) => dot + comp * vec2[i], 0);
     const mult1 = (mat, vec) => mat.reduce((prod, row, i) => [...prod, dotproduct(row, vec)], []);
-    const transpose = mat => mat[0].map((blah, i) => mat.map(row => row[i]));
-    const mult2 = (mat1, mat2) => mat1.map(x => transpose(mat2).map(y => dotproduct(x, y)));
+    const trans = mat => mat[0].map((blah, i) => mat.map(row => row[i]));
+    const mult2 = (mat1, mat2) => mat1.map(x => trans(mat2).map(y => dotproduct(x, y)));
     const det = mat => {
         return mat[0][0] * (mat[1][1] * mat[2][2] - mat[1][2] * mat[2][1]) +
                mat[0][1] * (mat[1][2] * mat[2][0] - mat[1][0] * mat[2][2]) +
@@ -55,10 +57,10 @@ const App = () => {
         return [[1, 0, 0], [0, c, s], [0, -s, c]];
     }
 
-    const rot = ths => mult2(mult2(zRot(ths[2]), xRot(ths[1])), zRot(ths[0]));
-    const invRot=ths=> mult2(mult2(zRot(-ths[0]),xRot(-ths[1])), zRot(-ths[2]));
-    const rotX = [[1, 0, 0], [0, 0,-1], [0, 1, 0]];
-    const rotY = [[0, 0,-1], [0, 1, 0], [1, 0, 0]];
+    const rot = ths => mult2(mult2(zRot( ths[2]), xRot( ths[1])), zRot( ths[0]));
+    const invRot=ths=> mult2(mult2(zRot(-ths[0]), xRot(-ths[1])), zRot(-ths[2]));
+    const rotX = [[1, 0, 0], [0, 0, 1], [0,-1, 0]];
+    const rotY = [[0, 0, 1], [0,-1, 0], [1, 0, 0]];
     const rotZ = [[1, 0, 0], [0, 1, 0], [0, 0, 1]];
 
     useEffect(() => {
@@ -77,6 +79,10 @@ const App = () => {
         setMids0(newMids0);
         setMids(newMids0.map((mid, i) => mult1(rot(ths), mid)));
         let mats = [rotY, rotX, rotZ].map(mat => mult2(rot(ths), mat));
+        console.table("mats[1] = ", mats[1]);
+        let angleVecs = mats.map(mat => rotate(mat));
+        console.log("angle[1] = ", angleVecs[1][0], " and rotation axis [1] = ");
+        console.table(angleVecs[1][1]);
         setAngleVecs(mats.map((mat, i) => {
             // console.log("det for i = ", i, " = ", det(mat));
             return rotate(mat);
@@ -99,7 +105,9 @@ const App = () => {
                             rVec[2] * vec[0] - rVec[0] * vec[2],
                             rVec[0] * vec[1] - rVec[1] * vec[0]];
         angle *= -Math.sign(dotproduct(axisVec, rVecCrossVec));
-        return [angle, axisVec]
+        let angle2 = -Math.asin(dotproduct(axisVec, rVecCrossVec));
+        console.log(angle, angle2);
+        return [angle2, axisVec]
     }
 
     // consolidate following two event handlers?
@@ -117,7 +125,7 @@ const App = () => {
         }
         setThsInput(newThsInput);
         setThs(newThs);
-        let newMids = JSON.parse(JSON.stringify(mids0));
+        let newMids = [];
         mids0.forEach((mid, i) => newMids[i] = mult1(rot(ths), mid));
         setMids(newMids);
     };

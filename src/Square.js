@@ -11,7 +11,7 @@ const Square = ({ nx, ny, mids, angleVec, color, d, i }) => {
             borderColor: `black`,
             // negative sign on angle causes L to always point in same direction (good thing)
             transform: `rotate3d(${axisVec[0]}, ${axisVec[1]}, ${axisVec[2]},${angle}rad)`,
-            backgroundColor: `${mids[i] && mids[i][2] < 0 ? "transparent" : color}`,
+            backgroundColor: `${mids[i] && mids[i][2] > 0 ? "transparent" : color}`,
         }}/>
     )
 }
