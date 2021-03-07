@@ -14,7 +14,7 @@ const App = () => {
     const [h, setH] = useState(1);
     const [thsInput, setThsInput] = useState(["0", "0", "0"]);
     const [ths, setThs] = useState(thsInput.map(elem => Number(elem)));
-    const [momsInput, setMomsInput] = useState(["1", "1", "1"]);
+    const [momsInput, setMomsInput] = useState(["1", "3", "2"]);
     const [moms, setMoms] = useState(momsInput.map(elem => Number(elem)));
     const [omsInput, setOmsInput] = useState(["", "", ""]);
     const [oms, setOms] = useState(omsInput.map(elem => Number(elem)));
@@ -79,6 +79,7 @@ const App = () => {
         setMids0(newMids0);
         setMids(newMids0.map((mid, i) => mult1(rot(ths), mid)));
         let mats = [rotY, rotX, rotZ].map(mat => mult2(rot(ths), mat));
+<<<<<<< HEAD
         console.log("When time = ", time, " ths[0] = ", ths[0], " and mat[2] equals ...");
         console.table(mats[2]);
         let angleVecs = mats.map(mat => rotate(mat));
@@ -88,6 +89,9 @@ const App = () => {
             // console.log("det for i = ", i, " = ", det(mat));
             return rotate(mat);
         }));
+=======
+        setAngleVecs(mats.map((mat, i) => rotate(mat)));
+>>>>>>> master
     }, [moms, ths]);
 
     const rotate = mat => {
@@ -150,18 +154,14 @@ const App = () => {
         }
         setMomsInput(newMomsInput);
         setMoms(newMoms);
-        // let factor = Math.sqrt(newMoms.reduce((momMax, mom) => Math.max(momMax, mom), 0));
-        // setD(newMoms.map(mom => Math.round(nx * Math.sqrt(mom)/factor/3)));
     };
-
-
 
     useEffect(() => {
         let interval = null;
         if (running) {
             interval = setInterval(() => {
                 setTime(time + dt/1000);
-                nextThs();
+                // nextThs();
             }, dt);
         } else if (!running && time !== 0) {
             clearInterval(interval);
@@ -170,8 +170,7 @@ const App = () => {
     }, [running, time]);
 
     const Fs = ths => {
-        // Following was used for symmetric rotor.
-        // let Fs = [oms[0], 0, oms[2]];
+        // Following was used for symmetric rotor: let Fs = [oms[0], 0, oms[2]];
         let cs = [];
         let ss = [];
         for (const th of ths) {
@@ -206,6 +205,7 @@ const App = () => {
     }
 
     const nextFs = (intFs, m) => Fs(ths.map((th, i) => th + intFs[i] * dt / 1000 / m));
+<<<<<<< HEAD
     // const nextFs = (intFs, m) => {
     //     let newThs = [...ths];
     //     return Fs(ths.map((th, i) => th + intFs[i] * dt / 1000 / m));
@@ -226,6 +226,18 @@ const App = () => {
         // setThs(nextThs);
         setThs([...ths].map((th, i) => th + (Fs1[i] + Fs4[i] + 2 * (Fs2[i] + Fs3[i])) * dt/ 1000 / 6));
     }
+=======
+
+    // With each "tick", calculate the next set of 3 Euler angles
+    useEffect(() => {
+            if (!running) return;
+            let Fs1 = Fs(ths);
+            let Fs2 = nextFs(Fs1, 2);
+            let Fs3 = nextFs(Fs2, 2);
+            let Fs4 = nextFs(Fs3, 1);
+            setThs([...ths].map((th, i) => th + (Fs1[i] + Fs4[i] + 2 * (Fs2[i] + Fs3[i])) * dt/ 1000 / 6));
+        }, [time]);
+>>>>>>> master
 
     return (
         <>
@@ -245,16 +257,16 @@ const App = () => {
                 <tbody>
                     <tr>
                         <td>angles (rad)</td>
-                        <td><Input n={0} quantity={running || time ? ths[0] : thsInput[0]} handler={handlerTh} /></td>
-                        <td><Input n={1} quantity={running || time ? ths[1] : thsInput[1]} handler={handlerTh} /></td>
-                        <td><Input n={2} quantity={running || time ? ths[2] : thsInput[2]} handler={handlerTh} /></td>
+                        <td><Input key={"ang0"} n={0} quantity={running || time ? ths[0] : thsInput[0]} handler={handlerTh} /></td>
+                        <td><Input key={"ang1"} n={1} quantity={running || time ? ths[1] : thsInput[1]} handler={handlerTh} /></td>
+                        <td><Input key={"ang2"} n={2} quantity={running || time ? ths[2] : thsInput[2]} handler={handlerTh} /></td>
                         <td> - </td>
                     </tr>
                     <tr>
                         <td>moments</td>
-                        <td><Input n={0} quantity={momsInput[0]} handler={handlerMom} /></td>
-                        <td><Input n={1} quantity={momsInput[1]} handler={handlerMom} /></td>
-                        <td><Input n={2} quantity={momsInput[2]} handler={handlerMom} /></td>
+                        <td><Input key={"mom0"} n={0} quantity={momsInput[0]} handler={handlerMom} /></td>
+                        <td><Input key={"mom1"} n={1} quantity={momsInput[1]} handler={handlerMom} /></td>
+                        <td><Input key={"mom2"} n={2} quantity={momsInput[2]} handler={handlerMom} /></td>
                         <td> - </td>
                     </tr>
                     <tr>
