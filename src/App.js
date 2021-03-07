@@ -14,7 +14,7 @@ const App = () => {
     const [h, setH] = useState(1);
     const [thsInput, setThsInput] = useState(["0", "0", "0"]);
     const [ths, setThs] = useState(thsInput.map(elem => Number(elem)));
-    const [momsInput, setMomsInput] = useState(["1", "3", "2"]);
+    const [momsInput, setMomsInput] = useState(["1", "1", "1"]);
     const [moms, setMoms] = useState(momsInput.map(elem => Number(elem)));
     const [omsInput, setOmsInput] = useState(["", "", ""]);
     const [oms, setOms] = useState(omsInput.map(elem => Number(elem)));
@@ -35,7 +35,7 @@ const App = () => {
     const [d, setD] = useState([nx / 3, nx / 3, nx / 3]);
 
     // ODE-solver timestep in ms
-    const dt = 1000;
+    const dt = 100;
 
     // helpful linear algebra functions:
     const dotproduct = (vec1, vec2) => vec1.reduce((dot, comp, i) => dot + comp * vec2[i], 0);
@@ -60,7 +60,7 @@ const App = () => {
     const rot = ths => mult2(mult2(zRot( ths[2]), xRot( ths[1])), zRot( ths[0]));
     const invRot=ths=> mult2(mult2(zRot(-ths[0]), xRot(-ths[1])), zRot(-ths[2]));
     const rotX = [[1, 0, 0], [0, 0, 1], [0,-1, 0]];
-    const rotY = [[0, 0, 1], [0,-1, 0], [1, 0, 0]];
+    const rotY = [[0, 0, 1], [0, 1, 0], [-1, 0, 0]];
     const rotZ = [[1, 0, 0], [0, 1, 0], [0, 0, 1]];
 
     useEffect(() => {
@@ -79,19 +79,7 @@ const App = () => {
         setMids0(newMids0);
         setMids(newMids0.map((mid, i) => mult1(rot(ths), mid)));
         let mats = [rotY, rotX, rotZ].map(mat => mult2(rot(ths), mat));
-<<<<<<< HEAD
-        console.log("When time = ", time, " ths[0] = ", ths[0], " and mat[2] equals ...");
-        console.table(mats[2]);
-        let angleVecs = mats.map(mat => rotate(mat));
-        // console.log("angle[1] = ", angleVecs[1][0], " and rotation axis [1] = ");
-        // console.table(angleVecs[1][1]);
-        setAngleVecs(mats.map((mat, i) => {
-            // console.log("det for i = ", i, " = ", det(mat));
-            return rotate(mat);
-        }));
-=======
         setAngleVecs(mats.map((mat, i) => rotate(mat)));
->>>>>>> master
     }, [moms, ths]);
 
     const rotate = mat => {
@@ -116,8 +104,9 @@ const App = () => {
         let sinAngle = dotproduct(axisVec, rVecCrossVec);
         let angle2 = Math.asin(dotproduct(axisVec, rVecCrossVec));
         let angle3 = Math.atan(sinAngle, cosAngle);
-        // console.log("angles:",angle, angle2, angle3);
-        return [angle3, axisVec]
+        console.log("angles:",ths[0], angle, angle2, angle3);
+        console.table(mat);
+        return [angle, axisVec]
     }
 
     // consolidate following two event handlers?
@@ -181,7 +170,7 @@ const App = () => {
         Fs[0] = h * (cs[2] * cs[2] / moms[1] + ss[2] * ss[2] / moms[0]);
         Fs[1] = h * (1 / moms[0] - 1 / moms[1]) * ss[1] * ss[2] * cs[2];
         Fs[2] = h * (1 / moms[2] - cs[2] * cs[2] / moms[1] - ss[2] * ss[2] / moms[0]) * cs[1];
-        console.log("Fs = ", Fs);
+        // console.log("Fs = ", Fs);
         let newOms = [];
         newOms[0] = Fs[0] * ss[1] * ss[2] + Fs[1] * cs[2];
         newOms[1] = Fs[0] * ss[1] * cs[2] - Fs[1] * ss[2];
@@ -201,32 +190,11 @@ const App = () => {
         setL2(newLs.reduce((L2, L) => L2 + L * L, 0));
         setLabLs(mult1(invRot(ths), newLs));
         setK(newLs.reduce((K, L, i) => K + L * oms[i], 0)/2);
+        // console.log(Fs)
         return Fs;
     }
 
     const nextFs = (intFs, m) => Fs(ths.map((th, i) => th + intFs[i] * dt / 1000 / m));
-<<<<<<< HEAD
-    // const nextFs = (intFs, m) => {
-    //     let newThs = [...ths];
-    //     return Fs(ths.map((th, i) => th + intFs[i] * dt / 1000 / m));
-    //     for (let i = 0; i < 3; i++) newThs[i] += intFs[i] * dt / 1000 / m;
-    //     return Fs(newThs);
-    // }
-
-    const nextThs = _ => {
-        let Fs1 = Fs(ths);
-        let Fs2 = nextFs(Fs1, 2);
-        let Fs3 = nextFs(Fs2, 2);
-        let Fs4 = nextFs(Fs3, 1);
-        // console.log("When time = ", time, " the four Fs equal ", Fs1, Fs2, Fs3, Fs4);
-        // let dths = ths.map((th, i) => (Fs1[i] + Fs4[i] + 2 * (Fs2[i] + Fs3[i])) * dt/ 1000 / 6);
-        // console.log("dths = ", dths);
-        // let nextThs = [...ths];
-        // for (let i = 0; i < 3; i++) nextThs[i] += (Fs1[i] + Fs4[i] + 2 * (Fs2[i] + Fs3[i])) * dt/ 1000 / 6;
-        // setThs(nextThs);
-        setThs([...ths].map((th, i) => th + (Fs1[i] + Fs4[i] + 2 * (Fs2[i] + Fs3[i])) * dt/ 1000 / 6));
-    }
-=======
 
     // With each "tick", calculate the next set of 3 Euler angles
     useEffect(() => {
@@ -235,9 +203,8 @@ const App = () => {
             let Fs2 = nextFs(Fs1, 2);
             let Fs3 = nextFs(Fs2, 2);
             let Fs4 = nextFs(Fs3, 1);
-            setThs([...ths].map((th, i) => th + (Fs1[i] + Fs4[i] + 2 * (Fs2[i] + Fs3[i])) * dt/ 1000 / 6));
+            setThs([...ths].map((th, i) => th+(Fs1[i]+Fs4[i]+2*(Fs2[i]+Fs3[i]))*dt/1000/6));
         }, [time]);
->>>>>>> master
 
     return (
         <>
