@@ -79,6 +79,8 @@ const App = () => {
         setMids0(newMids0);
         setMids(newMids0.map((mid, i) => mult1(rot(ths), mid)));
         let mats = [rotY, rotX, rotZ].map(mat => mult2(rot(ths), mat));
+        let nextAngleVecs = mats.map(mat => rotate(mat));
+        console.log(nextAngleVecs[2]);
         setAngleVecs(mats.map((mat, i) => rotate(mat)));
     }, [moms, ths]);
 
@@ -101,11 +103,12 @@ const App = () => {
                             rVec[2] * vec[0] - rVec[0] * vec[2],
                             rVec[0] * vec[1] - rVec[1] * vec[0]];
         angle *= -Math.sign(dotproduct(axisVec, rVecCrossVec));
+        // console.log("axisVec = ", axisVec);
         let sinAngle = dotproduct(axisVec, rVecCrossVec);
         let angle2 = Math.asin(dotproduct(axisVec, rVecCrossVec));
         let angle3 = Math.atan(sinAngle, cosAngle);
         console.log("angles:",ths[0], angle, angle2, angle3);
-        console.table(mat);
+        // console.table(mat);
         return [angle, axisVec]
     }
 
@@ -196,7 +199,7 @@ const App = () => {
 
     const nextFs = (intFs, m) => Fs(ths.map((th, i) => th + intFs[i] * dt / 1000 / m));
 
-    // With each "tick", calculate the next set of 3 Euler angles
+    // With each "tick", calculate the next set of 3 Euler angles using rk4
     useEffect(() => {
             if (!running) return;
             let Fs1 = Fs(ths);
