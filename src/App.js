@@ -12,7 +12,7 @@ const App = () => {
     const xyz = new Array(3).fill(0);
     const colors = ["red", "green", "blue"];
     const [h, setH] = useState(1);
-    const [thsInput, setThsInput] = useState(["0", "0.1", "0"]);
+    const [thsInput, setThsInput] = useState(["0", "0", "0"]);
     const [ths, setThs] = useState(thsInput.map(elem => Number(elem)));
     const [momsInput, setMomsInput] = useState(["1", "1", "1"]);
     const [moms, setMoms] = useState(momsInput.map(elem => Number(elem)));
@@ -35,7 +35,7 @@ const App = () => {
     const [d, setD] = useState([nx / 3, nx / 3, nx / 3]);
 
     // ODE-solver timestep in ms
-    const dt = 50;
+    const dt = 1000;
 
     // helpful linear algebra functions:
     const dotproduct = (vec1, vec2) => vec1.reduce((dot, comp, i) => dot + comp * vec2[i], 0);
@@ -79,10 +79,11 @@ const App = () => {
         setMids0(newMids0);
         setMids(newMids0.map((mid, i) => mult1(rot(ths), mid)));
         let mats = [rotY, rotX, rotZ].map(mat => mult2(rot(ths), mat));
-        console.table("mats[1] = ", mats[1]);
+        console.log("When time = ", time, " ths[0] = ", ths[0], " and mat[2] equals ...");
+        console.table(mats[2]);
         let angleVecs = mats.map(mat => rotate(mat));
-        console.log("angle[1] = ", angleVecs[1][0], " and rotation axis [1] = ");
-        console.table(angleVecs[1][1]);
+        // console.log("angle[1] = ", angleVecs[1][0], " and rotation axis [1] = ");
+        // console.table(angleVecs[1][1]);
         setAngleVecs(mats.map((mat, i) => {
             // console.log("det for i = ", i, " = ", det(mat));
             return rotate(mat);
@@ -91,8 +92,11 @@ const App = () => {
 
     const rotate = mat => {
         let trace = mat[0][0] + mat[1][1] + mat[2][2];
+        let cosAngle = (trace - 1)/2;
         let angle = Math.acos((trace - 1) / 2);
         let vectors = new EigenvalueDecomposition(new Matrix(mat)).eigenvectorMatrix.transpose().data;
+        // let mags = vectors.map(vector => Math.sqrt(vector.reduce((mag2, comp) => mag2 + comp * comp, 0)));
+        // console.log("mags = ", mags);
         // Determine which eigenvector has eigenvalue = 1 (ie, is rotation axis)
         let dVectors = vectors.map(vector => mult1(mat, vector).map((comp, i) => comp - vector[i]));
         let mags = dVectors.map(dVector => dVector.reduce((mag, comp) => mag + comp * comp, 0));
@@ -105,9 +109,11 @@ const App = () => {
                             rVec[2] * vec[0] - rVec[0] * vec[2],
                             rVec[0] * vec[1] - rVec[1] * vec[0]];
         angle *= -Math.sign(dotproduct(axisVec, rVecCrossVec));
-        let angle2 = -Math.asin(dotproduct(axisVec, rVecCrossVec));
-        console.log(angle, angle2);
-        return [angle2, axisVec]
+        let sinAngle = dotproduct(axisVec, rVecCrossVec);
+        let angle2 = Math.asin(dotproduct(axisVec, rVecCrossVec));
+        let angle3 = Math.atan(sinAngle, cosAngle);
+        // console.log("angles:",angle, angle2, angle3);
+        return [angle3, axisVec]
     }
 
     // consolidate following two event handlers?
@@ -176,6 +182,7 @@ const App = () => {
         Fs[0] = h * (cs[2] * cs[2] / moms[1] + ss[2] * ss[2] / moms[0]);
         Fs[1] = h * (1 / moms[0] - 1 / moms[1]) * ss[1] * ss[2] * cs[2];
         Fs[2] = h * (1 / moms[2] - cs[2] * cs[2] / moms[1] - ss[2] * ss[2] / moms[0]) * cs[1];
+        console.log("Fs = ", Fs);
         let newOms = [];
         newOms[0] = Fs[0] * ss[1] * ss[2] + Fs[1] * cs[2];
         newOms[1] = Fs[0] * ss[1] * cs[2] - Fs[1] * ss[2];
@@ -198,20 +205,26 @@ const App = () => {
         return Fs;
     }
 
-    const nextFs = (intFs, m) => {
-        let newThs = [...ths];
-        for (let i = 0; i < 3; i++) ths[i] += intFs[i] * dt / 1000 / m;
-        return Fs(ths);
-    }
+    const nextFs = (intFs, m) => Fs(ths.map((th, i) => th + intFs[i] * dt / 1000 / m));
+    // const nextFs = (intFs, m) => {
+    //     let newThs = [...ths];
+    //     return Fs(ths.map((th, i) => th + intFs[i] * dt / 1000 / m));
+    //     for (let i = 0; i < 3; i++) newThs[i] += intFs[i] * dt / 1000 / m;
+    //     return Fs(newThs);
+    // }
 
     const nextThs = _ => {
         let Fs1 = Fs(ths);
         let Fs2 = nextFs(Fs1, 2);
         let Fs3 = nextFs(Fs2, 2);
         let Fs4 = nextFs(Fs3, 1);
-        let nextThs = [...ths];
-        for (let i = 0; i < 3; i++) nextThs[i] += (Fs1[i] + Fs4[i] + 2 * (Fs2[i] + Fs3[i])) * dt/ 1000 / 6;
-        setThs(nextThs);
+        // console.log("When time = ", time, " the four Fs equal ", Fs1, Fs2, Fs3, Fs4);
+        // let dths = ths.map((th, i) => (Fs1[i] + Fs4[i] + 2 * (Fs2[i] + Fs3[i])) * dt/ 1000 / 6);
+        // console.log("dths = ", dths);
+        // let nextThs = [...ths];
+        // for (let i = 0; i < 3; i++) nextThs[i] += (Fs1[i] + Fs4[i] + 2 * (Fs2[i] + Fs3[i])) * dt/ 1000 / 6;
+        // setThs(nextThs);
+        setThs([...ths].map((th, i) => th + (Fs1[i] + Fs4[i] + 2 * (Fs2[i] + Fs3[i])) * dt/ 1000 / 6));
     }
 
     return (
