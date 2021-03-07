@@ -75,10 +75,15 @@ const App = () => {
             newMids0.push(mid1, mid2);
         })
         setMids0(newMids0);
-        setMids(newMids0.map((mid, i) => mult1(rot(ths), mid)));
+    }, [moms]);
+
+    const rotationStuff = () => {
+        setMids(mids0.map((mid, i) => mult1(rot(ths), mid)));
         let mats = [rotY, rotX, rotZ].map(mat => mult2(rot(ths), mat));
         setAngleVecs(mats.map((mat, i) => rotate(mat)));
-    }, [moms, ths]);
+    }
+
+    useEffect(() => rotationStuff(), [mids0, ths]);
 
     const rotate = mat => {
         let trace = mat[0][0] + mat[1][1] + mat[2][2];
@@ -96,7 +101,7 @@ const App = () => {
                             rVec[2] * vec[0] - rVec[0] * vec[2],
                             rVec[0] * vec[1] - rVec[1] * vec[0]];
         angle *= -Math.sign(dotproduct(axisVec, rVecCrossVec));
-        return [angle, axisVec]
+        return [angle, axisVec];
     }
 
     // consolidate following two event handlers?
