@@ -12,9 +12,9 @@ const App = () => {
     const xyz = new Array(3).fill(0);
     const colors = ["red", "green", "blue"];
     const [h, setH] = useState(1);
-    const [thsInput, setThsInput] = useState(["0", "0", "0"]);
+    const [thsInput, setThsInput] = useState(["0", "0.01", "0"]);
     const [ths, setThs] = useState(thsInput.map(elem => Number(elem)));
-    const [momsInput, setMomsInput] = useState(["1", "1", "1"]);
+    const [momsInput, setMomsInput] = useState(["1", "3", "2"]);
     const [moms, setMoms] = useState(momsInput.map(elem => Number(elem)));
     const [omsInput, setOmsInput] = useState(["", "", ""]);
     const [oms, setOms] = useState(omsInput.map(elem => Number(elem)));
@@ -79,16 +79,10 @@ const App = () => {
     }, [moms]);
 
     const rotationStuff = () => {
-        console.table(rot(ths));
-        setMids(mids0.map((mid, i) => mult1(rot(ths), mid)));
-        let mats = [rotY, rotX, rotZ].map(mat => mult2(rot(ths), mat));
-        // console.log(rotY),
-        // console.log(rot(ths)),
-        mats.forEach((mat, i) => console.log(i, mat));
+        setMids(mids0.map((mid, i) => mult1(invRot(ths), mid)));
+        let mats = [rotY, rotX, rotZ].map(mat => mult2(invRot(ths), mat));
         let newAngleVecs = mats.map(mat => rotate(mat));
         newAngleVecs.forEach((angleVec, i) => {
-            // console.log(i, angleVec[0]);
-            // console.log(angleVec[1]);
         });
         setAngleVecs(newAngleVecs);
     }
@@ -110,12 +104,10 @@ const App = () => {
         let rVecCrossVec = [rVec[1] * vec[2] - rVec[2] * vec[1],
                             rVec[2] * vec[0] - rVec[0] * vec[2],
                             rVec[0] * vec[1] - rVec[1] * vec[0]];
-        // following negation is needed because css uses LH coord system.
-        // rVecCrossVec = rVecCrossVec.map(comp => -comp);
-        angle *= -Math.sign(dotproduct(axisVec, rVecCrossVec));
-        let angle2 = Math.asin(dotproduct(axisVec, rVecCrossVec));
+        angle *= Math.sign(dotproduct(axisVec, rVecCrossVec));
+        // let angle2 = Math.asin(dotproduct(axisVec, rVecCrossVec));
         let angle3 = Math.atan2(dotproduct(axisVec, rVecCrossVec), (trace - 1) / 2);
-        return [angle3, axisVec];
+        return [angle, axisVec];
     }
 
     // consolidate following two event handlers?
@@ -134,7 +126,7 @@ const App = () => {
         setThsInput(newThsInput);
         setThs(newThs);
         let newMids = JSON.parse(JSON.stringify(mids0));
-        mids0.forEach((mid, i) => newMids[i] = mult1(rot(ths), mid));
+        mids0.forEach((mid, i) => newMids[i] = mult1(invRot(ths), mid));
         setMids(newMids);
     };
 
