@@ -9,7 +9,7 @@ const Line = ({ xi, yi, xf, yf, dashed }) => {
     const r = Math.sqrt(dx * dx + dy * dy);
     // "TOA" part of "SOHCAHTOA"
     let angle = Math.atan2(dy, dx);
-    return null;
+    // return null;
     return (
         <div className="line" style={{
             width:`${r}px`,
@@ -17,6 +17,7 @@ const Line = ({ xi, yi, xf, yf, dashed }) => {
             top: `${yi}px`,
             transform: `rotate(${angle * 180 / Math.PI}deg) translateX(${r / 2}px)`,
             borderTopStyle: `${dashed ? "dashed" : "solid"}`,
+            zIndex: 1,
         }}/>
     )
 }

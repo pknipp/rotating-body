@@ -1,11 +1,33 @@
-.container {position: relative; box-sizing: border-box; border: 1px solid black; }
+.container {position: relative; box-sizing: border-box; border: 1px solid black; perspective: none}
+.body {
+    font-size: 4em;
+    width: 2em;
+    margin: 1.5em auto;
+    transform-style: preserve-3d;
+    /* transform: rotateX(-20deg) rotateY(30deg); */
+}
+.side {
+    position: absolute;
+    width: 2em;
+    height: 2em;
+    background: rgba(100,100,100,0.5);
+    border: 1px solid red;
+    text-align: center;
+    line-height: 2em;
+  }
+.front {transform: translateZ(1em);}
+.top {transform: rotateX(90deg) translateZ(1em);}
+.right {transform: rotateY(90deg) translateZ(1em);}
+.left {transform: rotateY(-90deg) translateZ(1em);}
+.bottom {transform: rotateX(-90deg) translateZ(1em);}
+.back {transform: rotateY(-180deg) translateZ(1em);}
 .dot {
     box-sizing: border-box;
     border: solid 1px black;
     position: absolute;
     border-radius: 50%;
 }
-.square {box-sizing: border-box; position: absolute; border: none 1px black;     }
+.square {box-sizing: border-box; position: absolute; border: none 1px black; }
 .line {
     box-sizing: border-box;
     border-top: solid 1px black;
