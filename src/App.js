@@ -8,18 +8,18 @@ import Square from "./Square";
 const App = () => {
     const nx = 700;
     const ny = 700;
-    const nz = ny;
+    // const nz = ny;
     const xyz = new Array(3).fill(0);
     const colors = ["red", "green", "blue"];
-    const [h, setH] = useState(1);
+    const [h] = useState(1);
     const [thsInput, setThsInput] = useState(["0", "0.01", "0"]);
     const [ths, setThs] = useState(thsInput.map(elem => Number(elem)));
     const [momsInput, setMomsInput] = useState(["1", "3", "2"]);
     const [moms, setMoms] = useState(momsInput.map(elem => Number(elem)));
-    const [omsInput, setOmsInput] = useState(["", "", ""]);
+    const [omsInput] = useState(["", "", ""]);
     const [oms, setOms] = useState(omsInput.map(elem => Number(elem)));
     const [omfs, setOmfs] = useState([0, 0, 0]);
-    const [Ls, setLs] = useState([0, 0, 0]);
+    const [, setLs] = useState([0, 0, 0]);
     const [labLs, setLabLs] = useState([0, 0, 0]);
     const [om2, setOm2] = useState(0);
     const [omf2, setOmf2] = useState(0);
@@ -40,11 +40,11 @@ const App = () => {
     const mult1 = (mat, vec) => mat.reduce((prod, row, i) => [...prod, dotproduct(row, vec)], []);
     const transpose = mat => mat[0].map((blah, i) => mat.map(row => row[i]));
     const mult2 = (mat1, mat2) => mat1.map(x => transpose(mat2).map(y => dotproduct(x, y)));
-    const det = mat => {
-        return mat[0][0] * (mat[1][1] * mat[2][2] - mat[1][2] * mat[2][1]) +
-               mat[0][1] * (mat[1][2] * mat[2][0] - mat[1][0] * mat[2][2]) +
-               mat[0][2] * (mat[1][0] * mat[2][1] - mat[1][1] * mat[2][0]);
-    }
+    // const det = mat => {
+    //     return mat[0][0] * (mat[1][1] * mat[2][2] - mat[1][2] * mat[2][1]) +
+    //            mat[0][1] * (mat[1][2] * mat[2][0] - mat[1][0] * mat[2][2]) +
+    //            mat[0][2] * (mat[1][0] * mat[2][1] - mat[1][1] * mat[2][0]);
+    // }
 
     const zRot = th => {
         let [c, s] = [Math.cos(th), Math.sin(th)];
@@ -55,7 +55,7 @@ const App = () => {
         return [[1, 0, 0], [0, c, s], [0, -s, c]];
     }
 
-    const rot = ths => mult2(mult2(zRot(ths[2]), xRot(ths[1])), zRot(ths[0]));
+    // const rot = ths => mult2(mult2(zRot(ths[2]), xRot(ths[1])), zRot(ths[0]));
     const invRot=ths=> mult2(mult2(zRot(-ths[0]),xRot(-ths[1])), zRot(-ths[2]));
     const rotX = [[1, 0, 0], [0, 0,-1], [0, 1, 0]];
     const rotY = [[0, 0,-1], [0, 1, 0], [1, 0, 0]];
@@ -76,7 +76,7 @@ const App = () => {
             newMids0.push(mid1, mid2);
         })
         setMids0(newMids0);
-    }, [moms]);
+    }, [moms, xyz]);
 
     const rotationStuff = () => {
         setMids(mids0.map((mid, i) => mult1(invRot(ths), mid)));
@@ -106,7 +106,7 @@ const App = () => {
                             rVec[0] * vec[1] - rVec[1] * vec[0]];
         angle *= Math.sign(dotproduct(axisVec, rVecCrossVec));
         // let angle2 = Math.asin(dotproduct(axisVec, rVecCrossVec));
-        let angle3 = Math.atan2(dotproduct(axisVec, rVecCrossVec), (trace - 1) / 2);
+        // let angle3 = Math.atan2(dotproduct(axisVec, rVecCrossVec), (trace - 1) / 2);
         return [angle, axisVec];
     }
 
@@ -197,13 +197,13 @@ const App = () => {
 
     // With each "tick", calculate the next set of 3 Euler angles
     useEffect(() => {
-            if (!running) return;
-            let Fs1 = Fs(ths);
-            let Fs2 = nextFs(Fs1, 2);
-            let Fs3 = nextFs(Fs2, 2);
-            let Fs4 = nextFs(Fs3, 1);
-            setThs([...ths].map((th, i) => th + (Fs1[i] + Fs4[i] + 2 * (Fs2[i] + Fs3[i])) * dt/ 1000 / 6));
-        }, [time]);
+        if (!running) return;
+        let Fs1 = Fs(ths);
+        let Fs2 = nextFs(Fs1, 2);
+        let Fs3 = nextFs(Fs2, 2);
+        let Fs4 = nextFs(Fs3, 1);
+        setThs([...ths].map((th, i) => th + (Fs1[i] + Fs4[i] + 2 * (Fs2[i] + Fs3[i])) * dt/ 1000 / 6));
+    }, [time, running]);
 
     return (
         <>
