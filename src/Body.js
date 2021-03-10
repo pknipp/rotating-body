@@ -1,5 +1,5 @@
 const Body = ({ nx, ny, angleVec }) => {
-    let is = [[2, 1], [0, 2], [0, 1]][Math.floor(i / 2)];
+    let is = [[2, 1], [0, 2], [0, 1]];
     let angle = angleVec[0];
     let axisVec = angleVec.length ? angleVec[1] : [0, 0, 1];
     return (
@@ -18,7 +18,7 @@ const Body = ({ nx, ny, angleVec }) => {
             <div class="side left" />
             <div class="side top" />
             <div class="side bottom" />
-        }}/>
+        </div>
     )
 }
 export default Body;

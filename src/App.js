@@ -4,6 +4,7 @@ import { EigenvalueDecomposition, Matrix } from "ml-matrix";
 import Input from "./Input";
 import Line from "./Line";
 import Square from "./Square";
+import Body from "./Body";
 
 const App = () => {
     const nx = 700;
@@ -270,6 +271,7 @@ const App = () => {
                 ))}
                 {/* <Line xi={nx/2} yi={ny/2} xf={nx * (1/2 + omfs[0])} yf={ny * (1/2 + omfs[1])} /> */}
                 <Line xi={nx/2} yi={ny/2} xf={nx * (1/2 + oms[0]/3)} yf={ny * (1/2 + oms[1]/3)} dashed={true}/>
+                <Body nx={nx} ny={ny} angleVec={angleVecs[2]} />
             </div>
         </>
     )
