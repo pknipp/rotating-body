@@ -145,9 +145,18 @@ const App = () => {
         if (mom === '-' || mom === '.' || mom === '-.') {
             newMomsInput[xyOrZ] = mom;
         } else {
-            if (isNaN(Number(mom))) return;
-            newMomsInput[xyOrZ] = mom;
-            newMoms[xyOrZ] = Number(mom);
+            let newMom = Number(mom);
+            if (isNaN(mom)) return;
+            // calculate limits of the value of this new moment of inertia
+            let otherMoms = moms.splice(xyOrZ);
+            let maxOtherMom = Math.max(...otherMoms);
+            let minOtherMom = Math.min(...otherMoms);
+            let maxNewMom = maxOtherMom + minOtherMom;
+            let minNewMom = minOtherMom - minOtherMom;
+            console.log(minNewMom, maxNewMom);
+            mom = mom < minNewMom ? minNewMom : mom > maxNewMom ? maxNewMom : mom;
+            newMomsInput[xyOrZ] = String(mom);
+            newMoms[xyOrZ] = mom;
         }
         setMomsInput(newMomsInput);
         setMoms(newMoms);
