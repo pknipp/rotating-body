@@ -2,17 +2,17 @@ import React, { useState, useEffect } from "react";
 import { EigenvalueDecomposition, Matrix } from "ml-matrix";
 // import Dot from "./Dot";
 import Input from "./Input";
-// import Line from "./Line";
+import Line from "./Line";
 import Square from "./Square";
 
 const App = () => {
     const nx = 700;
     const ny = 700;
     // const nz = ny;
-    const xyz = new Array(3).fill(0);
+    const [xyz] = useState(new Array(3).fill(0));
     const colors = ["red", "green", "blue"];
     const [h] = useState(1);
-    const [thsInput, setThsInput] = useState(["0", "0.01", "0"]);
+    const [thsInput, setThsInput] = useState(["0", "0.1", "0"]);
     const [ths, setThs] = useState(thsInput.map(elem => Number(elem)));
     const [momsInput, setMomsInput] = useState(["1", "3", "2"]);
     const [moms, setMoms] = useState(momsInput.map(elem => Number(elem)));
@@ -179,8 +179,8 @@ const App = () => {
         setOms(newOms);
         setOm2(newOms.reduce((om2, om) => om2 + om * om, 0));
         let newOmfs = [];
-        newOmfs[0] = Fs[2] * ss[1] * ss[2] + Fs[1] * cs[0];
-        newOmfs[1] =-Fs[2] * ss[1] * cs[2] + Fs[1] * ss[0];
+        newOmfs[0] = Fs[2] * ss[1] * ss[0] + Fs[1] * cs[0];
+        newOmfs[1] =-Fs[2] * ss[1] * cs[0] + Fs[1] * ss[0];
         newOmfs[2] = Fs[2] * cs[1] + Fs[0];
         // newOms = newOms.map(elem => -elem);
         setOmfs(newOmfs);
@@ -268,6 +268,8 @@ const App = () => {
                         <Square key={`back${i}`} mids={mids} i={2*i+ 1} nx={nx} ny={ny} d={d} angleVec={angleVec} color={colors[i]} />
                     </>
                 ))}
+                {/* <Line xi={nx/2} yi={ny/2} xf={nx * (1/2 + omfs[0])} yf={ny * (1/2 + omfs[1])} /> */}
+                <Line xi={nx/2} yi={ny/2} xf={nx * (1/2 + oms[0]/3)} yf={ny * (1/2 + oms[1]/3)} dashed={true}/>
             </div>
         </>
     )
