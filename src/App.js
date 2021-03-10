@@ -10,12 +10,13 @@ const App = () => {
     const nx = 700;
     const ny = 700;
     // const nz = ny;
+    // following is solely needed for list comprehensions
     const [xyz] = useState(new Array(3).fill(0));
     const colors = ["red", "green", "blue"];
     const [h] = useState(1);
     const [thsInput, setThsInput] = useState(["0", "0.1", "0"]);
     const [ths, setThs] = useState(thsInput.map(elem => Number(elem)));
-    const [momsInput, setMomsInput] = useState(["1", "3", "2"]);
+    const [momsInput, setMomsInput] = useState(["1", "1", "2"]);
     const [moms, setMoms] = useState(momsInput.map(elem => Number(elem)));
     const [omsInput] = useState(["", "", ""]);
     const [oms, setOms] = useState(omsInput.map(elem => Number(elem)));
@@ -263,15 +264,15 @@ const App = () => {
                 </tbody>
             </table>
             <div className="container" style={{height:`${ny}px`, width:`${nx}px`}}>
-                {angleVecs.map((angleVec, i) => (
+                {/* {angleVecs.map((angleVec, i) => (
                     <>
                         <Square key={`front${i}`} mids={mids} i={2 * i} nx={nx} ny={ny} d={d} angleVec={angleVec} color={colors[i]} />
                         <Square key={`back${i}`} mids={mids} i={2*i+ 1} nx={nx} ny={ny} d={d} angleVec={angleVec} color={colors[i]} />
                     </>
-                ))}
+                ))} */}
                 {/* <Line xi={nx/2} yi={ny/2} xf={nx * (1/2 + omfs[0])} yf={ny * (1/2 + omfs[1])} /> */}
                 <Line xi={nx/2} yi={ny/2} xf={nx * (1/2 + oms[0]/3)} yf={ny * (1/2 + oms[1]/3)} dashed={true}/>
-                <Body nx={nx} ny={ny} angleVec={angleVecs[2]} />
+                <Body nx={nx} ny={ny} angleVec={angleVecs[2]} d={d} />
             </div>
         </>
     )
