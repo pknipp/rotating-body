@@ -16,7 +16,7 @@ const App = () => {
     const [h] = useState(1);
     const [thsInput, setThsInput] = useState(["0", "0.1", "0"]);
     const [ths, setThs] = useState(thsInput.map(elem => Number(elem)));
-    const [momsInput, setMomsInput] = useState(["1", "1", "2"]);
+    const [momsInput, setMomsInput] = useState(["1", "3", "2"]);
     const [moms, setMoms] = useState(momsInput.map(elem => Number(elem)));
     const [omsInput] = useState(["", "", ""]);
     const [oms, setOms] = useState(omsInput.map(elem => Number(elem)));
@@ -65,8 +65,13 @@ const App = () => {
     // const invZ = [[1, 0, 0], [0, 1, 0], [0, 0,-1]];
 
     useEffect(() => {
-        let factor = Math.sqrt(moms.reduce((momMax, mom) => Math.max(momMax, mom), 0));
-        let newD = moms.map(mom => Math.round(nx * Math.sqrt(mom)/factor/3));
+        let sumMom = moms[0] + moms[1] + moms[2];
+        let newD = moms.map(mom => Math.sqrt((sumMom - mom) / 2));
+        let dMax = newD.reduce((max, d) => Math.max(d, max));
+        newD = newD.map(d => nx * d / dMax / 4);
+        // let factor = Math.sqrt(moms.reduce((momMax, mom) => Math.max(momMax, mom), 0));
+        // // Fix the following, which assumes that D is proto moment along that axis
+        // let newD = moms.map(mom => Math.round(nx * Math.sqrt(mom)/factor/3));
         setD(newD);
         // replace this using reduce?
         const newMids0 = [];
@@ -271,7 +276,7 @@ const App = () => {
                     </>
                 ))} */}
                 {/* <Line xi={nx/2} yi={ny/2} xf={nx * (1/2 + omfs[0])} yf={ny * (1/2 + omfs[1])} /> */}
-                <Line xi={nx/2} yi={ny/2} xf={nx * (1/2 + oms[0]/3)} yf={ny * (1/2 + oms[1]/3)} dashed={true}/>
+                <Line xi={nx/2} yi={ny/2} xf={nx * (1/2 + omfs[0])} yf={ny * (1/2 + omfs[1])} />
                 <Body nx={nx} ny={ny} angleVec={angleVecs[2]} d={d} />
             </div>
         </>
