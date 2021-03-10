@@ -33,20 +33,17 @@ const App = () => {
     const [time, setTime] = useState(0);
     const [angleVecs, setAngleVecs] = useState([[]]);
     const [d, setD] = useState([nx / 3, nx / 3, nx / 3]);
+    const [areLegalMoms, setAreLegalMoms] = useState(true);
 
     // ODE-solver timestep in ms
     const dt = 50;
 
     // helpful linear algebra functions:
     const dotproduct = (vec1, vec2) => vec1.reduce((dot, comp, i) => dot + comp * vec2[i], 0);
+    // Can the following be expressed using map rather than reduce?
     const mult1 = (mat, vec) => mat.reduce((prod, row, i) => [...prod, dotproduct(row, vec)], []);
     const transpose = mat => mat[0].map((blah, i) => mat.map(row => row[i]));
     const mult2 = (mat1, mat2) => mat1.map(x => transpose(mat2).map(y => dotproduct(x, y)));
-    // const det = mat => {
-    //     return mat[0][0] * (mat[1][1] * mat[2][2] - mat[1][2] * mat[2][1]) +
-    //            mat[0][1] * (mat[1][2] * mat[2][0] - mat[1][0] * mat[2][2]) +
-    //            mat[0][2] * (mat[1][0] * mat[2][1] - mat[1][1] * mat[2][0]);
-    // }
 
     const zRot = th => {
         let [c, s] = [Math.cos(th), Math.sin(th)];
@@ -66,7 +63,7 @@ const App = () => {
 
     useEffect(() => {
         let sumMom = moms[0] + moms[1] + moms[2];
-        let newD = moms.map(mom => Math.sqrt((sumMom - mom) / 2));
+        let newD = moms.map(mom => Math.sqrt((sumMom / 2 - mom)));
         let dMax = newD.reduce((max, d) => Math.max(d, max));
         newD = newD.map(d => nx * d / dMax / 4);
         // let factor = Math.sqrt(moms.reduce((momMax, mom) => Math.max(momMax, mom), 0));
@@ -132,31 +129,33 @@ const App = () => {
         }
         setThsInput(newThsInput);
         setThs(newThs);
-        let newMids = JSON.parse(JSON.stringify(mids0));
-        mids0.forEach((mid, i) => newMids[i] = mult1(invRot(ths), mid));
+        let newMids = []; //JSON.parse(JSON.stringify(mids0));
+        mids0.forEach(mid => newMids.push(mult1(invRot(ths), mid)));
         setMids(newMids);
     };
 
     const handlerMom = e => {
         let xyOrZ = Number(e.target.name);
         let mom = e.target.value;
+        console.log("mom = ", mom);
         let newMomsInput = [...momsInput];
         let newMoms = [...moms];
-        if (mom === '-' || mom === '.' || mom === '-.') {
+        if (mom === '' || mom === '.') {
             newMomsInput[xyOrZ] = mom;
         } else {
             let newMom = Number(mom);
-            if (isNaN(mom)) return;
+            if (isNaN(newMom)) return;
             // calculate limits of the value of this new moment of inertia
-            let otherMoms = moms.splice(xyOrZ);
+            let otherMoms = [...moms];
+            otherMoms.splice(xyOrZ, 1);
             let maxOtherMom = Math.max(...otherMoms);
             let minOtherMom = Math.min(...otherMoms);
-            let maxNewMom = maxOtherMom + minOtherMom;
-            let minNewMom = minOtherMom - minOtherMom;
-            console.log(minNewMom, maxNewMom);
-            mom = mom < minNewMom ? minNewMom : mom > maxNewMom ? maxNewMom : mom;
-            newMomsInput[xyOrZ] = String(mom);
-            newMoms[xyOrZ] = mom;
+            let maxMom = maxOtherMom + minOtherMom;
+            let minMom = maxOtherMom - minOtherMom;
+            let newAreLegalMoms = !(mom < minMom || mom > maxMom);
+            newMomsInput[xyOrZ] = mom;
+            newMoms[xyOrZ] = newMom;
+            setAreLegalMoms(newAreLegalMoms);
         }
         setMomsInput(newMomsInput);
         setMoms(newMoms);
@@ -176,7 +175,6 @@ const App = () => {
     }, [running, time]);
 
     const Fs = ths => {
-        // Following was used for symmetric rotor: let Fs = [oms[0], 0, oms[2]];
         let cs = [];
         let ss = [];
         for (const th of ths) {
@@ -191,14 +189,12 @@ const App = () => {
         newOms[0] = Fs[0] * ss[1] * ss[2] + Fs[1] * cs[2];
         newOms[1] = Fs[0] * ss[1] * cs[2] - Fs[1] * ss[2];
         newOms[2] = Fs[0] * cs[1] + Fs[2];
-        // newOms = newOms.map(elem => -elem);
         setOms(newOms);
         setOm2(newOms.reduce((om2, om) => om2 + om * om, 0));
         let newOmfs = [];
         newOmfs[0] = Fs[2] * ss[1] * ss[0] + Fs[1] * cs[0];
         newOmfs[1] =-Fs[2] * ss[1] * cs[0] + Fs[1] * ss[0];
         newOmfs[2] = Fs[2] * cs[1] + Fs[0];
-        // newOms = newOms.map(elem => -elem);
         setOmfs(newOmfs);
         setOmf2(newOmfs.reduce((om2, om) => om2 + om * om, 0));
         let newLs = newOms.map((om, i) => moms[i] * om);
@@ -249,7 +245,7 @@ const App = () => {
                         <td><Input key={"mom0"} n={0} quantity={momsInput[0]} handler={handlerMom} /></td>
                         <td><Input key={"mom1"} n={1} quantity={momsInput[1]} handler={handlerMom} /></td>
                         <td><Input key={"mom2"} n={2} quantity={momsInput[2]} handler={handlerMom} /></td>
-                        <td> - </td>
+                        <td>{areLegalMoms ? null : "WARNING: No single moment of inertia should exceed the sum of the other two."}</td>
                     </tr>
                     <tr>
                         <td>(body) omega</td>
@@ -285,6 +281,9 @@ const App = () => {
                     </>
                 ))} */}
                 {/* <Line xi={nx/2} yi={ny/2} xf={nx * (1/2 + omfs[0])} yf={ny * (1/2 + omfs[1])} /> */}
+                {mids.map(mid => {
+                    <Line xi={nx/2} yi={ny/2} xf={nx * (0.5 + mid[0])} yf={ny * (0.5 + mid[1])} dashed={true} />
+                })}
                 <Line xi={nx/2} yi={ny/2} xf={nx * (1/2 + omfs[0])} yf={ny * (1/2 + omfs[1])} />
                 <Body nx={nx} ny={ny} angleVec={angleVecs[2]} d={d} />
             </div>
