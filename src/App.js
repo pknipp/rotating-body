@@ -4,11 +4,13 @@ import { EigenvalueDecomposition, Matrix } from "ml-matrix";
 import Input from "./Input";
 import Line from "./Line";
 import Square from "./Square";
+import Body from "./Body";
 
 const App = () => {
     const nx = 700;
     const ny = 700;
     // const nz = ny;
+    // following is solely needed for list comprehensions
     const [xyz] = useState(new Array(3).fill(0));
     const colors = ["red", "green", "blue"];
     const [h] = useState(1);
@@ -63,8 +65,13 @@ const App = () => {
     // const invZ = [[1, 0, 0], [0, 1, 0], [0, 0,-1]];
 
     useEffect(() => {
-        let factor = Math.sqrt(moms.reduce((momMax, mom) => Math.max(momMax, mom), 0));
-        let newD = moms.map(mom => Math.round(nx * Math.sqrt(mom)/factor/3));
+        let sumMom = moms[0] + moms[1] + moms[2];
+        let newD = moms.map(mom => Math.sqrt((sumMom - mom) / 2));
+        let dMax = newD.reduce((max, d) => Math.max(d, max));
+        newD = newD.map(d => nx * d / dMax / 4);
+        // let factor = Math.sqrt(moms.reduce((momMax, mom) => Math.max(momMax, mom), 0));
+        // // Fix the following, which assumes that D is proto moment along that axis
+        // let newD = moms.map(mom => Math.round(nx * Math.sqrt(mom)/factor/3));
         setD(newD);
         // replace this using reduce?
         const newMids0 = [];
@@ -262,14 +269,15 @@ const App = () => {
                 </tbody>
             </table>
             <div className="container" style={{height:`${ny}px`, width:`${nx}px`}}>
-                {angleVecs.map((angleVec, i) => (
+                {/* {angleVecs.map((angleVec, i) => (
                     <>
                         <Square key={`front${i}`} mids={mids} i={2 * i} nx={nx} ny={ny} d={d} angleVec={angleVec} color={colors[i]} />
                         <Square key={`back${i}`} mids={mids} i={2*i+ 1} nx={nx} ny={ny} d={d} angleVec={angleVec} color={colors[i]} />
                     </>
-                ))}
+                ))} */}
                 {/* <Line xi={nx/2} yi={ny/2} xf={nx * (1/2 + omfs[0])} yf={ny * (1/2 + omfs[1])} /> */}
-                <Line xi={nx/2} yi={ny/2} xf={nx * (1/2 + oms[0]/3)} yf={ny * (1/2 + oms[1]/3)} dashed={true}/>
+                <Line xi={nx/2} yi={ny/2} xf={nx * (1/2 + omfs[0])} yf={ny * (1/2 + omfs[1])} />
+                <Body nx={nx} ny={ny} angleVec={angleVecs[2]} d={d} />
             </div>
         </>
     )
