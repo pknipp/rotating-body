@@ -25,7 +25,7 @@
 .square {box-sizing: border-box; position: absolute; border: none 1px black; }
 .line {
     box-sizing: border-box;
-    border-top: solid 2px black;
+    border-top: solid 4px black;
     position: absolute;
     height: 0px;
 }
