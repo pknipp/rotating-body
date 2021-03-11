@@ -9,14 +9,15 @@ import Body from "./Body";
 const App = () => {
     const nx = 700;
     const ny = 700;
-    // const nz = ny;
     // following is solely needed for list comprehensions
     const [xyz] = useState(new Array(3).fill(0));
     // const colors = ["red", "green", "blue"];
-    const [h] = useState(1);
+    const [LzInput, setLzInput] = useState("1");
+    const [Lz, setLz] = useState(Number(LzInput));
     const [thsInput, setThsInput] = useState(["0", "0.1", "0"]);
     const [ths, setThs] = useState(thsInput.map(elem => Number(elem)));
-    const [momsInput, setMomsInput] = useState(["2", "4", "3"]);
+    const [momsInput, setMomsInput] = useState(["3", "3", "3"]);
+    const [firstMoms, setFirstMoms] = useState(momsInput.map(elem => Number(elem)));
     const [moms, setMoms] = useState(momsInput.map(elem => Number(elem)));
     const [omsInput] = useState(["", "", ""]);
     const [oms, setOms] = useState(omsInput.map(elem => Number(elem)));
@@ -36,6 +37,10 @@ const App = () => {
     const [d, setD] = useState([nx / 3, nx / 3, nx / 3]);
     const [areLegalMoms, setAreLegalMoms] = useState(true);
     const [degeneracies, setDegeneracies] = useState(new Array(3).fill(false));
+    const [shape, setShape] = useState(0);
+    const [types, setTypes] = useState([]);
+    const [zAxis, setZAxis] = useState(0);
+    const [legalOrder, setLegalOrder] = useState(true);
 
     // ODE-solver timestep in ms
     const dt = 50;
@@ -102,13 +107,21 @@ const App = () => {
         return [angle, axisVec];
     }
 
-    // consolidate following two event handlers?
+    // consolidate aspects of following event handlers?
+    const handlerLz = e => {
+        let newLz =  e.target.value;
+        if (['', '-', '.', '-.'].includes(newLz)) return setLzInput(newLz);
+        if (isNaN(Number(newLz))) return;
+        setLzInput(newLz);
+        setLz(Number(newLz));
+    };
+
     const handlerTh = e => {
         let xyOrZ = Number(e.target.name);
         let th =  e.target.value;
         let newThsInput = [...thsInput]
         let newThs = [...ths];
-        if (th === '' || th === '-' || th === '.' || th === '-.') {
+        if (['', '-','.', '-.'].includes(th)) {
             newThsInput[xyOrZ] = th;
         } else {
             if (isNaN(Number(th))) return;
@@ -123,35 +136,48 @@ const App = () => {
     };
 
     const handlerMom = e => {
-        let xyOrZ = Number(e.target.name);
+        // let xyOrZ = Number(e.target.name);
+        let name = Number(e.target.name);
         let mom = e.target.value;
         let newMomsInput = [...momsInput];
-        let newMoms = [...moms];
-        if (mom === '' || mom === '.') {
-            newMomsInput[xyOrZ] = mom;
+        let newMoms = [...firstMoms];
+        if (['', '.'].includes(mom)) {
+            newMomsInput[name] = mom;
         } else {
             let newMom = Number(mom);
             if (isNaN(newMom)) return;
-            // calculate limits of the value of this new moment of inertia
-            let otherMoms = [...moms];
-            otherMoms.splice(xyOrZ, 1);
-            let maxOtherMom = Math.max(...otherMoms);
-            let minOtherMom = Math.min(...otherMoms);
-            let maxMom = maxOtherMom + minOtherMom;
-            let minMom = maxOtherMom - minOtherMom;
-            let newAreLegalMoms = !(mom < minMom || mom > maxMom);
-            newMomsInput[xyOrZ] = mom;
-            newMoms[xyOrZ] = newMom;
-            setAreLegalMoms(newAreLegalMoms);
+            newMomsInput[name] = mom;
+            newMoms[name] = newMom;
+            if (shape === 1) {
+                newMoms[1] = newMom;
+                newMoms[2] = newMom;
+                // setMoms(newMoms);
+            }
+            if (shape === 2 && name === 1) newMoms[2] = newMom;
+            if (shape === 3) {
+                console.log(newMoms, legalOrder);
+                setLegalOrder(newMoms.reduce((legal, mom, i, moms) => (!i || (legal && mom < moms[i - 1])), true))
+            }
+            setAreLegalMoms(newMoms.reduce((legal, mom, i, moms) => (legal && mom <= (moms[(i+1)%3] + moms[(i+2)%3])), true));
+            // // calculate limits of the value of this new moment of inertia
+            // let otherMoms = [...moms];
+            // otherMoms.splice(xyOrZ, 1);
+            // let maxOtherMom = Math.max(...otherMoms);
+            // let minOtherMom = Math.min(...otherMoms);
+            // let maxMom = maxOtherMom + minOtherMom;
+            // let minMom = maxOtherMom - minOtherMom;
+            // let newAreLegalMoms = !(mom < minMom || mom > maxMom);
+            // setAreLegalMoms(newAreLegalMoms);
             // set as "true" for all axes for which moments of inertia are degenerate
-            let newDegeneracies = newMoms.map((momI, i) => {
-                return newMoms.filter((blah, j) => i !== j).reduce((degenerate, momJ) => {
-                    return degenerate || momJ === momI;
-                }, false);
-            })
-            setDegeneracies(newDegeneracies);
+            // let newDegeneracies = newMoms.map((momI, i) => {
+            //     return newMoms.filter((blah, j) => i !== j).reduce((degenerate, momJ) => {
+            //         return degenerate || momJ === momI;
+            //     }, false);
+            // })
+            // setDegeneracies(newDegeneracies);
         }
         setMomsInput(newMomsInput);
+        setFirstMoms(newMoms);
         setMoms(newMoms);
     };
 
@@ -170,9 +196,9 @@ const App = () => {
             ss.push(Math.sin(th));
         };
         let Fs = []
-        Fs[0] = h * (cs[2] * cs[2] / moms[1] + ss[2] * ss[2] / moms[0]);
-        Fs[1] = h * (1 / moms[0] - 1 / moms[1]) * ss[1] * ss[2] * cs[2];
-        Fs[2] = h * (1 / moms[2] - cs[2] * cs[2] / moms[1] - ss[2] * ss[2] / moms[0]) * cs[1];
+        Fs[0] = Lz * (cs[2] * cs[2] / moms[1] + ss[2] * ss[2] / moms[0]);
+        Fs[1] = Lz * (1 / moms[0] - 1 / moms[1]) * ss[1] * ss[2] * cs[2];
+        Fs[2] = Lz * (1 / moms[2] - cs[2] * cs[2] / moms[1] - ss[2] * ss[2] / moms[0]) * cs[1];
         let newOms = [];
         newOms[0] = Fs[0] * ss[1] * ss[2] + Fs[1] * cs[2];
         newOms[1] = Fs[0] * ss[1] * cs[2] - Fs[1] * ss[2];
@@ -212,6 +238,44 @@ const App = () => {
             <button onClick={() => setRunning(!running)}>{running ? "Stop" : "Start"}</button>
             <button onClick={() => setTime(0)}>Reset</button>
             Time = {time.toFixed(2)} s
+            <div><Input quantity={running || time ? Lz : LzInput}
+                handler={handlerLz}
+            /> z-component of angular momentum
+            </div>
+            <div>{shape ? "Shape of body": null}</div>
+            <select value={shape} onChange={e => {
+                let newShape = Number(e.target.value);
+                setShape(newShape);
+                if (newShape) setTypes([[''], ['parallel axis', 'transverse axis'], ['short axis', 'intermediate axis', 'long axis']][newShape - 1]);
+            }}>
+                  {["choose body's shape", 'isotropic (cube)', 'axisymmetric (e.g., box for pizza or wine)', 'asymmetric (e.g., suitcase)'].map((option, i) => <option key={i} value={i}>{option} </option>)}
+            </select>
+            {!shape ? null :
+                <>
+                <div>Moment{`${shape === 1 ? '' : "s"}`} of inertia:</div>
+                {xyz.filter((blah, i) => i < shape).map((blah, i) => {
+                    return <div><Input key={i} name={i} quantity={momsInput[i]} handler={handlerMom} />{types[i]}</div>
+                })}
+                <div>{legalOrder ? null : "WARNING: for an asymmetric rotor the moments of inertia should decrease, going from short axis to long axis."}</div>
+                <div>{!areLegalMoms ? "WARNING: no single moment of inertia should exceed the sum of the other two." : null}</div>
+                {shape < 2 ? null :
+                    <>
+                    <div>Choice for z-axis:</div>
+                    <select value={zAxis} onChange={e => {
+                        let newZAxis = Number(e.target.value);
+                        let newMoms = [...moms];
+                        newMoms[2] = firstMoms[newZAxis];
+                        newMoms[0] = firstMoms[(newZAxis + 1) % 3];
+                        newMoms[1] = firstMoms[(newZAxis + 2) % 3];
+                        setMoms(newMoms);
+                        setZAxis(newZAxis);
+                    }}>
+                      {types.map((option, i) => <option key={i} value={i}>near {option} </option>)}
+                    </select>
+                    </>
+                }
+                </>
+            }
             <table>
                 <thead>
                     <tr>
@@ -225,16 +289,16 @@ const App = () => {
                 <tbody>
                     <tr>
                         <td>angles (rad)</td>
-                        <td><Input key={"ang0"} n={0} quantity={running || time ? ths[0] : thsInput[0]} handler={handlerTh} /></td>
-                        <td><Input key={"ang1"} n={1} quantity={running || time ? ths[1] : thsInput[1]} handler={handlerTh} /></td>
-                        <td><Input key={"ang2"} n={2} quantity={running || time ? ths[2] : thsInput[2]} handler={handlerTh} /></td>
+                        <td><Input key={"ang0"} name={0} quantity={running || time ? ths[0] : thsInput[0]} handler={handlerTh} /></td>
+                        <td><Input key={"ang1"} name={1} quantity={running || time ? ths[1] : thsInput[1]} handler={handlerTh} /></td>
+                        <td><Input key={"ang2"} name={2} quantity={running || time ? ths[2] : thsInput[2]} handler={handlerTh} /></td>
                         <td> - </td>
                     </tr>
                     <tr>
                         <td>moments</td>
-                        <td><Input key={"mom0"} n={0} quantity={momsInput[0]} handler={handlerMom} /></td>
-                        <td><Input key={"mom1"} n={1} quantity={momsInput[1]} handler={handlerMom} /></td>
-                        <td><Input key={"mom2"} n={2} quantity={momsInput[2]} handler={handlerMom} /></td>
+                        <td><Input key={"mom0"} name={0} quantity={moms[0]} handler={handlerMom} /></td>
+                        <td><Input key={"mom1"} name={1} quantity={moms[1]} handler={handlerMom} /></td>
+                        <td><Input key={"mom2"} name={2} quantity={moms[2]} handler={handlerMom} /></td>
                         <td>{areLegalMoms ? null : "WARNING: No single moment of inertia should exceed the sum of the other two."}</td>
                     </tr>
                     <tr>
