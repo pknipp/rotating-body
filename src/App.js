@@ -9,11 +9,11 @@ import Body from "./Body";
 const App = () => {
     const nx = 700;
     const ny = 700;
-    // const nz = ny;
     // following is solely needed for list comprehensions
     const [xyz] = useState(new Array(3).fill(0));
     // const colors = ["red", "green", "blue"];
-    const [h] = useState(1);
+    const [LzInput, setLzInput] = useState("1");
+    const [Lz, setLz] = useState(Number(LzInput));
     const [thsInput, setThsInput] = useState(["0", "0.1", "0"]);
     const [ths, setThs] = useState(thsInput.map(elem => Number(elem)));
     const [momsInput, setMomsInput] = useState(["2", "4", "3"]);
@@ -102,7 +102,16 @@ const App = () => {
         return [angle, axisVec];
     }
 
-    // consolidate following two event handlers?
+    // consolidate aspects of following event handlers?
+    const handlerLz = e => {
+        let newLz =  e.target.value;
+        if (['', '-', '.', '-.'].includes(newLz)) return setLzInput(newLz);
+        if (isNaN(Number(newLz))) return;
+        setLzInput(newLz);
+        newLz = Number(newLz);
+        setLz(newLz);
+    };
+
     const handlerTh = e => {
         let xyOrZ = Number(e.target.name);
         let th =  e.target.value;
@@ -170,9 +179,9 @@ const App = () => {
             ss.push(Math.sin(th));
         };
         let Fs = []
-        Fs[0] = h * (cs[2] * cs[2] / moms[1] + ss[2] * ss[2] / moms[0]);
-        Fs[1] = h * (1 / moms[0] - 1 / moms[1]) * ss[1] * ss[2] * cs[2];
-        Fs[2] = h * (1 / moms[2] - cs[2] * cs[2] / moms[1] - ss[2] * ss[2] / moms[0]) * cs[1];
+        Fs[0] = Lz * (cs[2] * cs[2] / moms[1] + ss[2] * ss[2] / moms[0]);
+        Fs[1] = Lz * (1 / moms[0] - 1 / moms[1]) * ss[1] * ss[2] * cs[2];
+        Fs[2] = Lz * (1 / moms[2] - cs[2] * cs[2] / moms[1] - ss[2] * ss[2] / moms[0]) * cs[1];
         let newOms = [];
         newOms[0] = Fs[0] * ss[1] * ss[2] + Fs[1] * cs[2];
         newOms[1] = Fs[0] * ss[1] * cs[2] - Fs[1] * ss[2];
@@ -212,6 +221,9 @@ const App = () => {
             <button onClick={() => setRunning(!running)}>{running ? "Stop" : "Start"}</button>
             <button onClick={() => setTime(0)}>Reset</button>
             Time = {time.toFixed(2)} s
+            <Input quantity={running || time ? Lz : LzInput}
+                handler={handlerLz}
+            /> z-component of angular momentum
             <table>
                 <thead>
                     <tr>
@@ -225,16 +237,16 @@ const App = () => {
                 <tbody>
                     <tr>
                         <td>angles (rad)</td>
-                        <td><Input key={"ang0"} n={0} quantity={running || time ? ths[0] : thsInput[0]} handler={handlerTh} /></td>
-                        <td><Input key={"ang1"} n={1} quantity={running || time ? ths[1] : thsInput[1]} handler={handlerTh} /></td>
-                        <td><Input key={"ang2"} n={2} quantity={running || time ? ths[2] : thsInput[2]} handler={handlerTh} /></td>
+                        <td><Input key={"ang0"} name={0} quantity={running || time ? ths[0] : thsInput[0]} handler={handlerTh} /></td>
+                        <td><Input key={"ang1"} name={1} quantity={running || time ? ths[1] : thsInput[1]} handler={handlerTh} /></td>
+                        <td><Input key={"ang2"} name={2} quantity={running || time ? ths[2] : thsInput[2]} handler={handlerTh} /></td>
                         <td> - </td>
                     </tr>
                     <tr>
                         <td>moments</td>
-                        <td><Input key={"mom0"} n={0} quantity={momsInput[0]} handler={handlerMom} /></td>
-                        <td><Input key={"mom1"} n={1} quantity={momsInput[1]} handler={handlerMom} /></td>
-                        <td><Input key={"mom2"} n={2} quantity={momsInput[2]} handler={handlerMom} /></td>
+                        <td><Input key={"mom0"} name={0} quantity={momsInput[0]} handler={handlerMom} /></td>
+                        <td><Input key={"mom1"} name={1} quantity={momsInput[1]} handler={handlerMom} /></td>
+                        <td><Input key={"mom2"} name={2} quantity={momsInput[2]} handler={handlerMom} /></td>
                         <td>{areLegalMoms ? null : "WARNING: No single moment of inertia should exceed the sum of the other two."}</td>
                     </tr>
                     <tr>
