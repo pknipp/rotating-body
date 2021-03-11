@@ -17,6 +17,7 @@ const App = () => {
     const [thsInput, setThsInput] = useState(["0", "0.1", "0"]);
     const [ths, setThs] = useState(thsInput.map(elem => Number(elem)));
     const [momsInput, setMomsInput] = useState(["3", "3", "3"]);
+    const [firstMoms, setFirstMoms] = useState(momsInput.map(elem => Number(elem)));
     const [moms, setMoms] = useState(momsInput.map(elem => Number(elem)));
     const [omsInput] = useState(["", "", ""]);
     const [oms, setOms] = useState(omsInput.map(elem => Number(elem)));
@@ -139,7 +140,7 @@ const App = () => {
         let name = Number(e.target.name);
         let mom = e.target.value;
         let newMomsInput = [...momsInput];
-        let newMoms = [...moms];
+        let newMoms = [...firstMoms];
         if (['', '.'].includes(mom)) {
             newMomsInput[name] = mom;
         } else {
@@ -150,13 +151,14 @@ const App = () => {
             if (shape === 1) {
                 newMoms[1] = newMom;
                 newMoms[2] = newMom;
+                // setMoms(newMoms);
             }
             if (shape === 2 && name === 1) newMoms[2] = newMom;
             if (shape === 3) {
                 console.log(newMoms, legalOrder);
                 setLegalOrder(newMoms.reduce((legal, mom, i, moms) => (!i || (legal && mom < moms[i - 1])), true))
             }
-            setAreLegalMoms(newMoms.reduce((legal, mom, i, moms) => (legal && mom < (moms[(i+1)%3] + moms[(i+2)%3])), true));
+            setAreLegalMoms(newMoms.reduce((legal, mom, i, moms) => (legal && mom <= (moms[(i+1)%3] + moms[(i+2)%3])), true));
             // // calculate limits of the value of this new moment of inertia
             // let otherMoms = [...moms];
             // otherMoms.splice(xyOrZ, 1);
@@ -175,6 +177,7 @@ const App = () => {
             // setDegeneracies(newDegeneracies);
         }
         setMomsInput(newMomsInput);
+        setFirstMoms(newMoms);
         setMoms(newMoms);
     };
 
@@ -253,13 +256,19 @@ const App = () => {
                 {xyz.filter((blah, i) => i < shape).map((blah, i) => {
                     return <div><Input key={i} name={i} quantity={momsInput[i]} handler={handlerMom} />{types[i]}</div>
                 })}
-                <div>{legalOrder ? null : "WARNING: for an asymmetric rotor the moments of inertia should relate INversely to the axis lengths."}</div>
+                <div>{legalOrder ? null : "WARNING: for an asymmetric rotor the moments of inertia should decrease, going from short axis to long axis."}</div>
                 <div>{!areLegalMoms ? "WARNING: no single moment of inertia should exceed the sum of the other two." : null}</div>
                 {shape < 2 ? null :
                     <>
                     <div>Choice for z-axis:</div>
                     <select value={zAxis} onChange={e => {
-                        setZAxis(Number(e.target.value));
+                        let newZAxis = Number(e.target.value);
+                        let newMoms = [...moms];
+                        newMoms[2] = firstMoms[newZAxis];
+                        newMoms[0] = firstMoms[(newZAxis + 1) % 3];
+                        newMoms[1] = firstMoms[(newZAxis + 2) % 3];
+                        setMoms(newMoms);
+                        setZAxis(newZAxis);
                     }}>
                       {types.map((option, i) => <option key={i} value={i}>near {option} </option>)}
                     </select>
