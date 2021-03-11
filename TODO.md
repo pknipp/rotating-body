@@ -2,10 +2,9 @@ git push heroku master
 
 TO DO:
 render inputs in following order:
-    L ( = [0, 0, Lz])
+    Lz
     moments of inertia (preceded by a dropdown w/"isotropic", "axisymmetric", and "asymmetric")
     Euler angles (precedece by dropdown for (along symmetry axis, near one of the principal axes)
-Render lines which represent principal axes (but not if degenerate).
 Implement a lagrangian and/or hamiltonian version of this?
 Implement a version which'll allow setting of initial omegas?
 Tabulate things better.
@@ -17,4 +16,6 @@ Insert slider for perspective (and size of screen?) and time-step and angular mo
 Adjust colors, transparency, edges (solid or dashed)
 Insert info fields.
 Correlate timestep with sizes of moments and of Lz.
-Figure out what - if anything - gets broken if a moment equals zero or if I1 = I2 + i3.
+Figure out what - if anything - gets broken if a moment equals zero
+Figure out what - if anything - gets broken if I1 = I2 + i3.
+Implement A/B switches for choices of y-direction and z-direction.

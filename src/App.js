@@ -35,6 +35,7 @@ const App = () => {
     const [angleVec, setAngleVec] = useState([]);
     const [d, setD] = useState([nx / 3, nx / 3, nx / 3]);
     const [areLegalMoms, setAreLegalMoms] = useState(true);
+    const [degeneracies, setDegeneracies] = useState(new Array(3).fill(false));
 
     // ODE-solver timestep in ms
     const dt = 50;
@@ -57,13 +58,10 @@ const App = () => {
 
     // const rot = ths => mult2(mult2(zRot(ths[2]), xRot(ths[1])), zRot(ths[0]));
     const invRot=ths=> mult2(mult2(zRot(-ths[0]),xRot(-ths[1])), zRot(-ths[2]));
-    // const rotX = [[1, 0, 0], [0, 0,-1], [0, 1, 0]];
-    // const rotY = [[0, 0,-1], [0, 1, 0], [1, 0, 0]];
-    // const rotZ = [[1, 0, 0], [0, 1, 0], [0, 0, 1]];
 
     useEffect(() => {
         let sumMom = moms[0] + moms[1] + moms[2];
-        let newD = moms.map(mom => Math.sqrt((sumMom / 2 - mom)));
+        let newD = moms.map(mom => Math.max(0.000001, Math.sqrt((sumMom / 2 - mom))));
         let dMax = newD.reduce((max, d) => Math.max(d, max));
         newD = newD.map(d => nx * d / dMax / 4);
         setD(newD);
@@ -127,7 +125,6 @@ const App = () => {
     const handlerMom = e => {
         let xyOrZ = Number(e.target.name);
         let mom = e.target.value;
-        console.log("mom = ", mom);
         let newMomsInput = [...momsInput];
         let newMoms = [...moms];
         if (mom === '' || mom === '.') {
@@ -146,6 +143,13 @@ const App = () => {
             newMomsInput[xyOrZ] = mom;
             newMoms[xyOrZ] = newMom;
             setAreLegalMoms(newAreLegalMoms);
+            // set as "true" for all axes for which moments of inertia are degenerate
+            let newDegeneracies = newMoms.map((momI, i) => {
+                return newMoms.filter((blah, j) => i !== j).reduce((degenerate, momJ) => {
+                    return degenerate || momJ === momI;
+                }, false);
+            })
+            setDegeneracies(newDegeneracies);
         }
         setMomsInput(newMomsInput);
         setMoms(newMoms);
@@ -180,7 +184,7 @@ const App = () => {
         newOmfs[1] =-Fs[2] * ss[1] * cs[0] + Fs[1] * ss[0];
         newOmfs[2] = Fs[2] * cs[1] + Fs[0];
         setOmfs(newOmfs);
-        setOmf(newOmfs.reduce((om2, om) => om2 + om * om, 0));
+        setOmf(Math.sqrt(newOmfs.reduce((om2, om) => om2 + om * om, 0)));
         let newLs = newOms.map((om, i) => moms[i] * om);
         setLs(newLs);
         setL2(newLs.reduce((L2, L) => L2 + L * L, 0));
@@ -202,6 +206,9 @@ const App = () => {
     }, [time, running]);
     return (
         <>
+            <div className="top"><p align="center"><h1>Free-body rotation</h1></p></div>
+            <div className="bottom">
+            <div className="left">
             <button onClick={() => setRunning(!running)}>{running ? "Stop" : "Start"}</button>
             <button onClick={() => setTime(0)}>Reset</button>
             Time = {time.toFixed(2)} s
@@ -256,12 +263,15 @@ const App = () => {
                     </tr>
                 </tbody>
             </table>
+            </div>
             <div className="container" style={{height:`${ny}px`, width:`${nx}px`}}>
                 {mids.map((mid, i) => (
-                    <Line xi={nx/2} yi={ny/2} xf={nx * (0.5 + mid[0]/d[Math.floor(i / 2)]/10)} yf={ny * (0.5 + mid[1]/d[Math.floor(i / 2)]/10)} dashed={true} />
+                    degeneracies[Math.floor(i / 2)] ? null :
+                        <Line xi={nx/2} yi={ny/2} xf={nx * (0.5 + mid[0]/d[Math.floor(i / 2)]/10)} yf={ny * (0.5 + mid[1]/d[Math.floor(i / 2)]/10)} dashed={true} />
                 ))}
-                <Line xi={nx/2} yi={ny/2} xf={nx * (1 + omfs[0]/omf) / 2} yf={ny * (1 + omfs[1]/omf) / 2} />
+                <Line xi={nx/2} yi={ny/2} xf={nx * (1 + omfs[0]/omf) / 4} yf={ny * (1 + omfs[1]/omf) / 4} />
                 <Body nx={nx} ny={ny} angleVec={angleVec} d={d} />
+            </div>
             </div>
         </>
     )
