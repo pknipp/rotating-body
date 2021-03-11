@@ -145,14 +145,6 @@ const App = () => {
         } else {
             let newMom = Number(mom);
             if (isNaN(newMom)) return;
-            // // calculate limits of the value of this new moment of inertia
-            // let otherMoms = [...moms];
-            // otherMoms.splice(xyOrZ, 1);
-            // let maxOtherMom = Math.max(...otherMoms);
-            // let minOtherMom = Math.min(...otherMoms);
-            // let maxMom = maxOtherMom + minOtherMom;
-            // let minMom = maxOtherMom - minOtherMom;
-            // let newAreLegalMoms = !(mom < minMom || mom > maxMom);
             newMomsInput[name] = mom;
             newMoms[name] = newMom;
             if (shape === 1) {
@@ -164,6 +156,15 @@ const App = () => {
                 console.log(newMoms, legalOrder);
                 setLegalOrder(newMoms.reduce((legal, mom, i, moms) => (!i || (legal && mom < moms[i - 1])), true))
             }
+            setAreLegalMoms(newMoms.reduce((legal, mom, i, moms) => (legal && mom < (moms[(i+1)%3] + moms[(i+2)%3])), true));
+            // // calculate limits of the value of this new moment of inertia
+            // let otherMoms = [...moms];
+            // otherMoms.splice(xyOrZ, 1);
+            // let maxOtherMom = Math.max(...otherMoms);
+            // let minOtherMom = Math.min(...otherMoms);
+            // let maxMom = maxOtherMom + minOtherMom;
+            // let minMom = maxOtherMom - minOtherMom;
+            // let newAreLegalMoms = !(mom < minMom || mom > maxMom);
             // setAreLegalMoms(newAreLegalMoms);
             // set as "true" for all axes for which moments of inertia are degenerate
             // let newDegeneracies = newMoms.map((momI, i) => {
@@ -252,6 +253,8 @@ const App = () => {
                 {xyz.filter((blah, i) => i < shape).map((blah, i) => {
                     return <div><Input key={i} name={i} quantity={momsInput[i]} handler={handlerMom} />{types[i]}</div>
                 })}
+                <div>{legalOrder ? null : "WARNING: for an asymmetric rotor the moments of inertia should relate INversely to the axis lengths."}</div>
+                <div>{!areLegalMoms ? "WARNING: no single moment of inertia should exceed the sum of the other two." : null}</div>
                 {shape < 2 ? null :
                     <>
                     <div>Choice for z-axis:</div>
