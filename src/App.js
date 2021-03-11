@@ -36,6 +36,9 @@ const App = () => {
     const [d, setD] = useState([nx / 3, nx / 3, nx / 3]);
     const [areLegalMoms, setAreLegalMoms] = useState(true);
     const [degeneracies, setDegeneracies] = useState(new Array(3).fill(false));
+    const [shape, setShape] = useState(0);
+    const [types, setTypes] = useState([]);
+    const [zAxis, setZAxis] = useState(0);
 
     // ODE-solver timestep in ms
     const dt = 50;
@@ -224,6 +227,32 @@ const App = () => {
                 handler={handlerLz}
             /> z-component of angular momentum
             </div>
+            <div>{shape ? "Shape of body": null}</div>
+            <select value={shape} onChange={e => {
+                let newShape = Number(e.target.value);
+                setShape(newShape);
+                if (newShape) setTypes([[''], ['parallel axis', 'transverse axis'], ['short axis', 'intermediate axis', 'long axis']][newShape - 1]);
+            }}>
+                  {["choose body's shape", 'isotropic (cube)', 'axisymmetric (e.g., box for pizza or wine)', 'asymmetric (e.g., suitcase)'].map((option, i) => <option key={i} value={i}>{option} </option>)}
+            </select>
+            {!shape ? null :
+                <>
+                <div>Moment{`${shape === 1 ? '' : "s"}`} of inertia:</div>
+                {xyz.filter((blah, i) => i < shape).map((blah, i) => {
+                    return <div><Input key={i} name={i} quantity={momsInput[i]} handler={handlerMom} />{types[i]}</div>
+                })}
+                {shape < 2 ? null :
+                    <>
+                    <div>Choice for z-axis:</div>
+                    <select value={zAxis} onChange={e => {
+                        setZAxis(Number(e.target.value));
+                    }}>
+                      {types.map((option, i) => <option key={i} value={i}>near {option} </option>)}
+                    </select>
+                    </>
+                }
+                </>
+            }
             <table>
                 <thead>
                     <tr>
