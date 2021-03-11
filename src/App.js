@@ -108,8 +108,7 @@ const App = () => {
         if (['', '-', '.', '-.'].includes(newLz)) return setLzInput(newLz);
         if (isNaN(Number(newLz))) return;
         setLzInput(newLz);
-        newLz = Number(newLz);
-        setLz(newLz);
+        setLz(Number(newLz));
     };
 
     const handlerTh = e => {
@@ -117,7 +116,7 @@ const App = () => {
         let th =  e.target.value;
         let newThsInput = [...thsInput]
         let newThs = [...ths];
-        if (th === '' || th === '-' || th === '.' || th === '-.') {
+        if (['', '-','.', '-.'].includes(th)) {
             newThsInput[xyOrZ] = th;
         } else {
             if (isNaN(Number(th))) return;
@@ -136,7 +135,7 @@ const App = () => {
         let mom = e.target.value;
         let newMomsInput = [...momsInput];
         let newMoms = [...moms];
-        if (mom === '' || mom === '.') {
+        if (['', '.'].includes(mom)) {
             newMomsInput[xyOrZ] = mom;
         } else {
             let newMom = Number(mom);
@@ -221,9 +220,10 @@ const App = () => {
             <button onClick={() => setRunning(!running)}>{running ? "Stop" : "Start"}</button>
             <button onClick={() => setTime(0)}>Reset</button>
             Time = {time.toFixed(2)} s
-            <Input quantity={running || time ? Lz : LzInput}
+            <div><Input quantity={running || time ? Lz : LzInput}
                 handler={handlerLz}
             /> z-component of angular momentum
+            </div>
             <table>
                 <thead>
                     <tr>
