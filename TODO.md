@@ -5,7 +5,7 @@ render inputs in following order:
     L ( = [0, 0, Lz])
     moments of inertia (preceded by a dropdown w/"isotropic", "axisymmetric", and "asymmetric")
     Euler angles (precedece by dropdown for (along symmetry axis, near one of the principal axes)
-Render lines which represent (fixed-frame) omega and principal axes (but not if degenerate).
+Render lines which represent principal axes (but not if degenerate).
 Implement a lagrangian and/or hamiltonian version of this?
 Implement a version which'll allow setting of initial omegas?
 Tabulate things better.

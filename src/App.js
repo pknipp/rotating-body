@@ -24,7 +24,7 @@ const App = () => {
     const [, setLs] = useState([0, 0, 0]);
     const [labLs, setLabLs] = useState([0, 0, 0]);
     const [om2, setOm2] = useState(0);
-    const [omf2, setOmf2] = useState(0);
+    const [omf, setOmf] = useState(0);
     const [L2, setL2] = useState(0);
     const [K, setK] = useState(0);
     const [mids0, setMids0] = useState([]);
@@ -180,7 +180,7 @@ const App = () => {
         newOmfs[1] =-Fs[2] * ss[1] * cs[0] + Fs[1] * ss[0];
         newOmfs[2] = Fs[2] * cs[1] + Fs[0];
         setOmfs(newOmfs);
-        setOmf2(newOmfs.reduce((om2, om) => om2 + om * om, 0));
+        setOmf(newOmfs.reduce((om2, om) => om2 + om * om, 0));
         let newLs = newOms.map((om, i) => moms[i] * om);
         setLs(newLs);
         setL2(newLs.reduce((L2, L) => L2 + L * L, 0));
@@ -242,7 +242,7 @@ const App = () => {
                         <td>{Math.round(omfs[0] * 1000) / 1000}</td>
                         <td>{Math.round(omfs[1] * 1000) / 1000}</td>
                         <td>{Math.round(omfs[2] * 1000) / 1000}</td>
-                        <td>{Math.round(Math.sqrt(omf2) * 1000) / 1000}</td>
+                        <td>{Math.round(omf * 1000) / 1000}</td>
                     </tr>
                     <tr>
                         <td>ang. mom</td>
@@ -260,7 +260,7 @@ const App = () => {
                 {mids.map((mid, i) => (
                     <Line xi={nx/2} yi={ny/2} xf={nx * (0.5 + mid[0]/d[Math.floor(i / 2)]/10)} yf={ny * (0.5 + mid[1]/d[Math.floor(i / 2)]/10)} dashed={true} />
                 ))}
-                <Line xi={nx/2} yi={ny/2} xf={nx * (1/2 + omfs[0])} yf={ny * (1/2 + omfs[1])} />
+                <Line xi={nx/2} yi={ny/2} xf={nx * (1 + omfs[0]/omf) / 2} yf={ny * (1 + omfs[1]/omf) / 2} />
                 <Body nx={nx} ny={ny} angleVec={angleVec} d={d} />
             </div>
         </>
