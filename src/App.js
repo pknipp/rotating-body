@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { EigenvalueDecomposition, Matrix } from "ml-matrix";
-// import Dot from "./Dot";
+import Dot from "./Dot";
 import Input from "./Input";
 import Line from "./Line";
 // import Square from "./Square";
@@ -14,7 +14,7 @@ const App = () => {
     // const colors = ["red", "green", "blue"];
     const [LzInput, setLzInput] = useState("1");
     const [Lz, setLz] = useState(Number(LzInput));
-    const [thsInput, setThsInput] = useState(["0", "0.1", "0"]);
+    const [thsInput, setThsInput] = useState(["0.2", "0.3", "0.4"]);
     const [ths, setThs] = useState(thsInput.map(elem => Number(elem)));
     const [momsInput, setMomsInput] = useState(["1", "1", "1"]);
     const [firstMoms, setFirstMoms] = useState(momsInput.map(elem => Number(elem)));
@@ -236,10 +236,21 @@ const App = () => {
             <select value={shape} onChange={e => {
                 let newShape = Number(e.target.value);
                 setShape(newShape);
-                if (newShape === 1) setDegeneracies([true, true, true]);
-                if (newShape) setTypes([['generic'], ['parallel', 'transverse'], ['shortest', 'intermediate', 'longest']][newShape - 1]);
+                if (!newShape) return;
+                if (newShape === 1) setZAxis(1);
+                setDegeneracies([[true, true, true], [false, true, true], [false, false, false]][newShape - 1]);
+                let newMoms = [["1", "1", "1"], ["1", "2", "2"], ["2", "3", "4"]][newShape - 1];
+                setMomsInput(newMoms);
+                newMoms = newMoms.map(mom => Number(mom));
+                setFirstMoms(newMoms);
+                setMoms(newMoms);
+                setTypes([['generic'], ['parallel', 'transverse'], ['longest', 'intermediate', 'shortest']][newShape - 1]);
             }}>
-                  {["choose shape", 'isotropic', 'axisymmetric', 'asymmetric'].map((option, i) => <option key={i} title={"more info"} value={i}>{option} </option>)}
+                {["choose shape", 'isotropic', 'axisymmetric', 'asymmetric'].map((option, i) => (
+                    <option key={i} title={"more info"} value={i}>
+                        {option}
+                    </option>
+                ))}
             </select>
             <br/><br/>
 
@@ -267,6 +278,10 @@ const App = () => {
                         newMoms[1] = firstMoms[(newZAxis + 1) % 3];
                         setMoms(newMoms);
                         setZAxis(newZAxis);
+                        setRunning(false);
+                        setTime(0);
+                        setOms([0, 0, 0]);
+                        setOmfs([0, 0, 0]);
                         // set as "true" for all axes for which moments of inertia are degenerate
                         let newDegeneracies = newMoms.map((momI, i) => {
                             return newMoms.reduce((degenerate, momJ, j) => {
@@ -330,6 +345,7 @@ const App = () => {
                 ))}
                 <Line xi={nx/2} yi={ny/2} xf={nx/2 + nx * omfs[0]/omf/2} yf={ny/2 + nx * omfs[1]/omf/2} />
                 <Body nx={nx} ny={ny} angleVec={angleVec} d={d} />
+                <Dot x={nx/2} y={ny/2} d={10} />
             </div>
             </div>
         </>

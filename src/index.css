@@ -18,10 +18,9 @@
     /* line-height: 2em; */
   }
 .dot {
-    box-sizing: border-box;
-    border: solid 1px black;
     position: absolute;
     border-radius: 50%;
+    background: black;
 }
 .square {box-sizing: border-box; position: absolute; border: none 1px black; }
 .line {

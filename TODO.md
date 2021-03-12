@@ -13,6 +13,7 @@ Figure out what - if anything - gets broken if a moment equals zero
 What is best way to provide more info in re shape types dropdown: toggled info box, or "title" for each option?
 Whenever an onChange is triggered, ensure that later inputs are nulled out, wherever appropriate.
 Try to use transitions
+Make length of omfs less than those of axes, so that they both appear for axisymmetric case.
 
 MAYBE:
 Implement a lagrangian and/or hamiltonian version of this?
