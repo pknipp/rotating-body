@@ -236,15 +236,14 @@ const App = () => {
             <select value={shape} onChange={e => {
                 let newShape = Number(e.target.value);
                 setShape(newShape);
-                if (!newShape) return;
-                if (newShape === 1) setZAxis(1);
-                setDegeneracies([[true, true, true], [false, true, true], [false, false, false]][newShape - 1]);
-                let newMoms = [["1", "1", "1"], ["1", "2", "2"], ["2", "3", "4"]][newShape - 1];
+                setZAxis(newShape === 1 ? 1 : 0);
+                setDegeneracies([[false, false, false], [true, true, true], [false, true, true], [false, false, false]][newShape]);
+                let newMoms = [["1", "1", "1"], ["1", "1", "1"], ["1", "2", "2"], ["2", "3", "4"]][newShape];
                 setMomsInput(newMoms);
                 newMoms = newMoms.map(mom => Number(mom));
                 setFirstMoms(newMoms);
                 setMoms(newMoms);
-                setTypes([['generic'], ['parallel', 'transverse'], ['longest', 'intermediate', 'shortest']][newShape - 1]);
+                setTypes([[''], ['generic'], ['parallel', 'transverse'], ['longest', 'intermediate', 'shortest']][newShape]);
             }}>
                 {["choose shape", 'isotropic', 'axisymmetric', 'asymmetric'].map((option, i) => (
                     <option key={i} title={"more info"} value={i}>

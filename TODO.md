@@ -14,6 +14,7 @@ What is best way to provide more info in re shape types dropdown: toggled info b
 Whenever an onChange is triggered, ensure that later inputs are nulled out, wherever appropriate.
 Try to use transitions
 Make length of omfs less than those of axes, so that they both appear for axisymmetric case.
+(Eventually) adjust defaults to asymmetric rotor rotating about intermediate axis.
 
 MAYBE:
 Implement a lagrangian and/or hamiltonian version of this?
