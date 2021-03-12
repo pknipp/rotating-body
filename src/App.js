@@ -16,7 +16,7 @@ const App = () => {
     const [Lz, setLz] = useState(Number(LzInput));
     const [thsInput, setThsInput] = useState(["0", "0.1", "0"]);
     const [ths, setThs] = useState(thsInput.map(elem => Number(elem)));
-    const [momsInput, setMomsInput] = useState(["4", "3", "2"]);
+    const [momsInput, setMomsInput] = useState(["1", "1", "1"]);
     const [firstMoms, setFirstMoms] = useState(momsInput.map(elem => Number(elem)));
     const [moms, setMoms] = useState(momsInput.map(elem => Number(elem)));
     const [omsInput] = useState(["", "", ""]);
@@ -219,33 +219,42 @@ const App = () => {
             <div className="top"><p align="center"><h1>Free-body rotation</h1></p></div>
             <div className="bottom">
             <div className="left">
+            <p align="center"><h3>Controls</h3></p>
             <button onClick={() => setRunning(!running)}>{running ? "Stop" : "Start"}</button>
             <button onClick={() => setTime(0)}>Reset</button>
             Time = {time.toFixed(2)} s
-            <div><Input quantity={running || time ? Lz : LzInput}
-                handler={handlerLz}
-            /> z-component of angular momentum
-            </div>
-            <div>{shape ? "Shape of body": null}</div>
+            <p align="center"><h3>Inputs</h3></p>
+            <div><i>z</i>-component of angular momentum</div>
+            <Input quantity={running || time ? Lz : LzInput} handler={handlerLz}/> kg m/s
+            <br/><br/>
+
+            <div>Shape of box</div>
             <select value={shape} onChange={e => {
                 let newShape = Number(e.target.value);
                 setShape(newShape);
                 if (newShape === 1) setDegeneracies([true, true, true]);
-                if (newShape) setTypes([[''], ['parallel axis', 'transverse axis'], ['short axis', 'intermediate axis', 'long axis']][newShape - 1]);
+                if (newShape) setTypes([['generic'], ['parallel', 'transverse'], ['shortest', 'intermediate', 'longest']][newShape - 1]);
             }}>
-                  {["choose body's shape", 'isotropic (cube)', 'axisymmetric (e.g., box for pizza or wine)', 'asymmetric (e.g., suitcase)'].map((option, i) => <option key={i} value={i}>{option} </option>)}
+                  {["choose shape", 'isotropic', 'axisymmetric', 'asymmetric'].map((option, i) => <option key={i} title={"more info"} value={i}>{option} </option>)}
             </select>
+            <br/><br/>
+
             {!shape ? null :
                 <>
-                <div>Moment{`${shape === 1 ? '' : "s"}`} of inertia:</div>
-                {xyz.filter((blah, i) => i < shape).map((blah, i) => {
-                    return <div><Input key={i} name={i} quantity={momsInput[i]} handler={handlerMom} />{types[i]}</div>
-                })}
+                <div>Moment{`${shape === 1 ? '' : "s"}`} of inertia: (in kg m<sup>2</sup>)</div>
+                {xyz.filter((blah, i) => i < shape).map((blah, i) => (
+                    <div>
+                        <Input key={i} name={i} quantity={momsInput[i]} handler={handlerMom} />
+                        {types[i]} axis
+                    </div>
+                ))}
                 <div>{legalOrder ? null : "WARNING: for an asymmetric rotor the moments of inertia should decrease, going from short axis to long axis."}</div>
                 <div>{!areLegalMoms ? "WARNING: no single moment of inertia should exceed the sum of the other two." : null}</div>
-                {shape < 2 ? null :
+                <br/><br/>
+
+                {shape < 1 ? null :
                     <>
-                    <div>Choose <i>z</i>-axis to be ...</div>
+                    <div>Choose <i>z</i>-axis to be near ...</div>
                     <select value={zAxis} onChange={e => {
                         let newZAxis = Number(e.target.value);
                         let newMoms = [...moms];
@@ -262,71 +271,60 @@ const App = () => {
                         })
                         setDegeneracies(newDegeneracies);
                     }}>
-                      {["which axis?", ...types].map((option, i) => <option key={i} value={i}>near {option} </option>)}
-                    </select>
-                    <div>{!zAxis ? null : "Euler angles"}</div>
+                        {["which", ...types].map((option, i) => (
+                            <option key={i} value={i}>{option} </option>
+                        ))}
+                    </select> axis
+                    <p align="center"><h3>{zAxis && time ? "Data" : null}</h3></p>
+                    {!zAxis ? null :
+                        <>
+                        <div>Euler angles (in radians):</div>
+                        <div>between {types[zAxis - 1]} axis and <i>z</i>-axis:</div>
+                        <div>
+                            &theta; = <Input key={"ang1"} name={1} quantity={running || time ? ths[1] : thsInput[1]} handler={handlerTh} />
+                        </div>
+                        <div>Remaining two angles:</div>
+                        <div>
+                            &phi; = <Input
+                                key={"ang0"} name={0} handler={handlerTh}
+                                quantity={running || time ? ths[0] : thsInput[0]}
+                            />
+                            &psi; = <Input
+                                key={"ang0"} name={2} handler={handlerTh}
+                                quantity={running || time ? ths[2] : thsInput[2]}
+                            />
+                        </div>
+                        </>
+                    }
+                    </>
+                }
+                <br/>
+
+                {!(running || time) ? null :
+                    <>
+                    <div>Lab-frame angular velocity (in rad/sec)</div>
+                    <div>(also displayed as a segment in figure):</div>
+                    <div>components = [
+                        {Math.round(omfs[0] * 1000) / 1000},&nbsp;
+                        {Math.round(omfs[1] * 1000) / 1000},&nbsp;
+                        {Math.round(omfs[2] * 1000) / 1000}
+                        ]
+                    </div>
+                    <div>magnitude = {Math.round(omf * 1000) / 1000}</div>
+                    <br/><br/>
+                    <div>kinetic energy = {Math.round(1000 * K) / 1000} joules</div>
                     </>
                 }
                 </>
             }
-            <table>
-                <thead>
-                    <tr>
-                        <th>Quantity</th>
-                        <th>x-comp</th>
-                        <th>y-comp</th>
-                        <th>z-comp</th>
-                        <th>magnit.</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td>angles (rad)</td>
-                        <td><Input key={"ang0"} name={0} quantity={running || time ? ths[0] : thsInput[0]} handler={handlerTh} /></td>
-                        <td><Input key={"ang1"} name={1} quantity={running || time ? ths[1] : thsInput[1]} handler={handlerTh} /></td>
-                        <td><Input key={"ang2"} name={2} quantity={running || time ? ths[2] : thsInput[2]} handler={handlerTh} /></td>
-                        <td> - </td>
-                    </tr>
-                    <tr>
-                        <td>moments</td>
-                        <td><Input key={"mom0"} name={0} quantity={moms[0]} handler={handlerMom} /></td>
-                        <td><Input key={"mom1"} name={1} quantity={moms[1]} handler={handlerMom} /></td>
-                        <td><Input key={"mom2"} name={2} quantity={moms[2]} handler={handlerMom} /></td>
-                        <td>{areLegalMoms ? null : "WARNING: No single moment of inertia should exceed the sum of the other two."}</td>
-                    </tr>
-                    <tr>
-                        <td>(body) omega</td>
-                        <td>{Math.round(oms[0] * 1000) / 1000}</td>
-                        <td>{Math.round(oms[1] * 1000) / 1000}</td>
-                        <td>{Math.round(oms[2] * 1000) / 1000}</td>
-                        <td>{Math.round(Math.sqrt(om2) * 1000) / 1000}</td>
-                    </tr>
-                    <tr>
-                        <td>(fixed) omega</td>
-                        <td>{Math.round(omfs[0] * 1000) / 1000}</td>
-                        <td>{Math.round(omfs[1] * 1000) / 1000}</td>
-                        <td>{Math.round(omfs[2] * 1000) / 1000}</td>
-                        <td>{Math.round(omf * 1000) / 1000}</td>
-                    </tr>
-                    <tr>
-                        <td>ang. mom</td>
-                        <td>{Math.round(labLs[0] * 1000) / 1000}</td>
-                        <td>{Math.round(labLs[1] * 1000) / 1000}</td>
-                        <td>{Math.round(labLs[2] * 1000) / 1000}</td>
-                        <td>{Math.round(1000 * Math.sqrt(L2) / 1000)}</td>
-                    </tr>
-                    <tr>
-                        <td>KE</td><td></td><td></td><td></td><td>{Math.round(1000 * K) / 1000}</td>
-                    </tr>
-                </tbody>
-            </table>
+
             </div>
             <div className="container" style={{height:`${ny}px`, width:`${nx}px`}}>
                 {mids.map((mid, i) => (
                     degeneracies[Math.floor(i / 2)] ? null :
                         <Line xi={nx/2} yi={ny/2} xf={nx * (0.5 + mid[0]/d[Math.floor(i / 2)]/10)} yf={ny * (0.5 + mid[1]/d[Math.floor(i / 2)]/10)} dashed={true} />
                 ))}
-                <Line xi={nx/2} yi={ny/2} xf={nx * (1 + omfs[0]/omf) / 4} yf={ny * (1 + omfs[1]/omf) / 4} />
+                <Line xi={nx/2} yi={ny/2} xf={nx/2 + nx * omfs[0]/omf/2} yf={ny/2 + nx * omfs[1]/omf/2} />
                 <Body nx={nx} ny={ny} angleVec={angleVec} d={d} />
             </div>
             </div>

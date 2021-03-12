@@ -1,5 +1,5 @@
 .bottom {display: flex; }
-.container {position: relative; box-sizing: border-box; border: 1px solid black; perspective: 1000px}
+.container {position: relative; box-sizing: border-box; border: 1px solid black; perspective: 1000px; margin: 5px;}
 .body {
     position: absolute;
     /* font-size: 4em; */
