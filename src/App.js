@@ -16,7 +16,7 @@ const App = () => {
     const [Lz, setLz] = useState(Number(LzInput));
     const [thsInput, setThsInput] = useState(["0", "0.1", "0"]);
     const [ths, setThs] = useState(thsInput.map(elem => Number(elem)));
-    const [momsInput, setMomsInput] = useState(["3", "3", "3"]);
+    const [momsInput, setMomsInput] = useState(["4", "3", "2"]);
     const [firstMoms, setFirstMoms] = useState(momsInput.map(elem => Number(elem)));
     const [moms, setMoms] = useState(momsInput.map(elem => Number(elem)));
     const [omsInput] = useState(["", "", ""]);
@@ -159,22 +159,6 @@ const App = () => {
                 setLegalOrder(newMoms.reduce((legal, mom, i, moms) => (!i || (legal && mom < moms[i - 1])), true))
             }
             setAreLegalMoms(newMoms.reduce((legal, mom, i, moms) => (legal && mom <= (moms[(i+1)%3] + moms[(i+2)%3])), true));
-            // // calculate limits of the value of this new moment of inertia
-            // let otherMoms = [...moms];
-            // otherMoms.splice(xyOrZ, 1);
-            // let maxOtherMom = Math.max(...otherMoms);
-            // let minOtherMom = Math.min(...otherMoms);
-            // let maxMom = maxOtherMom + minOtherMom;
-            // let minMom = maxOtherMom - minOtherMom;
-            // let newAreLegalMoms = !(mom < minMom || mom > maxMom);
-            // setAreLegalMoms(newAreLegalMoms);
-            // set as "true" for all axes for which moments of inertia are degenerate
-            // let newDegeneracies = newMoms.map((momI, i) => {
-            //     return newMoms.filter((blah, j) => i !== j).reduce((degenerate, momJ) => {
-            //         return degenerate || momJ === momI;
-            //     }, false);
-            // })
-            // setDegeneracies(newDegeneracies);
         }
         setMomsInput(newMomsInput);
         setFirstMoms(newMoms);
@@ -246,6 +230,7 @@ const App = () => {
             <select value={shape} onChange={e => {
                 let newShape = Number(e.target.value);
                 setShape(newShape);
+                if (newShape === 1) setDegeneracies([true, true, true]);
                 if (newShape) setTypes([[''], ['parallel axis', 'transverse axis'], ['short axis', 'intermediate axis', 'long axis']][newShape - 1]);
             }}>
                   {["choose body's shape", 'isotropic (cube)', 'axisymmetric (e.g., box for pizza or wine)', 'asymmetric (e.g., suitcase)'].map((option, i) => <option key={i} value={i}>{option} </option>)}
@@ -260,18 +245,26 @@ const App = () => {
                 <div>{!areLegalMoms ? "WARNING: no single moment of inertia should exceed the sum of the other two." : null}</div>
                 {shape < 2 ? null :
                     <>
-                    <div>Choice for z-axis:</div>
+                    <div>Choose <i>z</i>-axis to be ...</div>
                     <select value={zAxis} onChange={e => {
                         let newZAxis = Number(e.target.value);
                         let newMoms = [...moms];
-                        newMoms[2] = firstMoms[newZAxis];
-                        newMoms[0] = firstMoms[(newZAxis + 1) % 3];
-                        newMoms[1] = firstMoms[(newZAxis + 2) % 3];
+                        newMoms[2] = firstMoms[newZAxis - 1];
+                        newMoms[0] = firstMoms[newZAxis % 3];
+                        newMoms[1] = firstMoms[(newZAxis + 1) % 3];
                         setMoms(newMoms);
                         setZAxis(newZAxis);
+                        // set as "true" for all axes for which moments of inertia are degenerate
+                        let newDegeneracies = newMoms.map((momI, i) => {
+                            return newMoms.reduce((degenerate, momJ, j) => {
+                                return degenerate || (momJ === momI && i !== j);
+                            }, false);
+                        })
+                        setDegeneracies(newDegeneracies);
                     }}>
-                      {types.map((option, i) => <option key={i} value={i}>near {option} </option>)}
+                      {["which axis?", ...types].map((option, i) => <option key={i} value={i}>near {option} </option>)}
                     </select>
+                    <div>{!zAxis ? null : "Euler angles"}</div>
                     </>
                 }
                 </>
