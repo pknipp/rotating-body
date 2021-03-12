@@ -219,10 +219,14 @@ const App = () => {
             <div className="top"><p align="center"><h1>Free-body rotation</h1></p></div>
             <div className="bottom">
             <div className="left">
-            <p align="center"><h3>Controls</h3></p>
-            <button onClick={() => setRunning(!running)}>{running ? "Stop" : "Start"}</button>
-            <button onClick={() => setTime(0)}>Reset</button>
-            Time = {time.toFixed(2)} s
+            {!zAxis ? null :
+                <>
+                <p align="center"><h3>Controls</h3></p>
+                <button onClick={() => setRunning(!running)}>{running ? "Stop" : "Start"}</button>
+                <button onClick={() => setTime(0)}>Reset</button>
+                Time = {time.toFixed(2)} s
+                </>
+            }
             <p align="center"><h3>Inputs</h3></p>
             <div><i>z</i>-component of angular momentum</div>
             <Input quantity={running || time ? Lz : LzInput} handler={handlerLz}/> kg m/s

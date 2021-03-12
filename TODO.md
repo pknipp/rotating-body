@@ -2,8 +2,8 @@ git push heroku master
 
 TO DO:
 DEF:
-Put padding to right of buttons.
-Tabulate things better?
+Put padding to right of buttons (and elsewhere?).
+Have y&z point up and out, respectively.
 Insert meta-tags.
 Insert slider for perspective (and size of screen?) and time-step
 Adjust colors, transparency, edges (solid or dashed)
@@ -12,6 +12,7 @@ Correlate timestep with sizes of moments and Lz.
 Figure out what - if anything - gets broken if a moment equals zero
 What is best way to provide more info in re shape types dropdown: toggled info box, or "title" for each option?
 Whenever an onChange is triggered, ensure that later inputs are nulled out, wherever appropriate.
+Try to use transitions
 
 MAYBE:
 Implement a lagrangian and/or hamiltonian version of this?
