@@ -22,6 +22,8 @@ const App = () => {
     const [omsInput] = useState(["", "", ""]);
     const [oms, setOms] = useState(omsInput.map(elem => Number(elem)));
     const [omfs, setOmfs] = useState([0, 0, 0]);
+    const [omfLat, setomfLat] = useState(0);
+    const [omfAng, setomfAng] = useState(0);
     const [, setLs] = useState([0, 0, 0]);
     const [labLs, setLabLs] = useState([0, 0, 0]);
     const [om2, setOm2] = useState(0);
@@ -91,9 +93,7 @@ const App = () => {
             newAngleVec[0] *= -1;
         }
         let nAng = (newAngleVec[0] - angleVec[0]) / 2 / Math.PI;
-        if (Math.abs(Math.round(nAng) - nAng) < 0.1) {
-            newAngleVec[0] -= Math.round(nAng) * 2 * Math.PI;
-        }
+        if (Math.abs(Math.round(nAng) - nAng) < 0.1) newAngleVec[0] -= Math.round(nAng) * 2 * Math.PI;
         setAngleVec(newAngleVec);
     }
     useEffect(() => rotationStuff(), [mids0, ths]);
@@ -205,6 +205,8 @@ const App = () => {
         newOmfs[1] =-Fs[2] * ss[1] * cs[0] + Fs[1] * ss[0];
         newOmfs[2] = Fs[2] * cs[1] + Fs[0];
         setOmfs(newOmfs);
+        setomfLat(Math.sqrt(newOmfs[0] * newOmfs[0] + newOmfs[1] * newOmfs[1]);
+        let newOmfsAng = atan2(omfs[1], omfs[0]);
         setOmf(Math.sqrt(newOmfs.reduce((om2, om) => om2 + om * om, 0)));
         let newLs = newOms.map((om, i) => moms[i] * om);
         setLs(newLs);
@@ -365,7 +367,7 @@ const App = () => {
                     degeneracies[Math.floor(i / 2)] ? null :
                         <Line xi={nx/2} yi={ny/2} xf={nx * (0.5 + mid[0]/d[Math.floor(i / 2)]/10)} yf={ny * (0.5 + mid[1]/d[Math.floor(i / 2)]/10)} dashed={true} />
                 ))} */}
-                {/* <Line xi={nx/2} yi={ny/2} xf={nx/2 + nx * omfs[0]/omf/2} yf={ny/2 + nx * omfs[1]/omf/2} /> */}
+                <Line xi={nx/2} yi={ny/2} xf={nx/2 + nx * omfs[0]/omf/2} yf={ny/2 + nx * omfs[1]/omf/2} dt={dt}/>
                 <Body nx={nx} ny={ny} angleVec={angleVec} d={d} dt={dt} mids={mids0} degeneracies={degeneracies} />
                 <Dot x={nx/2} y={ny/2} d={10} />
             </div>
