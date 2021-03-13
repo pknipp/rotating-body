@@ -11,7 +11,7 @@ Insert info fields.
 Correlate timestep with sizes of moments and Lz.
 Figure out what - if anything - gets broken if a moment equals zero
 What is best way to provide more info in re shape types dropdown: toggled info box, or "title" for each option?
-Try to use transitions
+Turn "degeneracies" back "on".
 Make length of omfs less than those of axes, so that they both appear for axisymmetric case.
 (Eventually) adjust defaults to asymmetric rotor rotating about intermediate axis.
 
