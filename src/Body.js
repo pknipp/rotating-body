@@ -4,7 +4,7 @@ const Body = ({ nx, ny, angleVec, d, dt }) => {
     return (
         <div className="body" style={{
             transform: `translateX(${nx/2}px) translateY(${ny/2}px) rotate3d(${axisVec[0]}, ${axisVec[1]}, ${-axisVec[2]},${angle}rad)`,
-            transitionDuration: `${dt / 1000}s`
+            // transitionDuration: `${dt / 1000}s`
             }}>
             <div className="side"  style={{transform: `rotateY(0deg) translateZ(${d[2]}px)`, background: "rgba(100,30,30,0.8)",
                 left: `${-d[0]}px`, top: `${-d[1]}px`, width:`${2 * d[0]}px`, height:`${2 * d[1]}px`

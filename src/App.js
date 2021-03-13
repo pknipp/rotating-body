@@ -44,7 +44,7 @@ const App = () => {
     const [isotropic, setIsotropic] = useState(false);
 
     // ODE-solver timestep in ms
-    const dt = 500;
+    const dt = 200;
 
     // helpful linear algebra functions:
     const dotproduct = (vec1, vec2) => vec1.reduce((dot, comp, i) => dot + comp * vec2[i], 0);
