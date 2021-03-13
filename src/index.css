@@ -1,31 +1,8 @@
 .bottom {display: flex; }
 .container {position: relative; box-sizing: border-box; border: 1px solid black; perspective: 1000px; margin: 5px;}
-.body {
-    position: absolute;
-    /* font-size: 4em; */
-    /* width: 2em; */
-    /* margin: 1.5em auto; */
-    transform-style: preserve-3d;
-    /* transform: rotateX(-20deg) rotateY(30deg); */
-}
-.side {
-    position: absolute;
-    /* width: 2em;
-    height: 2em; */
-    background: rgba(100,100,100,0.5);
-    border: 1px solid red;
-    /* text-align: center; */
-    /* line-height: 2em; */
-  }
-.dot {
-    position: absolute;
-    border-radius: 50%;
-    background: black;
-}
+.message {color: red; }
+.body {position: absolute; transform-style: preserve-3d; }
+.side {position: absolute; border: 1px solid red; }
+.dot {position: absolute; border-radius: 50%; background: black; }
 .square {box-sizing: border-box; position: absolute; border: none 1px black; }
-.line {
-    box-sizing: border-box;
-    border-top: solid 4px black;
-    position: absolute;
-    height: 0px;
-}
+.line {box-sizing: border-box; border-top: solid 4px black; position: absolute; height: 0px; }

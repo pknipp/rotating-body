@@ -16,7 +16,7 @@ const App = () => {
     const [Lz, setLz] = useState(Number(LzInput));
     const [thsInput, setThsInput] = useState(["0.2", "0.3", "0.4"]);
     const [ths, setThs] = useState(thsInput.map(elem => Number(elem)));
-    const [momsInput, setMomsInput] = useState(["1", "1", "1"]);
+    const [momsInput, setMomsInput] = useState(["2", "3", "4"]);
     const [firstMoms, setFirstMoms] = useState(momsInput.map(elem => Number(elem)));
     const [moms, setMoms] = useState(momsInput.map(elem => Number(elem)));
     const [omsInput] = useState(["", "", ""]);
@@ -41,13 +41,13 @@ const App = () => {
     const [types, setTypes] = useState([]);
     const [zAxis, setZAxis] = useState(0);
     const [legalOrder, setLegalOrder] = useState(true);
+    const [isotropic, setIsotropic] = useState(false);
 
     // ODE-solver timestep in ms
     const dt = 50;
 
     // helpful linear algebra functions:
     const dotproduct = (vec1, vec2) => vec1.reduce((dot, comp, i) => dot + comp * vec2[i], 0);
-    // const mult1 = (mat, vec) => mat.reduce((prod, row, i) => [...prod, dotproduct(row, vec)], []);
     const mult1 = (mat, vec) => mat.map(row => dotproduct(row, vec));
     const transpose = mat => mat[0].map((blah, i) => mat.map(row => row[i]));
     const mult2 = (mat1, mat2) => mat1.map(x => transpose(mat2).map(y => dotproduct(x, y)));
@@ -70,7 +70,7 @@ const App = () => {
         let dMax = newD.reduce((max, d) => Math.max(d, max));
         newD = newD.map(d => nx * d / dMax / 4);
         setD(newD);
-        // replace this using reduce?
+        // replace this using reduce or forEach?
         const newMids0 = [];
         xyz.forEach((row, i) => {
             let mid1 = [...xyz];
@@ -137,6 +137,7 @@ const App = () => {
 
     const handlerMom = e => {
         // let xyOrZ = Number(e.target.name);
+        let newIsotropic = false;
         let name = Number(e.target.name);
         let mom = e.target.value;
         let newMomsInput = [...momsInput];
@@ -151,15 +152,15 @@ const App = () => {
             if (shape === 1) {
                 newMoms[1] = newMom;
                 newMoms[2] = newMom;
-                // setMoms(newMoms);
             }
-            if (shape === 2 && name === 1) newMoms[2] = newMom;
-            if (shape === 3) {
-                console.log(newMoms, legalOrder);
-                setLegalOrder(newMoms.reduce((legal, mom, i, moms) => (!i || (legal && mom < moms[i - 1])), true))
+            if (shape === 2) {
+                if (name === 1) newMoms[2] = newMom;
+                if (newMoms[0] === newMoms[1]) newIsotropic = true;
             }
+            if (shape === 3) setLegalOrder(newMoms.reduce((legal, mom, i, moms) => (!i || (legal && mom > moms[i - 1])), true))
             setAreLegalMoms(newMoms.reduce((legal, mom, i, moms) => (legal && mom <= (moms[(i+1)%3] + moms[(i+2)%3])), true));
         }
+        setIsotropic(newIsotropic);
         setMomsInput(newMomsInput);
         setFirstMoms(newMoms);
         setMoms(newMoms);
@@ -237,10 +238,21 @@ const App = () => {
                 let newShape = Number(e.target.value);
                 setShape(newShape);
                 setZAxis(newShape === 1 ? 1 : 0);
+                setRunning(false);
+                setTime(0);
                 setDegeneracies([[false, false, false], [true, true, true], [false, true, true], [false, false, false]][newShape]);
-                let newMoms = [["1", "1", "1"], ["1", "1", "1"], ["1", "2", "2"], ["2", "3", "4"]][newShape];
-                setMomsInput(newMoms);
-                newMoms = newMoms.map(mom => Number(mom));
+                let newMoms = [...moms];
+                if (newShape === 1) newMoms = newMoms.map((mom, i, moms) => moms[0])
+                if (newShape === 2) {
+                    newMoms[1] = newMoms[1] === newMoms[0] ? Math.round(newMoms[0] + 0.6) : newMoms[1];
+                    newMoms[2] = newMoms[1];
+                }
+                if (newShape === 3) {
+                    newMoms.sort((a, b) => a - b);
+                    newMoms[1] = newMoms[1] === newMoms[0] ? Math.round(newMoms[0] + 0.6) : newMoms[1];
+                    newMoms[2] = newMoms[2] === newMoms[1] ? Math.round(newMoms[1] + 0.6) : newMoms[2];
+                }
+                setMomsInput(newMoms.map(mom => String(mom)));
                 setFirstMoms(newMoms);
                 setMoms(newMoms);
                 setTypes([[''], ['generic'], ['parallel', 'transverse'], ['longest', 'intermediate', 'shortest']][newShape]);
@@ -262,8 +274,9 @@ const App = () => {
                         {types[i]} axis
                     </div>
                 ))}
-                <div>{legalOrder ? null : "WARNING: for an asymmetric rotor the moments of inertia should decrease, going from short axis to long axis."}</div>
-                <div>{!areLegalMoms ? "WARNING: no single moment of inertia should exceed the sum of the other two." : null}</div>
+                {legalOrder ? null : <div className="message">For an asymmetric body the moments of inertia should increase, going from long axis to short axis.</div>}
+                {areLegalMoms ? null : <div className="message">No single moment of inertia should exceed the sum of the other two.</div>}
+                {!isotropic ? null : <div className="message">This is considered "isotropic" not "axisymmetric".</div>}
                 <br/><br/>
 
                 {shape < 1 ? null :
