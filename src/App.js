@@ -250,7 +250,7 @@ const App = () => {
                 if (newShape === 3) {
                     newMoms.sort((a, b) => a - b);
                     newMoms[1] = newMoms[1] === newMoms[0] ? Math.round(newMoms[0] + 0.6) : newMoms[1];
-                    newMoms[2] = newMoms[2] === newMoms[1] ? Math.round(newMoms[1] + 0.6) : newMoms[2];
+                    newMoms[2] = newMoms[2] <= newMoms[1] ? Math.round(newMoms[1] + 0.6) : newMoms[2];
                 }
                 setMomsInput(newMoms.map(mom => String(mom)));
                 setFirstMoms(newMoms);
