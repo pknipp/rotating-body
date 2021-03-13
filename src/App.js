@@ -44,7 +44,7 @@ const App = () => {
     const [isotropic, setIsotropic] = useState(false);
 
     // ODE-solver timestep in ms
-    const dt = 50;
+    const dt = 500;
 
     // helpful linear algebra functions:
     const dotproduct = (vec1, vec2) => vec1.reduce((dot, comp, i) => dot + comp * vec2[i], 0);
@@ -356,7 +356,7 @@ const App = () => {
                         <Line xi={nx/2} yi={ny/2} xf={nx * (0.5 + mid[0]/d[Math.floor(i / 2)]/10)} yf={ny * (0.5 + mid[1]/d[Math.floor(i / 2)]/10)} dashed={true} />
                 ))}
                 <Line xi={nx/2} yi={ny/2} xf={nx/2 + nx * omfs[0]/omf/2} yf={ny/2 + nx * omfs[1]/omf/2} />
-                <Body nx={nx} ny={ny} angleVec={angleVec} d={d} />
+                <Body nx={nx} ny={ny} angleVec={angleVec} d={d} dt={dt} />
                 <Dot x={nx/2} y={ny/2} d={10} />
             </div>
             </div>

@@ -1,8 +1,9 @@
 .bottom {display: flex; }
 .container {position: relative; box-sizing: border-box; border: 1px solid black; perspective: 1000px; margin: 5px;}
 .message {color: red; }
-.body {position: absolute; transform-style: preserve-3d; }
-.side {position: absolute; border: 1px solid red; }
+.body {position: absolute; transform-style: preserve-3d; transition-timing-function: linear; transition-property: all;
+}
+.side {position: absolute; border: 1px solid red; transition-timing-function: linear; transition-property: all;}
 .dot {position: absolute; border-radius: 50%; background: black; }
 .square {box-sizing: border-box; position: absolute; border: none 1px black; }
 .line {box-sizing: border-box; border-top: solid 4px black; position: absolute; height: 0px; }
