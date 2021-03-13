@@ -23,7 +23,7 @@ const App = () => {
     const [oms, setOms] = useState(omsInput.map(elem => Number(elem)));
     const [omfs, setOmfs] = useState([0, 0, 0]);
     const [omfLat, setomfLat] = useState(0);
-    const [omfAng, setomfAng] = useState(0);
+    const [omfAng, setOmfAng] = useState(0);
     const [, setLs] = useState([0, 0, 0]);
     const [labLs, setLabLs] = useState([0, 0, 0]);
     const [om2, setOm2] = useState(0);
@@ -46,7 +46,7 @@ const App = () => {
     const [isotropic, setIsotropic] = useState(false);
 
     // ODE-solver timestep in ms
-    const dt = 1000;
+    const dt = 100;
 
     // helpful linear algebra functions:
     const dotproduct = (vec1, vec2) => vec1.reduce((dot, comp, i) => dot + comp * vec2[i], 0);
@@ -205,9 +205,13 @@ const App = () => {
         newOmfs[1] =-Fs[2] * ss[1] * cs[0] + Fs[1] * ss[0];
         newOmfs[2] = Fs[2] * cs[1] + Fs[0];
         setOmfs(newOmfs);
-        setomfLat(Math.sqrt(newOmfs[0] * newOmfs[0] + newOmfs[1] * newOmfs[1]);
-        let newOmfsAng = atan2(omfs[1], omfs[0]);
-        setOmf(Math.sqrt(newOmfs.reduce((om2, om) => om2 + om * om, 0)));
+        let newOmf = Math.sqrt(newOmfs.reduce((om2, om) => om2 + om * om, 0));
+        setOmf(newOmf);
+        setomfLat(Math.sqrt(newOmfs[0] * newOmfs[0] + newOmfs[1] * newOmfs[1]) / newOmf);
+        let newOmfAng = Math.atan2(omfs[1], omfs[0]);
+        let nAng = (newOmfAng - omfAng) / 2 / Math.PI;
+        if (Math.abs(Math.round(nAng) - nAng) < 0.1) newOmfAng -= Math.round(nAng) * 2 * Math.PI;
+        setOmfAng(newOmfAng);
         let newLs = newOms.map((om, i) => moms[i] * om);
         setLs(newLs);
         setL2(newLs.reduce((L2, L) => L2 + L * L, 0));
@@ -367,7 +371,7 @@ const App = () => {
                     degeneracies[Math.floor(i / 2)] ? null :
                         <Line xi={nx/2} yi={ny/2} xf={nx * (0.5 + mid[0]/d[Math.floor(i / 2)]/10)} yf={ny * (0.5 + mid[1]/d[Math.floor(i / 2)]/10)} dashed={true} />
                 ))} */}
-                <Line xi={nx/2} yi={ny/2} xf={nx/2 + nx * omfs[0]/omf/2} yf={ny/2 + nx * omfs[1]/omf/2} dt={dt}/>
+                <Line nx={nx} ny={ny} r={omfLat * nx / 2} angle={omfAng} dt={dt}/>
                 <Body nx={nx} ny={ny} angleVec={angleVec} d={d} dt={dt} mids={mids0} degeneracies={degeneracies} />
                 <Dot x={nx/2} y={ny/2} d={10} />
             </div>

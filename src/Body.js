@@ -1,5 +1,5 @@
 import React from "react";
-import Line from "./Line";
+// import Line from "./Line";
 
 const Body = ({ nx, ny, angleVec, d, dt, mids, degeneracies }) => {
     let angle = angleVec ? angleVec[0] : 0;
