@@ -1,5 +1,4 @@
 const Body = ({ nx, ny, angleVec, d }) => {
-    // let is = [[2, 1], [0, 2], [0, 1]];
     let angle = angleVec ? angleVec[0] : 0;
     let axisVec = angleVec.length ? angleVec[1] : [0, 0, 1];
     return (
