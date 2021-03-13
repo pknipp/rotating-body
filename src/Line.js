@@ -1,23 +1,15 @@
-import React from "react";
+import React, { useState } from "react";
 
-const Line = ({ xi, yi, xf, yf, dashed }) => {
-    // The following two lines represent the two sides of a right triangle.
-    const dx = xf - xi;
-    const dy = yf - yi;
-
-    // Pythagorean theorem
-    const r = Math.sqrt(dx * dx + dy * dy);
-    // "TOA" part of "SOHCAHTOA"
-    let angle = Math.atan2(dy, dx);
-    // return null;
+const Line = ({ nx, ny, r, angle, dashed, dt }) => {
     return (
         <div className="line" style={{
             width:`${r}px`,
-            left: `${xi - r / 2}px`,
-            top: `${yi}px`,
+            left: `${nx / 2 - r / 2}px`,
+            top: `${ny / 2}px`,
             transform: `rotate(${angle * 180 / Math.PI}deg) translateX(${r / 2}px)`,
             borderTopStyle: `${dashed ? "dashed" : "solid"}`,
             zIndex: 1,
+            transitionDuration: `${dt / 1000}s`
         }}/>
     )
 }
