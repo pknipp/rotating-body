@@ -56,7 +56,7 @@ const App = () => {
 
     const zRot = th => {
         let [c, s] = [Math.cos(th), Math.sin(th)];
-        return [[c, s, 0], [-s, c, 0], [0, 0, 1]];
+        return [[c,-s, 0], [s, c, 0], [0, 0, 1]];
     }
     const xRot = th => {
         let [c, s] = [Math.cos(th), Math.sin(th)];
@@ -202,7 +202,7 @@ const App = () => {
         setOm2(newOms.reduce((om2, om) => om2 + om * om, 0));
         let newOmfs = [];
         newOmfs[0] = Fs[2] * ss[1] * ss[0] + Fs[1] * cs[0];
-        newOmfs[1] =-Fs[2] * ss[1] * cs[0] + Fs[1] * ss[0];
+        newOmfs[1] = Fs[2] * ss[1] * cs[0] - Fs[1] * ss[0];
         newOmfs[2] = Fs[2] * cs[1] + Fs[0];
         setOmfs(newOmfs);
         let newOmf = Math.sqrt(newOmfs.reduce((om2, om) => om2 + om * om, 0));
@@ -253,7 +253,7 @@ const App = () => {
     return (
         <>
             <div className="top"><p align="center"><h1>Free-body rotation</h1></p></div>
-            The motion of an object through the air consists 
+            The motion of an object through the air consists
             <div className="bottom">
                 <div className="left">
                 {!zAxis ? null :
