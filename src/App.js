@@ -3,7 +3,7 @@ import { EigenvalueDecomposition, Matrix } from "ml-matrix";
 import Dot from "./Dot";
 import Input from "./Input";
 import Line from "./Line";
-// import Square from "./Square";
+import ToggleInfo from "./ToggleInfo";
 import Body from "./Body";
 
 const App = () => {
@@ -23,7 +23,7 @@ const App = () => {
     const [oms, setOms] = useState(omsInput.map(elem => Number(elem)));
     const [omfs, setOmfs] = useState([0, 0, 0]);
     const [omfLat, setomfLat] = useState(0);
-    const [omfAng, setOmfAng] = useState(0);
+    const [omfAng, setOmfAng] = useState(null);
     const [, setLs] = useState([0, 0, 0]);
     const [labLs, setLabLs] = useState([0, 0, 0]);
     const [om2, setOm2] = useState(0);
@@ -44,9 +44,9 @@ const App = () => {
     const [zAxis, setZAxis] = useState(0);
     const [legalOrder, setLegalOrder] = useState(true);
     const [isotropic, setIsotropic] = useState(false);
-
-    // ODE-solver timestep in ms
-    const dt = 100;
+    const [logDt, setLogDt] = useState(8);
+    const [dt, setDt] = useState(2 ** logDt);
+    const [showInfo, setShowInfo] = useState({});
 
     // helpful linear algebra functions:
     const dotproduct = (vec1, vec2) => vec1.reduce((dot, comp, i) => dot + comp * vec2[i], 0);
@@ -210,7 +210,7 @@ const App = () => {
         setomfLat(Math.sqrt(newOmfs[0] * newOmfs[0] + newOmfs[1] * newOmfs[1]) / newOmf);
         let newOmfAng = Math.atan2(omfs[1], omfs[0]);
         let nAng = (newOmfAng - omfAng) / 2 / Math.PI;
-        if (Math.abs(Math.round(nAng) - nAng) < 0.1) newOmfAng -= Math.round(nAng) * 2 * Math.PI;
+        if (Math.abs(Math.round(nAng) - nAng) < 0.2) newOmfAng -= Math.round(nAng) * 2 * Math.PI;
         setOmfAng(newOmfAng);
         let newLs = newOms.map((om, i) => moms[i] * om);
         setLs(newLs);
@@ -231,6 +231,21 @@ const App = () => {
         let Fs4 = nextFs(Fs3, 1);
         setThs([...ths].map((th, i) => th + (Fs1[i] + Fs4[i] + 2 * (Fs2[i] + Fs3[i])) * dt/ 1000 / 6));
     }, [time, running]);
+
+    const handleToggle = e => {
+        let name = e.currentTarget.name;
+        let newShowInfo = {...showInfo};
+        newShowInfo[name] = !showInfo[name];
+        setShowInfo(newShowInfo);
+      }
+
+    let text = {
+        momentum:`Roughly speaking the angular momentum is the product of the body's mass, its width (away from the rotation axis), and how fast it spins.  The coordinate system for this simulation has x to the right, y down, and z into the screen.  Accordingly the z component of the angular momentum is positive for clockwise motion and negative for counterclockwise.`,
+        shape:`An object has three moments of inertia: one for rotation about each of its three axes.  (Note that the axes are mutually perpendicular and are indicated in the figure.) An object is said to be "isotropic" if its three moments are all equal, as is the case for either a sphere or a cube. An object is "axisymmetric" if two out of the three moments are equal, as is the case either for an object which has "rotational symmetry" such as a cup or a box for which four of the six faces are the same shape.  An object is asymmetric if all three of its moments of inertia are different.`,
+        moment:`The moment of inertia quantifies an object's resistance to instantaneous changes of its rate of rotation, just as an object's mass (or "translational inertia") quantifies an object's resistance to instantaneous changes of its speed.  The moment of inertia about a particular axis is small if most of the object is close to the particular axis.`,
+        choose:`When one of the body's principal axes is exactly parallel to the z-axis (which - in turn - is parallel to the angular momentum vector), the rotational motion is constant, as you can easily confirm with this simulation.  However when the principal axis is close to the z-axis the result is precession, which can be either stable or unstable.`,
+      }
+
     return (
         <>
             <div className="top"><p align="center"><h1>Free-body rotation</h1></p></div>
@@ -241,15 +256,41 @@ const App = () => {
                 <p align="center"><h3>Controls</h3></p>
                 <button onClick={() => setRunning(!running)}>{running ? "Stop" : "Start"}</button>
                 <button onClick={() => setTime(0)}>Reset</button>
-                Time = {time.toFixed(2)} s
+                Time = {time.toFixed(1)} s
+                <div>Time-step (presently {dt} ms):</div>
+                <div>
+                    1 ms
+                    <input
+                        type="range"
+                        min="0"
+                        max="11"
+                        value={logDt}
+                        onChange={e => {
+                            let newLogDt = Number(e.target.value);
+                            setLogDt(newLogDt);
+                            setDt(2 ** newLogDt);
+                        }}
+                    />
+                    2 s
+                </div>
                 </>
             }
             <p align="center"><h3>Inputs</h3></p>
-            <div><i>z</i>-component of angular momentum</div>
+            <div>
+                <ToggleInfo onClick={handleToggle} name="momentum" toggle={showInfo.momentum} />
+                <i>z</i>-component of angular momentum
+            </div>
+            <div><i>{showInfo.momentum ? text.momentum : null}</i></div>
             <Input quantity={running || time ? Lz : LzInput} handler={handlerLz}/> kg m/s
+            <div>(The other two components are zero.)</div>
+
             <br/><br/>
 
-            <div>Shape of box</div>
+            <div>
+                <ToggleInfo onClick={handleToggle} name="shape" toggle={showInfo.shape} />
+                Shape of box
+            </div>
+            <div><i>{showInfo.shape ? text.shape : null}</i></div>
             <select value={shape} onChange={e => {
                 let newShape = Number(e.target.value);
                 setShape(newShape);
@@ -283,7 +324,11 @@ const App = () => {
 
             {!shape ? null :
                 <>
-                <div>Moment{`${shape === 1 ? '' : "s"}`} of inertia: (in kg m<sup>2</sup>)</div>
+                <div>
+                    <ToggleInfo onClick={handleToggle} name="moment" toggle={showInfo.moment} />
+                    Moment{`${shape === 1 ? '' : "s"}`} of inertia: (in kg m<sup>2</sup>)
+                </div>
+                <div><i>{showInfo.moment ? text.moment : null}</i></div>
                 {xyz.filter((blah, i) => i < shape).map((blah, i) => (
                     <div>
                         <Input key={i} name={i} quantity={momsInput[i]} handler={handlerMom} />
@@ -297,7 +342,11 @@ const App = () => {
 
                 {shape < 1 ? null :
                     <>
-                    <div>Choose <i>z</i>-axis to be near ...</div>
+                    <div>
+                        <ToggleInfo onClick={handleToggle} name="choose" toggle={showInfo.choose} />
+                        Choose <i>z</i>-axis to be near ...
+                    </div>
+                    <div><i>{showInfo.choose ? text.choose : null}</i></div>
                     <select value={zAxis} onChange={e => {
                         let newZAxis = Number(e.target.value);
                         let newMoms = [...moms];
@@ -352,12 +401,12 @@ const App = () => {
                     <div>Lab-frame angular velocity (in rad/sec)</div>
                     <div>(also displayed as a segment in figure):</div>
                     <div>components = [
-                        {Math.round(omfs[0] * 1000) / 1000},&nbsp;
-                        {Math.round(omfs[1] * 1000) / 1000},&nbsp;
-                        {Math.round(omfs[2] * 1000) / 1000}
+                        {Math.round(omfs[0] * 100) / 100},&nbsp;
+                        {Math.round(omfs[1] * 100) / 100},&nbsp;
+                        {Math.round(omfs[2] * 100) / 100}
                         ]
                     </div>
-                    <div>magnitude = {Math.round(omf * 1000) / 1000}</div>
+                    <div>magnitude = {Math.round(omf * 100) / 100}</div>
                     <br/><br/>
                     <div>kinetic energy = {Math.round(1000 * K) / 1000} joules</div>
                     </>
@@ -371,8 +420,8 @@ const App = () => {
                     degeneracies[Math.floor(i / 2)] ? null :
                         <Line xi={nx/2} yi={ny/2} xf={nx * (0.5 + mid[0]/d[Math.floor(i / 2)]/10)} yf={ny * (0.5 + mid[1]/d[Math.floor(i / 2)]/10)} dashed={true} />
                 ))} */}
-                <Line nx={nx} ny={ny} r={omfLat * nx / 2} angle={omfAng} dt={dt}/>
-                <Body nx={nx} ny={ny} angleVec={angleVec} d={d} dt={dt} mids={mids0} degeneracies={degeneracies} />
+                <Line nx={nx} ny={ny} r={omfLat * nx / 2} angle={omfAng} dt={dt} time={time} />
+                <Body nx={nx} ny={ny} angleVec={angleVec} d={d} dt={dt} mids={mids0} degeneracies={degeneracies} running={running} />
                 <Dot x={nx/2} y={ny/2} d={10} />
             </div>
             </div>

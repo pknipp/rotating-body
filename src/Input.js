@@ -6,7 +6,7 @@ const Input = ({name, quantity, handler}) => (
         type="text"
         onChange={handler}
         name={`${name}`}
-        size="5"
+        size="4"
         value={typeof(quantity) === "string" ? quantity : Math.round(1000 * quantity) / 1000}
     />
     &nbsp;
