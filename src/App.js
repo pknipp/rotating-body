@@ -257,30 +257,26 @@ const App = () => {
             <div className="left">
             {!zAxis ? null :
                 <>
-                <p align="center"><h3>Controls</h3></p>
-                <button onClick={() => setRunning(!running)}>{running ? "Stop" : "Start"}</button>
-                <button onClick={() => setTime(0)}>Reset</button>
-                Time = {time.toFixed(1)} s
-                <div>
-                    <ToggleInfo onClick={handleToggle} name="timestep" toggle={showInfo.timestep} />
-                    Time-step (presently {dt} ms):
-                </div>
-                <div>
-                    1 ms
-                    <input
-                        type="range"
-                        min="0"
-                        max="11"
-                        value={logDt}
-                        onChange={e => {
-                            let newLogDt = Number(e.target.value);
-                            setLogDt(newLogDt);
-                            setDt(2 ** newLogDt);
-                        }}
-                    />
-                    2 s
-                </div>
-                <div><i>{showInfo.timestep ? text.timestep : null}</i></div>
+                    <p align="center"><h3>Controls</h3></p>
+                    <button onClick={() => setRunning(!running)}>{running ? "Stop" : "Start"}</button>
+                    <button onClick={() => setTime(0)}>Reset</button>
+                    Time = {time.toFixed(1)} s
+                    <div>
+                        <ToggleInfo onClick={handleToggle} name="timestep" toggle={showInfo.timestep} />
+                        Time-step (presently {dt} ms):
+                    </div>
+                    <div>
+                        1 ms
+                        <input
+                            type="range" min="0" max="11" value={logDt} onChange={e => {
+                                let newLogDt = Number(e.target.value);
+                                setLogDt(newLogDt);
+                                setDt(2 ** newLogDt);
+                            }}
+                        />
+                        2 s
+                    </div>
+                    <div><i>{showInfo.timestep ? text.timestep : null}</i></div>
                 </>
             }
             <p align="center"><h3>Inputs</h3></p>
@@ -291,7 +287,6 @@ const App = () => {
             <div><i>{showInfo.momentum ? text.momentum : null}</i></div>
             <Input quantity={running || time ? Lz : LzInput} handler={handlerLz}/> kg m/s
             <div>(The other two components are zero.)</div>
-
             <br/><br/>
 
             <div>
@@ -323,114 +318,121 @@ const App = () => {
                 setTypes([[''], ['generic'], ['parallel', 'transverse'], ['longest', 'intermediate', 'shortest']][newShape]);
             }}>
                 {["choose shape", 'isotropic', 'axisymmetric', 'asymmetric'].map((option, i) => (
-                    <option key={i} title={"more info"} value={i}>
-                        {option}
-                    </option>
+                    <option key={i} title={"more info"} value={i}> {option} </option>
                 ))}
             </select>
             <br/><br/>
 
             {!shape ? null :
                 <>
-                <div>
-                    <ToggleInfo onClick={handleToggle} name="moment" toggle={showInfo.moment} />
-                    Moment{`${shape === 1 ? '' : "s"}`} of inertia: (in kg m<sup>2</sup>)
-                </div>
-                <div><i>{showInfo.moment ? text.moment : null}</i></div>
-                {xyz.filter((blah, i) => i < shape).map((blah, i) => (
                     <div>
-                        <Input key={i} name={i} quantity={momsInput[i]} handler={handlerMom} />
-                        {types[i]} axis
+                        <ToggleInfo onClick={handleToggle} name="moment" toggle={showInfo.moment} />
+                        Moment{`${shape === 1 ? '' : "s"}`} of inertia: (in kg m<sup>2</sup>)
                     </div>
-                ))}
-                {legalOrder ? null : <div className="message">For an asymmetric body the moments of inertia should increase, going from long axis to short axis.</div>}
-                {areLegalMoms ? null : <div className="message">No single moment of inertia should exceed the sum of the other two.</div>}
-                {!isotropic ? null : <div className="message">This is considered "isotropic" not "axisymmetric".</div>}
-                <br/><br/>
+                    <div><i>{showInfo.moment ? text.moment : null}</i></div>
+                    {xyz.filter((blah, i) => i < shape).map((blah, i) => (
+                        <div>
+                            <Input key={i} name={i} quantity={momsInput[i]} handler={handlerMom} />
+                            {types[i]} axis
+                        </div>
+                    ))}
+                    {legalOrder ? null : <div className="message">
+                            For an asymmetric body the moments of inertia should increase, going from long    axis to short axis.
+                    </div>}
+                    {areLegalMoms ? null : <div className="message">No single moment of inertia should exceed the sum of the other two.</div>}
+                    {!isotropic ? null : <div className="message">This is considered "isotropic" not "axisymmetric".</div>}
+                    <br/><br/>
 
-                {shape < 1 ? null :
-                    <>
-                    <div>
-                        <ToggleInfo onClick={handleToggle} name="choose" toggle={showInfo.choose} />
-                        Choose <i>z</i>-axis to be near ...
-                    </div>
-                    <div><i>{showInfo.choose ? text.choose : null}</i></div>
-                    <select value={zAxis} onChange={e => {
-                        let newZAxis = Number(e.target.value);
-                        let newMoms = [...moms];
-                        newMoms[2] = firstMoms[newZAxis - 1];
-                        newMoms[0] = firstMoms[newZAxis % 3];
-                        newMoms[1] = firstMoms[(newZAxis + 1) % 3];
-                        setMoms(newMoms);
-                        setZAxis(newZAxis);
-                        setRunning(false);
-                        setTime(0);
-                        setOms([0, 0, 0]);
-                        setOmfs([0, 0, 0]);
-                        // set as "true" for all axes for which moments of inertia are degenerate
-                        let newDegeneracies = newMoms.map((momI, i) => {
-                            return newMoms.reduce((degenerate, momJ, j) => {
-                                return degenerate || (momJ === momI && i !== j);
-                            }, false);
-                        })
-                        setDegeneracies(newDegeneracies);
-                    }}>
-                        {["which", ...types].map((option, i) => (
-                            <option key={i} value={i}>{option} </option>
-                        ))}
-                    </select> axis
-                    <p align="center"><h3>{zAxis && time ? "Data" : null}</h3></p>
-                    {!zAxis ? null :
+                    {shape < 1 ? null :
                         <>
-                        <div>
-                            <ToggleInfo onClick={handleToggle} name="euler" toggle={showInfo.euler} />
-                            Euler angles (in radians):
-                        </div>
-                        <div><i>{showInfo.euler ? text.euler : null}</i></div>
-                        <div>between {types[zAxis - 1]} axis and <i>z</i>-axis:</div>
-                        <div>
-                            &theta; = <Input key={"ang1"} name={1} quantity={running || time ? ths[1] : thsInput[1]} handler={handlerTh} />
-                        </div>
-                        <div>Remaining two angles:</div>
-                        <div>
-                            &phi; = <Input
-                                key={"ang0"} name={0} handler={handlerTh}
-                                quantity={running || time ? ths[0] : thsInput[0]}
-                            />
-                            &psi; = <Input
-                                key={"ang0"} name={2} handler={handlerTh}
-                                quantity={running || time ? ths[2] : thsInput[2]}
-                            />
-                        </div>
+                            <div>
+                                <ToggleInfo onClick={handleToggle} name="choose" toggle={showInfo.choose} />
+                                Choose <i>z</i>-axis to be near ...
+                            </div>
+                            <div><i>{showInfo.choose ? text.choose : null}</i></div>
+                            <select value={zAxis} onChange={e => {
+                                let newZAxis = Number(e.target.value);
+                                let newMoms = [...moms];
+                                newMoms[2] = firstMoms[newZAxis - 1];
+                                newMoms[0] = firstMoms[newZAxis % 3];
+                                newMoms[1] = firstMoms[(newZAxis + 1) % 3];
+                                setMoms(newMoms);
+                                setZAxis(newZAxis);
+                                setRunning(false);
+                                setTime(0);
+                                setOms([0, 0, 0]);
+                                setOmfs([0, 0, 0]);
+                                // set as "true" for all axes for which moments of inertia are degenerate
+                                let newDegeneracies = newMoms.map((momI, i) => {
+                                    return newMoms.reduce((degenerate, momJ, j) => {
+                                        return degenerate || (momJ === momI && i !== j);
+                                    }, false);
+                                })
+                                setDegeneracies(newDegeneracies);
+                            }}>
+                                {["which", ...types].map((option, i) => (
+                                    <option key={i} value={i}>{option} </option>
+                                ))}
+                            </select> axis
+                            <p align="center"><h3>{zAxis && time ? "Data" : null}</h3></p>
+                            {!zAxis ? null :
+                                <>
+                                    <div>
+                                        <ToggleInfo onClick={handleToggle} name="euler" toggle={showInfo.euler} />
+                                        Euler angles (in radians):
+                                    </div>
+                                    <div><i>{showInfo.euler ? text.euler : null}</i></div>
+                                    <div>between {types[zAxis - 1]} axis and <i>z</i>-axis:</div>
+                                    <div>
+                                        &theta; =
+                                        <Input
+                                            key={"ang1"} name={1} handler= {handlerTh}
+                                            quantity={running || time ? ths[1] : thsInput[1]}
+                                        />
+                                    </div>
+                                    <div>Remaining two angles:</div>
+                                    <div>
+                                        &phi; =
+                                        <Input
+                                            key={"ang0"} name={0} handler={handlerTh}
+                                            quantity={running || time ? ths[0] : thsInput[0]}
+                                        />
+                                        &psi; =
+                                        <Input
+                                            key={"ang0"} name={2} handler={handlerTh}
+                                            quantity={running || time ? ths[2] : thsInput[2]}
+                                        />
+                                    </div>
+                                </>
+                            }
                         </>
                     }
-                    </>
-                }
-                <br/>
+                    <br/>
 
-                {!(running || time) ? null :
-                    <>
-                    <div>
-                        <ToggleInfo onClick={handleToggle} name="omega" toggle={showInfo.omega} />
-                        Lab-frame angular velocity &omega; (in rad/sec)
-                        <div>(also displayed as a segment in figure):</div>
-                    </div>
-                    <div><i>{showInfo.omega ? text.omega : null}</i></div>
-                    <div>components = [
-                        {Math.round(omfs[0] * 100) / 100},&nbsp;
-                        {Math.round(omfs[1] * 100) / 100},&nbsp;
-                        {Math.round(omfs[2] * 100) / 100}
-                        ]
-                    </div>
-                    <div>magnitude = {Math.round(omf * 100) / 100}</div>
-                    <br/><br/>
-                    <div>
-                        <ToggleInfo onClick={handleToggle} name="energy" toggle={showInfo.energy} />
-                        kinetic energy = {Math.round(1000 * K) / 1000} joules
-                    </div>
-                    <div><i>{showInfo.energy ? text.energy : null}</i></div>
-                    </>
-                }
+                    {!(running || time) ? null :
+                        <>
+                            <div>
+                                <ToggleInfo onClick={handleToggle} name="omega" toggle={showInfo.omega} />
+                                Lab-frame angular velocity &omega; (in rad/sec)
+                                <div>(also displayed as a segment in figure):</div>
+                            </div>
+                            <div><i>{showInfo.omega ? text.omega : null}</i></div>
+                            <div>components = [
+                                {Math.round(omfs[0] * 100) / 100},&nbsp;
+                                {Math.round(omfs[1] * 100) / 100},&nbsp;
+                                {Math.round(omfs[2] * 100) / 100}
+                                ]
+                            </div>
+                            <div>magnitude = {Math.round(omf * 100) / 100}</div>
+                            <br/><br/>
+                            
+                            <div>
+                                <ToggleInfo onClick={handleToggle} name="energy" toggle={showInfo.energy} />
+                                kinetic energy = {Math.round(1000 * K) / 1000} joules
+                            </div>
+                            <div><i>{showInfo.energy ? text.energy : null}</i></div>
+                        </>
+                    }
                 </>
             }
 
