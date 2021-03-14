@@ -3,7 +3,7 @@ import { EigenvalueDecomposition, Matrix } from "ml-matrix";
 import Dot from "./Dot";
 import Input from "./Input";
 import Line from "./Line";
-// import Square from "./Square";
+import ToggleInfo from "./ToggleInfo";
 import Body from "./Body";
 
 const App = () => {
@@ -22,6 +22,8 @@ const App = () => {
     const [omsInput] = useState(["", "", ""]);
     const [oms, setOms] = useState(omsInput.map(elem => Number(elem)));
     const [omfs, setOmfs] = useState([0, 0, 0]);
+    const [omfLat, setomfLat] = useState(0);
+    const [omfAng, setOmfAng] = useState(null);
     const [, setLs] = useState([0, 0, 0]);
     const [labLs, setLabLs] = useState([0, 0, 0]);
     const [om2, setOm2] = useState(0);
@@ -42,9 +44,9 @@ const App = () => {
     const [zAxis, setZAxis] = useState(0);
     const [legalOrder, setLegalOrder] = useState(true);
     const [isotropic, setIsotropic] = useState(false);
-
-    // ODE-solver timestep in ms
-    const dt = 50;
+    const [logDt, setLogDt] = useState(8);
+    const [dt, setDt] = useState(2 ** logDt);
+    const [showInfo, setShowInfo] = useState({});
 
     // helpful linear algebra functions:
     const dotproduct = (vec1, vec2) => vec1.reduce((dot, comp, i) => dot + comp * vec2[i], 0);
@@ -84,7 +86,15 @@ const App = () => {
 
     const rotationStuff = () => {
         setMids(mids0.map((mid, i) => mult1(invRot(ths), mid)));
-        setAngleVec(rotate(invRot(ths)));
+        let newAngleVec = rotate(invRot(ths));
+        let dot = angleVec[1] ? newAngleVec[1].reduce((dot, comp, i) => dot + comp * angleVec[1][i], 0) : null;
+        if (dot < 0) {
+            newAngleVec[1] = newAngleVec[1].map(comp => -comp);
+            newAngleVec[0] *= -1;
+        }
+        let nAng = (newAngleVec[0] - angleVec[0]) / 2 / Math.PI;
+        if (Math.abs(Math.round(nAng) - nAng) < 0.1) newAngleVec[0] -= Math.round(nAng) * 2 * Math.PI;
+        setAngleVec(newAngleVec);
     }
     useEffect(() => rotationStuff(), [mids0, ths]);
 
@@ -195,7 +205,13 @@ const App = () => {
         newOmfs[1] =-Fs[2] * ss[1] * cs[0] + Fs[1] * ss[0];
         newOmfs[2] = Fs[2] * cs[1] + Fs[0];
         setOmfs(newOmfs);
-        setOmf(Math.sqrt(newOmfs.reduce((om2, om) => om2 + om * om, 0)));
+        let newOmf = Math.sqrt(newOmfs.reduce((om2, om) => om2 + om * om, 0));
+        setOmf(newOmf);
+        setomfLat(Math.sqrt(newOmfs[0] * newOmfs[0] + newOmfs[1] * newOmfs[1]) / newOmf);
+        let newOmfAng = Math.atan2(omfs[1], omfs[0]);
+        let nAng = (newOmfAng - omfAng) / 2 / Math.PI;
+        if (Math.abs(Math.round(nAng) - nAng) < 0.2) newOmfAng -= Math.round(nAng) * 2 * Math.PI;
+        setOmfAng(newOmfAng);
         let newLs = newOms.map((om, i) => moms[i] * om);
         setLs(newLs);
         setL2(newLs.reduce((L2, L) => L2 + L * L, 0));
@@ -215,148 +231,215 @@ const App = () => {
         let Fs4 = nextFs(Fs3, 1);
         setThs([...ths].map((th, i) => th + (Fs1[i] + Fs4[i] + 2 * (Fs2[i] + Fs3[i])) * dt/ 1000 / 6));
     }, [time, running]);
+
+    const handleToggle = e => {
+        let name = e.currentTarget.name;
+        let newShowInfo = {...showInfo};
+        newShowInfo[name] = !showInfo[name];
+        setShowInfo(newShowInfo);
+      }
+
+    let text = {
+        timestep: `This controls the extent of the approximation used when computing derivatives with respect to time.  Shorter timesteps make the results more accurate but may make the simulation run slowly.`,
+        momentum: `Roughly speaking the angular momentum is the product of the body's mass, its width (away from the rotation axis), and how fast it spins.  The coordinate system for this simulation has x to the right, y down, and z into the screen.  Accordingly the z component of the angular momentum is positive for clockwise motion and negative for counterclockwise.`,
+        shape: `An object has three moments of inertia: one for rotation about each of its three axes.  (Note that the axes are mutually perpendicular and are indicated in the figure.) An object is said to be "isotropic" if its three moments are all equal, as is the case for either a sphere or a cube. An object is "axisymmetric" if two out of the three moments are equal, as is the case either for an object which has "rotational symmetry" such as a cup or a box for which four of the six faces are the same shape.  An object is asymmetric if all three of its moments of inertia are different.`,
+        moment: `The moment of inertia quantifies an object's resistance to instantaneous changes of its rate of rotation, just as an object's mass (or "translational inertia") quantifies an object's resistance to instantaneous changes of its speed.  The moment of inertia about a particular axis is small if the object is "skinny" along that axis.`,
+        choose: `When one of the body's principal axes is exactly parallel to the z-axis (which - in turn - is parallel to the angular momentum vector), the rotational motion is constant, as you can easily confirm with this simulation.  However when the principal axis is close to the z-axis the result is precession, which can be either stable or unstable.`,
+        euler: `Three angular parameters are required in order to specify the orientation of a rigid object which is free to rotate about its center of mass.  In aviation these variables are called "pitch", "roll", and "yaw", but in general these are usually chosen as the Euler angles, which are typically represented by the Greek letters "phi", "theta", and "psi" as used below.  For this simulation, the middle angle (between the body axis and the z-axis) is the most important, because it relates directly to precession of the body's axes.  The easiest way for you to learn more about these angles is by seeing the effects of their adjustment upon the body's appearance.`,
+        omega: `The body's angular velocity (or "angular frequency") is a vector which points in the same general direction as the body's angular-momentum vector, and these two vectors are exactly parallel if the angular momentum points exactly parallel to one of the body's principal axes of rotation.  The diagram on the right will use a dot to represent the angular velocity if/when it is ever parallel to the z-axis, because the vector will then be directed either into or out of the screen.`,
+        energy: `The body's rotational kinetic energy equals 0.5 times the "dot product" of the angular momentum and the angular velocity.  It is a non-negative quantity and should be constant in this simulation.  If it seems NOT to be constant, you should probably lower the value of the time-step.`,
+      }
+
     return (
         <>
             <div className="top"><p align="center"><h1>Free-body rotation</h1></p></div>
+            The motion of an object through the air consists 
             <div className="bottom">
-            <div className="left">
-            {!zAxis ? null :
-                <>
-                <p align="center"><h3>Controls</h3></p>
-                <button onClick={() => setRunning(!running)}>{running ? "Stop" : "Start"}</button>
-                <button onClick={() => setTime(0)}>Reset</button>
-                Time = {time.toFixed(2)} s
-                </>
-            }
-            <p align="center"><h3>Inputs</h3></p>
-            <div><i>z</i>-component of angular momentum</div>
-            <Input quantity={running || time ? Lz : LzInput} handler={handlerLz}/> kg m/s
-            <br/><br/>
-
-            <div>Shape of box</div>
-            <select value={shape} onChange={e => {
-                let newShape = Number(e.target.value);
-                setShape(newShape);
-                setZAxis(newShape === 1 ? 1 : 0);
-                setRunning(false);
-                setTime(0);
-                setDegeneracies([[false, false, false], [true, true, true], [false, true, true], [false, false, false]][newShape]);
-                let newMoms = [...moms];
-                if (newShape === 1) newMoms = newMoms.map((mom, i, moms) => moms[0])
-                if (newShape === 2) {
-                    newMoms[1] = newMoms[1] === newMoms[0] ? Math.round(newMoms[0] + 0.6) : newMoms[1];
-                    newMoms[2] = newMoms[1];
+                <div className="left">
+                {!zAxis ? null :
+                    <>
+                        <p align="center"><h3>Controls</h3></p>
+                        <button onClick={() => setRunning(!running)}>{running ? "Stop" : "Start"}</button>
+                        <button onClick={() => setTime(0)}>Reset</button>
+                        Time = {time.toFixed(1)} s
+                        <div>
+                            <ToggleInfo onClick={handleToggle} name="timestep" toggle={showInfo.timestep} />
+                            Time-step (presently {dt} ms):
+                        </div>
+                        <div>
+                            1 ms
+                            <input
+                                type="range" min="0" max="11" value={logDt} onChange={e => {
+                                    let newLogDt = Number(e.target.value);
+                                    setLogDt(newLogDt);
+                                    setDt(2 ** newLogDt);
+                                }}
+                            />
+                            2 s
+                        </div>
+                        <div><i>{showInfo.timestep ? text.timestep : null}</i></div>
+                    </>
                 }
-                if (newShape === 3) {
-                    newMoms.sort((a, b) => a - b);
-                    newMoms[1] = newMoms[1] === newMoms[0] ? Math.round(newMoms[0] + 0.6) : newMoms[1];
-                    newMoms[2] = newMoms[2] === newMoms[1] ? Math.round(newMoms[1] + 0.6) : newMoms[2];
-                }
-                setMomsInput(newMoms.map(mom => String(mom)));
-                setFirstMoms(newMoms);
-                setMoms(newMoms);
-                setTypes([[''], ['generic'], ['parallel', 'transverse'], ['longest', 'intermediate', 'shortest']][newShape]);
-            }}>
-                {["choose shape", 'isotropic', 'axisymmetric', 'asymmetric'].map((option, i) => (
-                    <option key={i} title={"more info"} value={i}>
-                        {option}
-                    </option>
-                ))}
-            </select>
-            <br/><br/>
-
-            {!shape ? null :
-                <>
-                <div>Moment{`${shape === 1 ? '' : "s"}`} of inertia: (in kg m<sup>2</sup>)</div>
-                {xyz.filter((blah, i) => i < shape).map((blah, i) => (
-                    <div>
-                        <Input key={i} name={i} quantity={momsInput[i]} handler={handlerMom} />
-                        {types[i]} axis
-                    </div>
-                ))}
-                {legalOrder ? null : <div className="message">For an asymmetric body the moments of inertia should increase, going from long axis to short axis.</div>}
-                {areLegalMoms ? null : <div className="message">No single moment of inertia should exceed the sum of the other two.</div>}
-                {!isotropic ? null : <div className="message">This is considered "isotropic" not "axisymmetric".</div>}
+                <p align="center"><h3>Inputs</h3></p>
+                <div>
+                    <ToggleInfo onClick={handleToggle} name="momentum" toggle={showInfo.momentum} />
+                    <i>z</i>-component of angular momentum
+                </div>
+                <div><i>{showInfo.momentum ? text.momentum : null}</i></div>
+                <Input quantity={running || time ? Lz : LzInput} handler={handlerLz}/> kg m/s
+                <div>(The other two components are zero.)</div>
                 <br/><br/>
 
-                {shape < 1 ? null :
-                    <>
-                    <div>Choose <i>z</i>-axis to be near ...</div>
-                    <select value={zAxis} onChange={e => {
-                        let newZAxis = Number(e.target.value);
-                        let newMoms = [...moms];
-                        newMoms[2] = firstMoms[newZAxis - 1];
-                        newMoms[0] = firstMoms[newZAxis % 3];
-                        newMoms[1] = firstMoms[(newZAxis + 1) % 3];
-                        setMoms(newMoms);
-                        setZAxis(newZAxis);
-                        setRunning(false);
-                        setTime(0);
-                        setOms([0, 0, 0]);
-                        setOmfs([0, 0, 0]);
-                        // set as "true" for all axes for which moments of inertia are degenerate
-                        let newDegeneracies = newMoms.map((momI, i) => {
-                            return newMoms.reduce((degenerate, momJ, j) => {
-                                return degenerate || (momJ === momI && i !== j);
-                            }, false);
-                        })
-                        setDegeneracies(newDegeneracies);
-                    }}>
-                        {["which", ...types].map((option, i) => (
-                            <option key={i} value={i}>{option} </option>
-                        ))}
-                    </select> axis
-                    <p align="center"><h3>{zAxis && time ? "Data" : null}</h3></p>
-                    {!zAxis ? null :
-                        <>
-                        <div>Euler angles (in radians):</div>
-                        <div>between {types[zAxis - 1]} axis and <i>z</i>-axis:</div>
-                        <div>
-                            &theta; = <Input key={"ang1"} name={1} quantity={running || time ? ths[1] : thsInput[1]} handler={handlerTh} />
-                        </div>
-                        <div>Remaining two angles:</div>
-                        <div>
-                            &phi; = <Input
-                                key={"ang0"} name={0} handler={handlerTh}
-                                quantity={running || time ? ths[0] : thsInput[0]}
-                            />
-                            &psi; = <Input
-                                key={"ang0"} name={2} handler={handlerTh}
-                                quantity={running || time ? ths[2] : thsInput[2]}
-                            />
-                        </div>
-                        </>
+                <div>
+                    <ToggleInfo onClick={handleToggle} name="shape" toggle={showInfo.shape} />
+                    Shape of box
+                </div>
+                <div><i>{showInfo.shape ? text.shape : null}</i></div>
+                <select value={shape} onChange={e => {
+                    let newShape = Number(e.target.value);
+                    setShape(newShape);
+                    setZAxis(newShape === 1 ? 1 : 0);
+                    setRunning(false);
+                    setTime(0);
+                    setDegeneracies([[false, false, false], [true, true, true], [false, true, true], [false,    false, false]][newShape]);
+                    let newMoms = [...moms];
+                    if (newShape === 1) newMoms = newMoms.map((mom, i, moms) => moms[0])
+                    if (newShape === 2) {
+                        newMoms[1] = newMoms[1] === newMoms[0] ? Math.round(newMoms[0] + 0.6) : newMoms[1];
+                        newMoms[2] = newMoms[1];
                     }
-                    </>
-                }
-                <br/>
+                    if (newShape === 3) {
+                        newMoms.sort((a, b) => a - b);
+                        newMoms[1] = newMoms[1] === newMoms[0] ? Math.round(newMoms[0] + 0.6) : newMoms[1];
+                        newMoms[2] = newMoms[2] <= newMoms[1] ? Math.round(newMoms[1] + 0.6) : newMoms[2];
+                    }
+                    setMomsInput(newMoms.map(mom => String(mom)));
+                    setFirstMoms(newMoms);
+                    setMoms(newMoms);
+                    setTypes([[''], ['generic'], ['parallel', 'transverse'], ['longest', 'intermediate',    'shortest']][newShape]);
+                }}>
+                    {["choose shape", 'isotropic', 'axisymmetric', 'asymmetric'].map((option, i) => (
+                        <option key={i} title={"more info"} value={i}> {option} </option>
+                    ))}
+                </select>
+                <br/><br/>
 
-                {!(running || time) ? null :
+                {!shape ? null :
                     <>
-                    <div>Lab-frame angular velocity (in rad/sec)</div>
-                    <div>(also displayed as a segment in figure):</div>
-                    <div>components = [
-                        {Math.round(omfs[0] * 1000) / 1000},&nbsp;
-                        {Math.round(omfs[1] * 1000) / 1000},&nbsp;
-                        {Math.round(omfs[2] * 1000) / 1000}
-                        ]
-                    </div>
-                    <div>magnitude = {Math.round(omf * 1000) / 1000}</div>
-                    <br/><br/>
-                    <div>kinetic energy = {Math.round(1000 * K) / 1000} joules</div>
+                        <div>
+                            <ToggleInfo onClick={handleToggle} name="moment" toggle={showInfo.moment} />
+                            Moment{`${shape === 1 ? '' : "s"}`} of inertia: (in kg m<sup>2</sup>)
+                        </div>
+                        <div><i>{showInfo.moment ? text.moment : null}</i></div>
+                        {xyz.filter((blah, i) => i < shape).map((blah, i) => (
+                            <div>
+                                <Input key={i} name={i} quantity={momsInput[i]} handler={handlerMom} />
+                                {types[i]} axis
+                            </div>
+                        ))}
+                        {legalOrder ? null : <div className="message">
+                                For an asymmetric body the moments of inertia should increase, going from   long    axis to short axis.
+                        </div>}
+                        {areLegalMoms ? null : <div className="message">No single moment of inertia should  exceed the sum of the other two.</div>}
+                        {!isotropic ? null : <div className="message">This is considered "isotropic" not    "axisymmetric".</div>}
+                        <br/><br/>
+
+                        {shape < 1 ? null :
+                            <>
+                                <div>
+                                    <ToggleInfo onClick={handleToggle} name="choose" toggle={showInfo.choose}   />
+                                    Choose <i>z</i>-axis to be near ...
+                                </div>
+                                <div><i>{showInfo.choose ? text.choose : null}</i></div>
+                                <select value={zAxis} onChange={e => {
+                                    let newZAxis = Number(e.target.value);
+                                    let newMoms = [...moms];
+                                    newMoms[2] = firstMoms[newZAxis - 1];
+                                    newMoms[0] = firstMoms[newZAxis % 3];
+                                    newMoms[1] = firstMoms[(newZAxis + 1) % 3];
+                                    setMoms(newMoms);
+                                    setZAxis(newZAxis);
+                                    setRunning(false);
+                                    setTime(0);
+                                    setOms([0, 0, 0]);
+                                    setOmfs([0, 0, 0]);
+                                    // set as "true" for all axes for which moments of inertia are degenerate
+                                    let newDegeneracies = newMoms.map((momI, i) => {
+                                        return newMoms.reduce((degenerate, momJ, j) => {
+                                            return degenerate || (momJ === momI && i !== j);
+                                        }, false);
+                                    })
+                                    setDegeneracies(newDegeneracies);
+                                }}>
+                                    {["which", ...types].map((option, i) => (
+                                        <option key={i} value={i}>{option} </option>
+                                    ))}
+                                </select> axis
+                                <p align="center"><h3>{zAxis && time ? "Data" : null}</h3></p>
+                                {!zAxis ? null :
+                                    <>
+                                        <div>
+                                            <ToggleInfo onClick={handleToggle} name="euler" toggle={showInfo.   euler} />
+                                            Euler angles (in radians):
+                                        </div>
+                                        <div><i>{showInfo.euler ? text.euler : null}</i></div>
+                                        <div>between {types[zAxis - 1]} axis and <i>z</i>-axis:</div>
+                                        <div>
+                                            &theta; =
+                                            <Input
+                                                key={"ang1"} name={1} handler= {handlerTh}
+                                                quantity={running || time ? ths[1] : thsInput[1]}
+                                            />
+                                        </div>
+                                        <div>Remaining two angles:</div>
+                                        <div>
+                                            &phi; =
+                                            <Input
+                                                key={"ang0"} name={0} handler={handlerTh}
+                                                quantity={running || time ? ths[0] : thsInput[0]}
+                                            />
+                                            &psi; =
+                                            <Input
+                                                key={"ang0"} name={2} handler={handlerTh}
+                                                quantity={running || time ? ths[2] : thsInput[2]}
+                                            />
+                                        </div>
+                                    </>
+                                }
+                            </>
+                        }
+                        <br/>
+
+                        {!(running || time) ? null :
+                            <>
+                                <div>
+                                    <ToggleInfo onClick={handleToggle} name="omega" toggle={showInfo.omega} />
+                                    Lab-frame angular velocity &omega; (in rad/sec)
+                                    <div>(also displayed as a segment in figure):</div>
+                                </div>
+                                <div><i>{showInfo.omega ? text.omega : null}</i></div>
+                                <div>components = [
+                                    {Math.round(omfs[0] * 100) / 100},&nbsp;
+                                    {Math.round(omfs[1] * 100) / 100},&nbsp;
+                                    {Math.round(omfs[2] * 100) / 100}
+                                    ]
+                                </div>
+                                <div>magnitude = {Math.round(omf * 100) / 100}</div>
+                                <br/><br/>
+
+                                <div>
+                                    <ToggleInfo onClick={handleToggle} name="energy" toggle={showInfo.energy}   />
+                                    kinetic energy = {Math.round(1000 * K) / 1000} joules
+                                </div>
+                                <div><i>{showInfo.energy ? text.energy : null}</i></div>
+                            </>
+                        }
                     </>
                 }
-                </>
-            }
-
             </div>
             <div className="container" style={{height:`${ny}px`, width:`${nx}px`}}>
-                {mids.map((mid, i) => (
-                    degeneracies[Math.floor(i / 2)] ? null :
-                        <Line xi={nx/2} yi={ny/2} xf={nx * (0.5 + mid[0]/d[Math.floor(i / 2)]/10)} yf={ny * (0.5 + mid[1]/d[Math.floor(i / 2)]/10)} dashed={true} />
-                ))}
-                <Line xi={nx/2} yi={ny/2} xf={nx/2 + nx * omfs[0]/omf/2} yf={ny/2 + nx * omfs[1]/omf/2} />
-                <Body nx={nx} ny={ny} angleVec={angleVec} d={d} />
+                <Line nx={nx} ny={ny} r={omfLat * nx / 2} angle={omfAng} dt={dt} time={time} />
+                <Body nx={nx} ny={ny} angleVec={angleVec} d={d} dt={dt} mids={mids0} degeneracies={degeneracies} running={running} />
                 <Dot x={nx/2} y={ny/2} d={10} />
             </div>
             </div>
