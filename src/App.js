@@ -240,10 +240,14 @@ const App = () => {
       }
 
     let text = {
-        momentum:`Roughly speaking the angular momentum is the product of the body's mass, its width (away from the rotation axis), and how fast it spins.  The coordinate system for this simulation has x to the right, y down, and z into the screen.  Accordingly the z component of the angular momentum is positive for clockwise motion and negative for counterclockwise.`,
-        shape:`An object has three moments of inertia: one for rotation about each of its three axes.  (Note that the axes are mutually perpendicular and are indicated in the figure.) An object is said to be "isotropic" if its three moments are all equal, as is the case for either a sphere or a cube. An object is "axisymmetric" if two out of the three moments are equal, as is the case either for an object which has "rotational symmetry" such as a cup or a box for which four of the six faces are the same shape.  An object is asymmetric if all three of its moments of inertia are different.`,
-        moment:`The moment of inertia quantifies an object's resistance to instantaneous changes of its rate of rotation, just as an object's mass (or "translational inertia") quantifies an object's resistance to instantaneous changes of its speed.  The moment of inertia about a particular axis is small if most of the object is close to the particular axis.`,
-        choose:`When one of the body's principal axes is exactly parallel to the z-axis (which - in turn - is parallel to the angular momentum vector), the rotational motion is constant, as you can easily confirm with this simulation.  However when the principal axis is close to the z-axis the result is precession, which can be either stable or unstable.`,
+        timestep: `This controls the extent of the approximation used when computing derivatives with respect to time.  Shorter timesteps make the results more accurate but may make the simulation run slowly.`,
+        momentum: `Roughly speaking the angular momentum is the product of the body's mass, its width (away from the rotation axis), and how fast it spins.  The coordinate system for this simulation has x to the right, y down, and z into the screen.  Accordingly the z component of the angular momentum is positive for clockwise motion and negative for counterclockwise.`,
+        shape: `An object has three moments of inertia: one for rotation about each of its three axes.  (Note that the axes are mutually perpendicular and are indicated in the figure.) An object is said to be "isotropic" if its three moments are all equal, as is the case for either a sphere or a cube. An object is "axisymmetric" if two out of the three moments are equal, as is the case either for an object which has "rotational symmetry" such as a cup or a box for which four of the six faces are the same shape.  An object is asymmetric if all three of its moments of inertia are different.`,
+        moment: `The moment of inertia quantifies an object's resistance to instantaneous changes of its rate of rotation, just as an object's mass (or "translational inertia") quantifies an object's resistance to instantaneous changes of its speed.  The moment of inertia about a particular axis is small if most of the object is close to the particular axis.`,
+        choose: `When one of the body's principal axes is exactly parallel to the z-axis (which - in turn - is parallel to the angular momentum vector), the rotational motion is constant, as you can easily confirm with this simulation.  However when the principal axis is close to the z-axis the result is precession, which can be either stable or unstable.`,
+        euler: `Three angular parameters are required in order to specify the orientation of a rigid object which is free to rotate about its center of mass.  In aviation these variables are usually "pitch", "roll", and "yaw", but in general these are usually chosen as the Euler angles, which are typically represented by the Greek letters "phi", "theta", and "psi" as used below.  For this simulation, the middle angle (between the body axis and the z-axis) is the most important, because it relates directly to precession of the body's axes.  The easiest way for you to learn more about these angles is by seeing the effects of their adjustment upon the body's appearance.`,
+        omega: `The body's angular velocity (or "angular frequency") is a vector which points in the same general direction as the body's angular-momentum vector, and these two vectors are exactly parallel if the angular momentum points exactly parallel to one of the body's principal axes of rotation.  The diagram on the right will use a dot to represent the angular velocity if/when it is ever parallel to the z-axis, because the vector will then be directed either into or out of the screen.`,
+        energy: `The body's rotational kinetic energy equals 0.5 times the "dot product" of the angular momentum and the angular velocity.  It is a non-negative quantity and should be constant in this simulation.  If it seems NOT to be constant, you should probably lower the value of the time-step.`,
       }
 
     return (
@@ -257,7 +261,10 @@ const App = () => {
                 <button onClick={() => setRunning(!running)}>{running ? "Stop" : "Start"}</button>
                 <button onClick={() => setTime(0)}>Reset</button>
                 Time = {time.toFixed(1)} s
-                <div>Time-step (presently {dt} ms):</div>
+                <div>
+                    <ToggleInfo onClick={handleToggle} name="timestep" toggle={showInfo.timestep} />
+                    Time-step (presently {dt} ms):
+                </div>
                 <div>
                     1 ms
                     <input
@@ -273,6 +280,7 @@ const App = () => {
                     />
                     2 s
                 </div>
+                <div><i>{showInfo.timestep ? text.timestep : null}</i></div>
                 </>
             }
             <p align="center"><h3>Inputs</h3></p>
@@ -374,7 +382,11 @@ const App = () => {
                     <p align="center"><h3>{zAxis && time ? "Data" : null}</h3></p>
                     {!zAxis ? null :
                         <>
-                        <div>Euler angles (in radians):</div>
+                        <div>
+                            <ToggleInfo onClick={handleToggle} name="euler" toggle={showInfo.euler} />
+                            Euler angles (in radians):
+                        </div>
+                        <div><i>{showInfo.euler ? text.euler : null}</i></div>
                         <div>between {types[zAxis - 1]} axis and <i>z</i>-axis:</div>
                         <div>
                             &theta; = <Input key={"ang1"} name={1} quantity={running || time ? ths[1] : thsInput[1]} handler={handlerTh} />
@@ -398,8 +410,12 @@ const App = () => {
 
                 {!(running || time) ? null :
                     <>
-                    <div>Lab-frame angular velocity (in rad/sec)</div>
-                    <div>(also displayed as a segment in figure):</div>
+                    <div>
+                        <ToggleInfo onClick={handleToggle} name="omega" toggle={showInfo.omega} />
+                        Lab-frame angular velocity &omega; (in rad/sec)
+                        <div>(also displayed as a segment in figure):</div>
+                    </div>
+                    <div><i>{showInfo.omega ? text.omega : null}</i></div>
                     <div>components = [
                         {Math.round(omfs[0] * 100) / 100},&nbsp;
                         {Math.round(omfs[1] * 100) / 100},&nbsp;
@@ -408,7 +424,11 @@ const App = () => {
                     </div>
                     <div>magnitude = {Math.round(omf * 100) / 100}</div>
                     <br/><br/>
-                    <div>kinetic energy = {Math.round(1000 * K) / 1000} joules</div>
+                    <div>
+                        <ToggleInfo onClick={handleToggle} name="energy" toggle={showInfo.energy} />
+                        kinetic energy = {Math.round(1000 * K) / 1000} joules
+                    </div>
+                    <div><i>{showInfo.energy ? text.energy : null}</i></div>
                     </>
                 }
                 </>
