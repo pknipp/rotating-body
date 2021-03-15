@@ -241,7 +241,7 @@ const App = () => {
 
     let text = {
         timestep: `This controls the extent of the approximation used when computing derivatives with respect to time.  Shorter timesteps make the results more accurate but may make the simulation run slowly.`,
-        momentum: `Roughly speaking the angular momentum is the product of the body's mass, its width (away from the rotation axis), and how fast it spins.  The coordinate system for this simulation has x to the right, y down, and z into the screen.  Accordingly the z component of the angular momentum is positive for clockwise motion and negative for counterclockwise.`,
+        momentum: `Roughly speaking the angular momentum is the product of the body's mass, its width (away from the rotation axis), and how fast it spins.  The coordinate system for this simulation has x to the right, y down, and z into the screen.  Accordingly the z component of the angular momentum is positive for clockwise motion and negative for counterclockwise. If you want to see the body spin faster, increase its angular momentum.`,
         shape: `An object has three moments of inertia: one for rotation about each of its three axes.  (Note that the axes are mutually perpendicular and are indicated in the figure.) An object is said to be "isotropic" if its three moments are all equal, as is the case for either a sphere or a cube. An object is "axisymmetric" if two out of the three moments are equal, as is the case either for an object which has "rotational symmetry" such as a cup or a box for which four of the six faces are the same shape.  An object is asymmetric if all three of its moments of inertia are different.`,
         moment: `The moment of inertia quantifies an object's resistance to instantaneous changes of its rate of rotation, just as an object's mass (or "translational inertia") quantifies an object's resistance to instantaneous changes of its speed.  The moment of inertia about a particular axis is small if the object is "skinny" along that axis.`,
         choose: `When one of the body's principal axes is exactly parallel to the z-axis (which - in turn - is parallel to the angular momentum vector), the rotational motion is constant, as you can easily confirm with this simulation.  However when the principal axis is close to the z-axis the result is precession, which can be either stable or unstable.`,
@@ -253,7 +253,7 @@ const App = () => {
     return (
         <>
             <div className="top"><p align="center"><h1>Free-body rotation</h1></p></div>
-            The motion of an object through the air consists 
+            The motion of an object through space consists of two types of motion: motion of the center of mass, and rotation around the center of mass.  The trajectory of the center of mass is either a straight line (for a free body), a parabola (for a body near the surface of the earth), or a conic section such as a circle, ellipse, or hyperbola for a body moving a certain distance away from a gravitating body.  This simulation considers the second type of motion: the free rotation of a body around its center of mass.  Except for the simple case of a body in the shape of a sphere or cube, this rotation is not as simple as you would think.  For instance the motion is not like that of a globe which spins at a constant rate about its axis.  Free rotation is governed by "Euler's equations", a system of three nonlinear differential equations which usually can only be solved numerically, as I do in this simulation.  Enjoy!
             <div className="bottom">
                 <div className="left">
                 {!zAxis ? null :
@@ -288,7 +288,6 @@ const App = () => {
                 <div><i>{showInfo.momentum ? text.momentum : null}</i></div>
                 <Input quantity={running || time ? Lz : LzInput} handler={handlerLz}/> kg m/s
                 <div>(The other two components are zero.)</div>
-                <br/><br/>
 
                 <div>
                     <ToggleInfo onClick={handleToggle} name="shape" toggle={showInfo.shape} />
@@ -322,7 +321,6 @@ const App = () => {
                         <option key={i} title={"more info"} value={i}> {option} </option>
                     ))}
                 </select>
-                <br/><br/>
 
                 {!shape ? null :
                     <>
@@ -342,7 +340,6 @@ const App = () => {
                         </div>}
                         {areLegalMoms ? null : <div className="message">No single moment of inertia should  exceed the sum of the other two.</div>}
                         {!isotropic ? null : <div className="message">This is considered "isotropic" not    "axisymmetric".</div>}
-                        <br/><br/>
 
                         {shape < 1 ? null :
                             <>
@@ -408,7 +405,6 @@ const App = () => {
                                 }
                             </>
                         }
-                        <br/>
 
                         {!(running || time) ? null :
                             <>
@@ -425,7 +421,6 @@ const App = () => {
                                     ]
                                 </div>
                                 <div>magnitude = {Math.round(omf * 100) / 100}</div>
-                                <br/><br/>
 
                                 <div>
                                     <ToggleInfo onClick={handleToggle} name="energy" toggle={showInfo.energy}   />
