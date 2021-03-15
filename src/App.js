@@ -202,7 +202,7 @@ const App = () => {
         setOm2(newOms.reduce((om2, om) => om2 + om * om, 0));
         let newOmfs = [];
         newOmfs[0] = Fs[2] * ss[1] * ss[0] + Fs[1] * cs[0];
-        newOmfs[1] = Fs[2] * ss[1] * cs[0] - Fs[1] * ss[0];
+        newOmfs[1] =-Fs[2] * ss[1] * cs[0] + Fs[1] * ss[0];
         newOmfs[2] = Fs[2] * cs[1] + Fs[0];
         setOmfs(newOmfs);
         let newOmf = Math.sqrt(newOmfs.reduce((om2, om) => om2 + om * om, 0));
