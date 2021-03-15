@@ -8,7 +8,7 @@ Insert meta-tags.
 Adjust colors, transparency, edges (solid or dashed)
 Change euler-angle inputs from text to number, to allow roller.
 Figure out what - if anything - gets broken if a moment equals zero
-What is best way to provide more info in re shape types dropdown: toggled info box, or "title" for each option?
+Use "titles" for each of the dropdown options for body shape
 Make length of omfs less than those of axes, so that they both appear for axisymmetric case.
 (Eventually) adjust defaults to asymmetric rotor rotating about intermediate axis.
 
