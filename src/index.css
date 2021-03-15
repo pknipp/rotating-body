@@ -3,7 +3,7 @@
     align-items: start;
     justify-items: end;
 }
-.container {position: relative; box-sizing: border-box; border: 1px solid black; perspective: 1000px; margin: 5px;}
+.container {position: relative; box-sizing: border-box; border: 1px solid black; margin: 5px;}
 .message {color: red; }
 .body {position: absolute; transform-style: preserve-3d; transition-timing-function: linear; transition-property: all;
 }

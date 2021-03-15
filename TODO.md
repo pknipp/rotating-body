@@ -3,12 +3,9 @@ git push heroku master
 TO DO:
 DEF:
 Put padding to right of buttons (and elsewhere?).
-Space items on left side so that they snuggle center line but are left-justified.
 Have y&z point up and out, respectively.
 Insert meta-tags.
-Insert slider for perspective (and size of screen?)
 Adjust colors, transparency, edges (solid or dashed)
-Insert intro info.
 Change euler-angle inputs from text to number, to allow roller.
 Figure out what - if anything - gets broken if a moment equals zero
 What is best way to provide more info in re shape types dropdown: toggled info box, or "title" for each option?

@@ -1,13 +1,13 @@
 import React from "react";
 // import Line from "./Line";
 
-const Body = ({ nx, ny, angleVec, d, dt, mids, degeneracies, running }) => {
+const Body = ({ npx, angleVec, d, dt, mids, degeneracies, running }) => {
     let angle = angleVec ? angleVec[0] : 0;
     let axisVec = angleVec.length ? angleVec[1] : [0, 0, 1];
     let dmin = Math.min(...d)/2;
     return (
         <div className="body" style={{
-            transform: `translateX(${nx/2}px) translateY(${ny/2}px) rotate3d(${axisVec[0]}, ${axisVec[1]}, ${-axisVec[2]},${angle}rad)`,
+            transform: `translateX(${npx/2}px) translateY(${npx/2}px) rotate3d(${axisVec[0]}, ${axisVec[1]}, ${-axisVec[2]},${angle}rad)`,
             transitionDuration: `${!running ? 0 : dt / 1000}s`
             }}>
             <div className="side"  style={{transform: `rotateY(0deg) translateZ(${d[2]}px)`, background: "rgba(100,30,30,0.8)",
@@ -46,10 +46,6 @@ const Body = ({ nx, ny, angleVec, d, dt, mids, degeneracies, running }) => {
             <div className="line" style={{transform: `rotateY(90deg) rotateX(90deg)`, left: `${-dmin}px`, width: `${2 * dmin}px`}} />
             </>
             }
-            {/* {mids.map((mid, i) => (
-                    (degeneracies[Math.floor(i / 2)] || i > 3) ? null :
-                        <Line xi={0*nx/2} yi={0*ny/2} xf={nx*(0.0+mid[0]/d[Math.floor(i/2)]/10)} yf={ny* (0.0+mid[1]/d[Math.floor(i/2)]/10)} dashed={true} />
-            ))} */}
         </div>
     )
 }
