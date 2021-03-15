@@ -1,7 +1,7 @@
 .bottom {display: grid;
     grid-template-columns: repeat(2, 1fr);
     align-items: start;
-    justify-content: center;
+    justify-items: end;
 }
 .container {position: relative; box-sizing: border-box; border: 1px solid black; perspective: 1000px; margin: 5px;}
 .message {color: red; }
