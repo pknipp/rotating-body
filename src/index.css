@@ -1,9 +1,10 @@
 .bottom {display: grid;
     grid-template-columns: repeat(2, 1fr);
     align-items: start;
-    justify-content: center;    
+    justify-content: center;
     justify-items: end;
 }
+.number {width: 4em; }
 .container {position: relative; box-sizing: border-box; border: 1px solid black; margin: 5px;}
 .message {color: red; }
 .body {position: absolute; transform-style: preserve-3d; transition-timing-function: linear; transition-property: all;
