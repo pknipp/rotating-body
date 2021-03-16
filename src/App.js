@@ -19,12 +19,11 @@ const App = () => {
     const [momsInput, setMomsInput] = useState(["2", "3", "4"]);
     const [firstMoms, setFirstMoms] = useState(momsInput.map(elem => Number(elem)));
     const [moms, setMoms] = useState(momsInput.map(elem => Number(elem)));
-    // const [omsInput] = useState(["", "", ""]);
-    // const [oms, setOms] = useState(omsInput.map(elem => Number(elem)));
+    const [oms, setOms] = useState([]);
     const [omfs, setOmfs] = useState([0, 0, 0]);
     const [omfLat, setomfLat] = useState(0);
     const [omfAng, setOmfAng] = useState(null);
-    // const [, setLs] = useState([0, 0, 0]);
+    const [, setLs] = useState([0, 0, 0]);
     // const [labLs, setLabLs] = useState([0, 0, 0]);
     // const [om2, setOm2] = useState(0);
     const [omf, setOmf] = useState(0);
@@ -44,7 +43,7 @@ const App = () => {
     const [zAxis, setZAxis] = useState(0);
     const [legalOrder, setLegalOrder] = useState(true);
     const [isotropic, setIsotropic] = useState(false);
-    const [logDt, setLogDt] = useState(8);
+    const [logDt, setLogDt] = useState(7);
     const [dt, setDt] = useState(2 ** logDt);
     const [showInfo, setShowInfo] = useState({});
     const [perspective, setPerspective] = useState(npx);
@@ -196,10 +195,10 @@ const App = () => {
         Fs[1] = Lz * (1 / moms[0] - 1 / moms[1]) * ss[1] * ss[2] * cs[2];
         Fs[2] = Lz * (1 / moms[2] - cs[2] * cs[2] / moms[1] - ss[2] * ss[2] / moms[0]) * cs[1];
         let newOms = [];
-        // newOms[0] = Fs[0] * ss[1] * ss[2] + Fs[1] * cs[2];
-        // newOms[1] = Fs[0] * ss[1] * cs[2] - Fs[1] * ss[2];
-        // newOms[2] = Fs[0] * cs[1] + Fs[2];
-        // setOms(newOms);
+        newOms[0] = Fs[0] * ss[1] * ss[2] + Fs[1] * cs[2];
+        newOms[1] = Fs[0] * ss[1] * cs[2] - Fs[1] * ss[2];
+        newOms[2] = Fs[0] * cs[1] + Fs[2];
+        setOms(newOms);
         // setOm2(newOms.reduce((om2, om) => om2 + om * om, 0));
         let newOmfs = [];
         newOmfs[0] = Fs[2] * ss[1] * ss[0] + Fs[1] * cs[0];
@@ -213,12 +212,12 @@ const App = () => {
         let nAng = (newOmfAng - omfAng) / 2 / Math.PI;
         if (Math.abs(Math.round(nAng) - nAng) < 0.2) newOmfAng -= Math.round(nAng) * 2 * Math.PI;
         setOmfAng(newOmfAng);
-        // let newLs = newOms.map((om, i) => moms[i] * om);
-        // setLs(newLs);
+        let newLs = newOms.map((om, i) => moms[i] * om);
+        setLs(newLs);
         // setL2(newLs.reduce((L2, L) => L2 + L * L, 0));
         // setLabLs(mult1(invRot(ths), newLs));
-        // setK(newLs.reduce((K, L, i) => K + L * oms[i], 0)/2);
-        setK(Lz * (Fs[0] * cs[1] + Fs[2]));
+        setK(newLs.reduce((K, L, i) => K + L * oms[i], 0)/2);
+        // setK(Lz * (Fs[0] * cs[1] + Fs[2]));
         return Fs;
     }
 
