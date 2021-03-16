@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { EigenvalueDecomposition, Matrix } from "ml-matrix";
 import Dot from "./Dot";
 import Input from "./Input";
+import InputNumber from "./InputNumber";
 import Line from "./Line";
 import ToggleInfo from "./ToggleInfo";
 import Body from "./Body";
@@ -128,18 +129,8 @@ const App = () => {
     };
 
     const handlerTh = e => {
-        let xyOrZ = Number(e.target.name);
-        let th =  e.target.value;
-        let newThsInput = [...thsInput]
         let newThs = [...ths];
-        if (['', '-','.', '-.'].includes(th)) {
-            newThsInput[xyOrZ] = th;
-        } else {
-            if (isNaN(Number(th))) return;
-            newThsInput[xyOrZ] = th;
-            newThs[xyOrZ] = Number(th);
-        }
-        setThsInput(newThsInput);
+        newThs[Number(e.target.name)] = Number(e.target.value);
         setThs(newThs);
         let newMids = [];
         mids0.forEach(mid => newMids.push(mult1(invRot(ths), mid)));
@@ -413,9 +404,9 @@ const App = () => {
                                             {/* </div>
                                             <div> */}
                                             &theta; =
-                                            <Input
+                                            <InputNumber
                                                 key={"ang1"} name={1} handler= {handlerTh}
-                                                quantity={running || time ? ths[1] : thsInput[1]}
+                                                quantity={ths[1]}
                                             />
                                         </div>
                                         <div>
