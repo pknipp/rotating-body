@@ -9,6 +9,7 @@ import info from "./info.png";
 import cancel from "./cancel.jpeg";
 
 const App = () => {
+    const allTypes = [[''], ['generic'], ['parallel', 'transverse'], ['longest',    'intermediate',    'shortest']];
     // following is solely needed for list comprehensions
     const [xyz] = useState(new Array(3).fill(0));
     const [npx, setNpx] = useState(700);
@@ -38,8 +39,8 @@ const App = () => {
     const [d, setD] = useState([npx / 3, npx / 3, npx / 3]);
     const [areLegalMoms, setAreLegalMoms] = useState(true);
     const [degeneracies, setDegeneracies] = useState(new Array(3).fill(false));
-    const [shape, setShape] = useState(0);
-    const [types, setTypes] = useState([]);
+    const [shape, setShape] = useState(3);
+    const [types, setTypes] = useState(allTypes[shape]);
     const [zAxis, setZAxis] = useState(0);
     const [legalOrder, setLegalOrder] = useState(true);
     const [isotropic, setIsotropic] = useState(false);
@@ -268,8 +269,6 @@ const App = () => {
                         <div>
                             <ToggleInfo onClick={handleToggle} name="timestep" toggle={showInfo.timestep} />
                             Time-step (presently {dt} ms):&nbsp;&nbsp;&nbsp;
-                        {/* </div>
-                        <div> */}
                             1 ms
                             <input
                                 type="range" min="0" max="11" value={logDt} onChange={e => {
@@ -286,8 +285,6 @@ const App = () => {
                 <>
                     <div>
                         Window size:&nbsp;&nbsp;&nbsp;
-                    {/* </div>
-                    <div> */}
                         small
                         <input
                             type="range" min="400" max="1000" step="50" value={npx}
@@ -297,8 +294,6 @@ const App = () => {
                     </div>
                     <div>
                         Perspective:&nbsp;&nbsp;&nbsp;
-                    {/* </div>
-                    <div> */}
                         lots
                         <input
                             type="range" min={npx / 2} max={3 * npx} value={perspective}
