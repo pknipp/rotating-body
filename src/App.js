@@ -120,13 +120,6 @@ const App = () => {
     }
 
     // consolidate aspects of following event handlers?
-    const handlerLz = e => {
-        let newLz =  e.target.value;
-        if (['', '-', '.', '-.'].includes(newLz)) return setLzInput(newLz);
-        if (isNaN(Number(newLz))) return;
-        setLzInput(newLz);
-        setLz(Number(newLz));
-    };
 
     const handlerTh = e => {
         let newThs = [...ths];
@@ -140,30 +133,22 @@ const App = () => {
     const handlerMom = e => {
         // let xyOrZ = Number(e.target.name);
         let newIsotropic = false;
-        let name = Number(e.target.name);
-        let mom = e.target.value;
-        let newMomsInput = [...momsInput];
         let newMoms = [...firstMoms];
-        if (['', '.'].includes(mom)) {
-            newMomsInput[name] = mom;
-        } else {
-            let newMom = Number(mom);
-            if (isNaN(newMom)) return;
-            newMomsInput[name] = mom;
-            newMoms[name] = newMom;
-            if (shape === 1) {
-                newMoms[1] = newMom;
-                newMoms[2] = newMom;
-            }
-            if (shape === 2) {
-                if (name === 1) newMoms[2] = newMom;
-                if (newMoms[0] === newMoms[1]) newIsotropic = true;
-            }
-            if (shape === 3) setLegalOrder(newMoms.reduce((legal, mom, i, moms) => (!i || (legal && mom > moms[i - 1])), true))
-            setAreLegalMoms(newMoms.reduce((legal, mom, i, moms) => (legal && mom <= (moms[(i+1)%3] + moms[(i+2)%3])), true));
+        let name = Number(e.target.name);
+        // singularities occur if a moment equals zero
+        let newMom = Math.max(0.00001, Number(e.target.value));
+        newMoms[name] = newMom;
+        if (shape === 1) {
+            newMoms[1] = newMom;
+            newMoms[2] = newMom;
         }
+        if (shape === 2) {
+            if (name === 1) newMoms[2] = newMom;
+            if (newMoms[0] === newMoms[1]) newIsotropic = true;
+        }
+        if (shape === 3) setLegalOrder(newMoms.reduce((legal, mom, i, moms) => (!i || (legal && mom > moms[i - 1])), true));
+        setAreLegalMoms(newMoms.reduce((legal, mom, i, moms) => (legal && mom <= (moms[(i+1)%3] + moms[(i+2)%3])), true));
         setIsotropic(newIsotropic);
-        setMomsInput(newMomsInput);
         setFirstMoms(newMoms);
         setMoms(newMoms);
     };
@@ -241,7 +226,7 @@ const App = () => {
         euler: `Three angular parameters are required in order to specify the orientation of a rigid object which is free to rotate about its center of mass.  In aviation these variables are called "pitch", "roll", and "yaw", but in general these are usually chosen as the Euler angles, typically represented by the Greek letters "phi", "theta", and "psi" as used below.  For this simulation, the middle angle (between the body axis and the z-axis) is the most important, because it relates directly to precession of the body's axes.  The easiest way for you to learn more about these angles is by seeing the effects of their adjustment upon the body's appearance.`,
         omega: `The body's angular velocity (or "angular frequency") is a vector which points in the same general direction as the body's angular-momentum vector, and these two vectors are exactly parallel if the angular momentum points exactly parallel to one of the body's principal axes of rotation.  The diagram on the right will use a dot to represent the angular velocity if/when it is ever parallel to the z-axis, because the vector will then be directed either into or out of the screen.`,
         energy: `The body's rotational kinetic energy equals 0.5 times the "dot product" of the angular momentum and the angular velocity.  It is a non-negative quantity and should be constant in this simulation.  If it seems NOT to be constant, you should probably lower the value of the time-step.`,
-      }
+    }
 
     return (
         <>
@@ -251,15 +236,15 @@ const App = () => {
             {`in order to toggle the display of information about the particular item. Enjoy!`}
             <div className="bottom">
                 <div className="left">
+                <p align="center"><h3>Controls</h3></p>
                 {!zAxis ? null :
                     <>
-                        <p align="center"><h3>Controls</h3></p>
                         <button onClick={() => setRunning(!running)}>{running ? "Stop" : "Start"}</button>
                         <button onClick={() => setTime(0)}>Reset</button>
                         Time = {time.toFixed(1)} s
                         <div>
                             <ToggleInfo onClick={handleToggle} name="timestep" toggle={showInfo.timestep} />
-                            Time-step (presently {dt} ms):&nbsp;&nbsp;&nbsp;
+                            Time-step (now {dt} ms):&nbsp;&nbsp;&nbsp;
                             1 ms
                             <input
                                 type="range" min="0" max="11" value={logDt} onChange={e => {
@@ -298,14 +283,14 @@ const App = () => {
                 <div>
                     <ToggleInfo onClick={handleToggle} name="momentum" toggle={showInfo.momentum} />
                     <i>z</i>-component of angular momentum: &nbsp;&nbsp;&nbsp;
-                    <Input quantity={running || time ? Lz : LzInput} handler={handlerLz}/> kg m/s
+                    <InputNumber quantity={Lz} handler={e => setLz(Number(e.target.value))} /> kg m/s
                 </div>
                 <div>(The other two components are zero.)</div>
                 <div><i>{showInfo.momentum ? text.momentum : null}</i></div>
 
                 <div>
                     <ToggleInfo onClick={handleToggle} name="shape" toggle={showInfo.shape} />
-                    Shape of box&nbsp;&nbsp;&nbsp;
+                    Shape of box: &nbsp;&nbsp;&nbsp;
                     <select value={shape} onChange={e => {
                         let newShape = Number(e.target.value);
                         setShape(newShape);
@@ -347,7 +332,7 @@ const App = () => {
                         {xyz.filter((blah, i) => i < shape).map((blah, i) => (
                             <div>
                                 &nbsp;&nbsp;&nbsp;&nbsp;
-                                <Input key={i} name={i} quantity={momsInput[i]} handler={handlerMom} />
+                                <InputNumber key={i} name={i} quantity={firstMoms[i]} handler={handlerMom} exceedsZero={true} />
                                 {types[i]} axis
                             </div>
                         ))}
@@ -387,7 +372,7 @@ const App = () => {
                                         {["which", ...types].map((option, i) => (
                                             <option key={i} value={i}>{option} </option>
                                         ))}
-                                    </select> axis
+                                    </select> axis.
                                 </div>
                                 <i>{showInfo.choose ? text.choose : null}</i>
 
@@ -414,15 +399,15 @@ const App = () => {
                                         {/* </div>
                                         <div> */}
                                             &phi; =
-                                            <Input
+                                            <InputNumber
                                                 key={"ang0"} name={0} handler={handlerTh}
-                                                quantity={running || time ? ths[0] : thsInput[0]}
+                                                quantity={ths[0]}
                                             />
                                             &nbsp;&nbsp;&nbsp;
                                             &psi; =
-                                            <Input
+                                            <InputNumber
                                                 key={"ang0"} name={2} handler={handlerTh}
-                                                quantity={running || time ? ths[2] : thsInput[2]}
+                                                quantity={ths[2]}
                                             />
                                         </div>
                                     </>
