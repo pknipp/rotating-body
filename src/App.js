@@ -74,7 +74,7 @@ const App = () => {
         let dMax = newD.reduce((max, d) => Math.max(d, max));
         newD = newD.map(d => npx * d / dMax / 4);
         setD(newD);
-        // replace this using reduce or forEach?
+        // replace this with reduce?
         const newMids0 = [];
         xyz.forEach((row, i) => {
             let mid1 = [...xyz];
@@ -119,16 +119,29 @@ const App = () => {
         return [angle, axisVec];
     }
 
-    // consolidate aspects of following event handlers?
-
-    const handlerTh = e => {
-        let newThs = [...ths];
-        newThs[Number(e.target.name)] = Number(e.target.value);
-        setThs(newThs);
-        let newMids = [];
-        mids0.forEach(mid => newMids.push(mult1(invRot(ths), mid)));
-        setMids(newMids);
-    };
+    const handlerShape = e => {
+        let newShape = Number(e.target.value);
+        setShape(newShape);
+        setZAxis(newShape === 1 ? 1 : 0);
+        setRunning(false);
+        setTime(0);
+        setDegeneracies([[false, false, false], [true, true, true], [false, true, true],    [false,    false, false]][newShape]);
+        let newMoms = [...moms];
+        if (newShape === 1) newMoms = newMoms.map((mom, i, moms) => moms[0])
+        if (newShape === 2) {
+            newMoms[1] = newMoms[1] === newMoms[0] ? Math.round(newMoms[0] + 0.6) : newMoms[1]  ;
+            newMoms[2] = newMoms[1];
+        }
+        if (newShape === 3) {
+            newMoms.sort((a, b) => a - b);
+            newMoms[1] = newMoms[1] === newMoms[0] ? Math.round(newMoms[0] + 0.6) : newMoms[1]  ;
+            newMoms[2] = newMoms[2] <= newMoms[1] ? Math.round(newMoms[1] + 0.6) : newMoms[2];
+        }
+        setMomsInput(newMoms.map(mom => String(mom)));
+        setFirstMoms(newMoms);
+        setMoms(newMoms);
+        setTypes([[''], ['generic'], ['parallel', 'transverse'], ['longest',    'intermediate',    'shortest']][newShape]);
+    }
 
     const handlerMom = e => {
         // let xyOrZ = Number(e.target.name);
@@ -151,6 +164,36 @@ const App = () => {
         setIsotropic(newIsotropic);
         setFirstMoms(newMoms);
         setMoms(newMoms);
+    };
+
+    const handlerZAxis = e => {
+        let newZAxis = Number(e.target.value);
+        let newMoms = [...moms];
+        newMoms[2] = firstMoms[newZAxis - 1];
+        newMoms[0] = firstMoms[newZAxis % 3];
+        newMoms[1] = firstMoms[(newZAxis + 1) % 3];
+        setMoms(newMoms);
+        setZAxis(newZAxis);
+        setRunning(false);
+        setTime(0);
+        // setOms([0, 0, 0]);
+        setOmfs([0, 0, 0]);
+        // set as "true" for all axes for which moments of inertia are degenerate
+        let newDegeneracies = newMoms.map((momI, i) => {
+            return newMoms.reduce((degenerate, momJ, j) => {
+                return degenerate || (momJ === momI && i !== j);
+            }, false);
+        })
+        setDegeneracies(newDegeneracies);
+    }
+
+    const handlerTh = e => {
+        let newThs = [...ths];
+        newThs[Number(e.target.name)] = Number(e.target.value);
+        setThs(newThs);
+        let newMids = [];
+        mids0.forEach(mid => newMids.push(mult1(invRot(ths), mid)));
+        setMids(newMids);
     };
 
     useEffect(() => {
@@ -291,36 +334,15 @@ const App = () => {
                 <div>
                     <ToggleInfo onClick={handleToggle} name="shape" toggle={showInfo.shape} />
                     Shape of box: &nbsp;&nbsp;&nbsp;
-                    <select value={shape} onChange={e => {
-                        let newShape = Number(e.target.value);
-                        setShape(newShape);
-                        setZAxis(newShape === 1 ? 1 : 0);
-                        setRunning(false);
-                        setTime(0);
-                        setDegeneracies([[false, false, false], [true, true, true], [false, true, true],    [false,    false, false]][newShape]);
-                        let newMoms = [...moms];
-                        if (newShape === 1) newMoms = newMoms.map((mom, i, moms) => moms[0])
-                        if (newShape === 2) {
-                            newMoms[1] = newMoms[1] === newMoms[0] ? Math.round(newMoms[0] + 0.6) : newMoms[1]  ;
-                            newMoms[2] = newMoms[1];
-                        }
-                        if (newShape === 3) {
-                            newMoms.sort((a, b) => a - b);
-                            newMoms[1] = newMoms[1] === newMoms[0] ? Math.round(newMoms[0] + 0.6) : newMoms[1]  ;
-                            newMoms[2] = newMoms[2] <= newMoms[1] ? Math.round(newMoms[1] + 0.6) : newMoms[2];
-                        }
-                        setMomsInput(newMoms.map(mom => String(mom)));
-                        setFirstMoms(newMoms);
-                        setMoms(newMoms);
-                        setTypes([[''], ['generic'], ['parallel', 'transverse'], ['longest',    'intermediate',    'shortest']][newShape]);
-                    }}>
+                    <select value={shape} onChange={handlerShape} >
                         {["choose shape", 'isotropic', 'axisymmetric', 'asymmetric'].map((option, i) => (
-                        <option key={i} title={"more info"} value={i}> {option} </option>
+                            <option key={i} title={"more info"} value={i}>
+                                {option}
+                            </option>
                         ))}
                     </select>
                 </div>
                 <div><i>{showInfo.shape ? text.shape : null}</i></div>
-
 
                 {!shape ? null :
                     <>
@@ -332,43 +354,35 @@ const App = () => {
                         {xyz.filter((blah, i) => i < shape).map((blah, i) => (
                             <div>
                                 &nbsp;&nbsp;&nbsp;&nbsp;
-                                <InputNumber key={i} name={i} quantity={firstMoms[i]} handler={handlerMom} exceedsZero={true} />
+                                <InputNumber
+                                    key={i} name={i} quantity={firstMoms[i]}
+                                    handler={handlerMom} exceedsZero={true}
+                                />
                                 {types[i]} axis
                             </div>
                         ))}
-                        {legalOrder ? null : <div className="message">
-                                For an asymmetric body the moments of inertia should increase, going from   long    axis to short axis.
-                        </div>}
-                        {areLegalMoms ? null : <div className="message">No single moment of inertia should  exceed the sum of the other two.</div>}
-                        {!isotropic ? null : <div className="message">This is considered "isotropic" not    "axisymmetric".</div>}
+                        {legalOrder ? null :
+                            <div className="message">
+                                For an asymmetric body the moments of inertia should increase, going from long axis to short axis.
+                            </div>
+                        }
+                        {areLegalMoms ? null :
+                            <div className="message">
+                                No single moment of inertia should  exceed the sum of the other two.
+                            </div>
+                        }
+                        {!isotropic ? null :
+                            <div className="message">
+                                This is considered "isotropic" not "axisymmetric".
+                            </div>
+                        }
 
                         {shape < 1 ? null :
                             <>
                                 <div>
                                     <ToggleInfo onClick={handleToggle} name="choose" toggle={showInfo.choose}   />
                                     Choose <i>z</i>-axis to be near ...&nbsp;&nbsp;&nbsp;
-                                {/* </div>
-                                <div> */}
-                                    <select value={zAxis} onChange={e => {
-                                        let newZAxis = Number(e.target.value);
-                                        let newMoms = [...moms];
-                                        newMoms[2] = firstMoms[newZAxis - 1];
-                                        newMoms[0] = firstMoms[newZAxis % 3];
-                                        newMoms[1] = firstMoms[(newZAxis + 1) % 3];
-                                        setMoms(newMoms);
-                                        setZAxis(newZAxis);
-                                        setRunning(false);
-                                        setTime(0);
-                                        // setOms([0, 0, 0]);
-                                        setOmfs([0, 0, 0]);
-                                        // set as "true" for all axes for which moments of inertia are degenerate
-                                        let newDegeneracies = newMoms.map((momI, i) => {
-                                            return newMoms.reduce((degenerate, momJ, j) => {
-                                                return degenerate || (momJ === momI && i !== j);
-                                            }, false);
-                                        })
-                                        setDegeneracies(newDegeneracies);
-                                    }}>
+                                    <select value={zAxis} onChange={handlerZAxis} >
                                         {["which", ...types].map((option, i) => (
                                             <option key={i} value={i}>{option} </option>
                                         ))}
@@ -380,14 +394,12 @@ const App = () => {
                                 {!zAxis ? null :
                                     <>
                                         <div>
-                                            <ToggleInfo onClick={handleToggle} name="euler" toggle={showInfo.   euler} />
+                                            <ToggleInfo onClick={handleToggle} name="euler" toggle={showInfo.euler} />
                                             Euler angles (in radians):
                                         </div>
                                         <div><i>{showInfo.euler ? text.euler : null}</i></div>
                                         <div>
                                             between {types[zAxis - 1]} axis and <i>z</i>-axis: &nbsp;&nbsp;&nbsp;
-                                            {/* </div>
-                                            <div> */}
                                             &theta; =
                                             <InputNumber
                                                 key={"ang1"} name={1} handler= {handlerTh}
@@ -396,8 +408,6 @@ const App = () => {
                                         </div>
                                         <div>
                                             Remaining two angles: &nbsp;&nbsp;&nbsp;
-                                        {/* </div>
-                                        <div> */}
                                             &phi; =
                                             <InputNumber
                                                 key={"ang0"} name={0} handler={handlerTh}
