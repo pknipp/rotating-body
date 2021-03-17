@@ -42,7 +42,7 @@ const App = () => {
     const [degeneracies, setDegeneracies] = useState(new Array(3).fill(false));
     const [shape, setShape] = useState(3);
     const [types, setTypes] = useState(allTypes[shape]);
-    const [zAxis, setZAxis] = useState(0);
+    const [zAxis, setZAxis] = useState(2);
     const [legalOrder, setLegalOrder] = useState(true);
     const [isotropic, setIsotropic] = useState(false);
     const [logDt, setLogDt] = useState(7);
@@ -69,6 +69,7 @@ const App = () => {
     const invRot=ths=> mult2(mult2(zRot(-ths[0]),xRot(-ths[1])), zRot(-ths[2]));
 
     useEffect(() => {
+        handlerShape(shape);
         let sumMom = moms[0] + moms[1] + moms[2];
         let newD = moms.map(mom => Math.max(0.000001, Math.sqrt((sumMom / 2 - mom))));
         let dMax = newD.reduce((max, d) => Math.max(d, max));
@@ -119,8 +120,8 @@ const App = () => {
         return [angle, axisVec];
     }
 
-    const handlerShape = e => {
-        let newShape = Number(e.target.value);
+    const handlerShape = newShape => {
+        // let newShape = Number(e.target.value);
         setShape(newShape);
         setZAxis(newShape === 1 ? 1 : 0);
         setRunning(false);
@@ -166,8 +167,8 @@ const App = () => {
         setMoms(newMoms);
     };
 
-    const handlerZAxis = e => {
-        let newZAxis = Number(e.target.value);
+    const handlerZAxis = newZAxis => {
+        // let newZAxis = Number(e.target.value);
         let newMoms = [...moms];
         newMoms[2] = firstMoms[newZAxis - 1];
         newMoms[0] = firstMoms[newZAxis % 3];
@@ -334,7 +335,7 @@ const App = () => {
                 <div>
                     <ToggleInfo onClick={handleToggle} name="shape" toggle={showInfo.shape} />
                     Shape of box: &nbsp;&nbsp;&nbsp;
-                    <select value={shape} onChange={handlerShape} >
+                    <select value={shape} onChange={e => handlerShape(Number(e.target.value))} >
                         {["choose shape", 'isotropic', 'axisymmetric', 'asymmetric'].map((option, i) => (
                             <option key={i} title={"more info"} value={i}>
                                 {option}
@@ -382,7 +383,7 @@ const App = () => {
                                 <div>
                                     <ToggleInfo onClick={handleToggle} name="choose" toggle={showInfo.choose}   />
                                     Choose <i>z</i>-axis to be near ...&nbsp;&nbsp;&nbsp;
-                                    <select value={zAxis} onChange={handlerZAxis} >
+                                    <select value={zAxis} onChange={e => handlerZAxis(Number(e.target.value))} >
                                         {["which", ...types].map((option, i) => (
                                             <option key={i} value={i}>{option} </option>
                                         ))}
