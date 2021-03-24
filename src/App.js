@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { EigenvalueDecomposition, Matrix } from "ml-matrix";
 import Dot from "./Dot";
-import Input from "./Input";
+// import Input from "./Input";
 import InputNumber from "./InputNumber";
 import Line from "./Line";
 import ToggleInfo from "./ToggleInfo";
@@ -40,9 +40,9 @@ const App = () => {
     const [d, setD] = useState([npx / 3, npx / 3, npx / 3]);
     const [areLegalMoms, setAreLegalMoms] = useState(true);
     const [degeneracies, setDegeneracies] = useState(new Array(3).fill(false));
-    const [shape, setShape] = useState(3);
+    const [shape, setShape] = useState(0);
     const [types, setTypes] = useState(allTypes[shape]);
-    const [zAxis, setZAxis] = useState(2);
+    const [zAxis, setZAxis] = useState(0);
     const [legalOrder, setLegalOrder] = useState(true);
     const [isotropic, setIsotropic] = useState(false);
     const [logDt, setLogDt] = useState(7);
@@ -69,7 +69,7 @@ const App = () => {
     const invRot=ths=> mult2(mult2(zRot(-ths[0]),xRot(-ths[1])), zRot(-ths[2]));
 
     useEffect(() => {
-        handlerShape(shape);
+        // handlerShape(shape);
         let sumMom = moms[0] + moms[1] + moms[2];
         let newD = moms.map(mom => Math.max(0.000001, Math.sqrt((sumMom / 2 - mom))));
         let dMax = newD.reduce((max, d) => Math.max(d, max));
@@ -417,7 +417,7 @@ const App = () => {
                                             &nbsp;&nbsp;&nbsp;
                                             &psi; =
                                             <InputNumber
-                                                key={"ang0"} name={2} handler={handlerTh}
+                                                key={"ang2"} name={2} handler={handlerTh}
                                                 quantity={ths[2]}
                                             />
                                         </div>
