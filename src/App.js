@@ -40,7 +40,7 @@ const App = () => {
     const [d, setD] = useState([npx / 3, npx / 3, npx / 3]);
     const [areLegalMoms, setAreLegalMoms] = useState(true);
     const [degeneracies, setDegeneracies] = useState(new Array(3).fill(false));
-    const [shape, setShape] = useState(0);
+    const [shape, setShape] = useState(1);
     const [types, setTypes] = useState(allTypes[shape]);
     const [zAxis, setZAxis] = useState(0);
     const [legalOrder, setLegalOrder] = useState(true);
@@ -68,8 +68,34 @@ const App = () => {
     // const rot = ths => mult2(mult2(zRot(ths[2]), xRot(ths[1])), zRot(ths[0]));
     const invRot=ths=> mult2(mult2(zRot(-ths[0]),xRot(-ths[1])), zRot(-ths[2]));
 
+    const handlerShape = newShape => {
+        // let newShape = Number(e.target.value);
+        setShape(newShape);
+        if (newShape === 1) setZAxis(1);
+        // setZAxis(newShape === 1 ? 1 : 0);
+        setRunning(false);
+        setTime(0);
+        setDegeneracies([[false, false, false], [true, true, true], [false, true, true],    [false,    false, false]][newShape]);
+        let newMoms = [...moms];
+        if (newShape === 1) newMoms = newMoms.map((mom, i, moms) => moms[0])
+        if (newShape === 2) {
+            newMoms[1] = newMoms[1] === newMoms[0] ? Math.round(newMoms[0] + 0.6) : newMoms[1]  ;
+            newMoms[2] = newMoms[1];
+        }
+        if (newShape === 3) {
+            newMoms.sort((a, b) => a - b);
+            newMoms[1] = newMoms[1] === newMoms[0] ? Math.round(newMoms[0] + 0.6) : newMoms[1]  ;
+            newMoms[2] = newMoms[2] <= newMoms[1] ? Math.round(newMoms[1] + 0.6) : newMoms[2];
+        }
+        setMomsInput(newMoms.map(mom => String(mom)));
+        setFirstMoms(newMoms);
+        setMoms(newMoms);
+        setTypes([[''], ['generic'], ['parallel', 'transverse'], ['longest',    'intermediate',    'shortest']][newShape]);
+    }
+
     useEffect(() => {
-        // handlerShape(shape);
+        handlerShape(shape);
+        console.log(moms);
         let sumMom = moms[0] + moms[1] + moms[2];
         let newD = moms.map(mom => Math.max(0.000001, Math.sqrt((sumMom / 2 - mom))));
         let dMax = newD.reduce((max, d) => Math.max(d, max));
@@ -85,7 +111,7 @@ const App = () => {
             newMids0.push(mid1, mid2);
         })
         setMids0(newMids0);
-    }, [moms, xyz]);
+    }, []);
 
     const rotationStuff = () => {
         setMids(mids0.map((mid, i) => mult1(invRot(ths), mid)));
@@ -118,30 +144,6 @@ const App = () => {
                             rVec[0] * vec[1] - rVec[1] * vec[0]];
         angle *= Math.sign(dotproduct(axisVec, rVecCrossVec));
         return [angle, axisVec];
-    }
-
-    const handlerShape = newShape => {
-        // let newShape = Number(e.target.value);
-        setShape(newShape);
-        setZAxis(newShape === 1 ? 1 : 0);
-        setRunning(false);
-        setTime(0);
-        setDegeneracies([[false, false, false], [true, true, true], [false, true, true],    [false,    false, false]][newShape]);
-        let newMoms = [...moms];
-        if (newShape === 1) newMoms = newMoms.map((mom, i, moms) => moms[0])
-        if (newShape === 2) {
-            newMoms[1] = newMoms[1] === newMoms[0] ? Math.round(newMoms[0] + 0.6) : newMoms[1]  ;
-            newMoms[2] = newMoms[1];
-        }
-        if (newShape === 3) {
-            newMoms.sort((a, b) => a - b);
-            newMoms[1] = newMoms[1] === newMoms[0] ? Math.round(newMoms[0] + 0.6) : newMoms[1]  ;
-            newMoms[2] = newMoms[2] <= newMoms[1] ? Math.round(newMoms[1] + 0.6) : newMoms[2];
-        }
-        setMomsInput(newMoms.map(mom => String(mom)));
-        setFirstMoms(newMoms);
-        setMoms(newMoms);
-        setTypes([[''], ['generic'], ['parallel', 'transverse'], ['longest',    'intermediate',    'shortest']][newShape]);
     }
 
     const handlerMom = e => {
