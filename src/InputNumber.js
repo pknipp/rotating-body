@@ -2,6 +2,8 @@ import React from "react";
 
 const InputNumber = ({name, quantity, handler, exceedsZero }) => (
     <>
+    {/* {quantity}
+    {typeof(quantity)} */}
     <input
         className="number"
         type="number"
