@@ -72,7 +72,7 @@ const App = () => {
         // let newShape = Number(e.target.value);
         setShape(newShape);
         // if (newShape === 1) setZAxis(1);
-        // setZAxis(newShape === 1 ? 1 : 0);
+        setZAxis(!newShape ? 0 : (newShape === 1 || newShape === 2) ? 1 : 2);
         setRunning(false);
         setTime(0);
         setDegeneracies([[false, false, false], [true, true, true], [false, true, true],    [false,    false, false]][newShape]);
