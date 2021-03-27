@@ -20,7 +20,7 @@ const App = () => {
     const [ths, setThs] = useState(thsInput.map(elem => Number(elem)));
     const [momsInput, setMomsInput] = useState(["2", "3", "4"]);
     const [firstMoms, setFirstMoms] = useState(momsInput.map(elem => Number(elem)));
-    const [moms, setMoms] = useState(momsInput.map(elem => Number(elem)));
+    const [moms, setMoms] = useState([...firstMoms]);
     const [oms, setOms] = useState([]);
     const [omfs, setOmfs] = useState([0, 0, 0]);
     const [omfLat, setomfLat] = useState(0);
@@ -40,9 +40,9 @@ const App = () => {
     const [d, setD] = useState([npx / 3, npx / 3, npx / 3]);
     const [areLegalMoms, setAreLegalMoms] = useState(true);
     const [degeneracies, setDegeneracies] = useState(new Array(3).fill(false));
-    const [shape, setShape] = useState(0);
+    const [shape, setShape] = useState(3);
     const [types, setTypes] = useState(allTypes[shape]);
-    const [zAxis, setZAxis] = useState(0);
+    const [zAxis, setZAxis] = useState(2);
     const [legalOrder, setLegalOrder] = useState(true);
     const [isotropic, setIsotropic] = useState(false);
     const [logDt, setLogDt] = useState(7);
@@ -68,14 +68,34 @@ const App = () => {
     // const rot = ths => mult2(mult2(zRot(ths[2]), xRot(ths[1])), zRot(ths[0]));
     const invRot=ths=> mult2(mult2(zRot(-ths[0]),xRot(-ths[1])), zRot(-ths[2]));
 
-    useEffect(() => {
-        // handlerShape(shape);
+    const handlerShape = newShape => {
+        setShape(newShape);
+        let newZAxis = !newShape ? 0 : (newShape === 1 || newShape === 2) ? 1 : 2;
+        let newRunning = false;
+        let newTime = 0;
+        let newDegeneracies = [[false, false, false], [true, true, true], [false, true, true],    [false,    false, false]][newShape];
+        let newFirstMoms = [...firstMoms];
+        if (newShape === 1) newFirstMoms = firstMoms.map((mom, i, moms) => moms[0])
+        if (newShape === 2) {
+            newFirstMoms[1] += (firstMoms[0] === firstMoms[1] ) ? 1 : 0;
+            newFirstMoms[2] = firstMoms[1];
+        }
+        if (newShape === 3) {
+            newFirstMoms.sort((a, b) => a - b);
+            newFirstMoms[1] += (newFirstMoms[1] === newFirstMoms[0] ? 1 : 0);
+            newFirstMoms[2] += (newFirstMoms[2] === newFirstMoms[1] ? 1 : newFirstMoms[2] < newFirstMoms[1] ? 2 : 0);
+        }
+        let newMomsInput = newFirstMoms.map(mom => String(mom));
+        let newMoms = [...newFirstMoms];
+        let newTypes = [[''], ['generic'], ['parallel', 'transverse'], ['longest',    'intermediate', 'shortest']][newShape];
+        return {newShape, newZAxis, newRunning, newTime, newDegeneracies, newFirstMoms, newMomsInput, newMoms, newTypes};
+    }
+
+    const calcD = moms => {
         let sumMom = moms[0] + moms[1] + moms[2];
         let newD = moms.map(mom => Math.max(0.000001, Math.sqrt((sumMom / 2 - mom))));
         let dMax = newD.reduce((max, d) => Math.max(d, max));
         newD = newD.map(d => npx * d / dMax / 4);
-        setD(newD);
-        // replace this with reduce?
         const newMids0 = [];
         xyz.forEach((row, i) => {
             let mid1 = [...xyz];
@@ -84,8 +104,34 @@ const App = () => {
             mid2[i] = -newD[i];
             newMids0.push(mid1, mid2);
         })
-        setMids0(newMids0);
-    }, [moms, xyz]);
+        return {newD, newMids0};
+    }
+
+    useEffect(() => {
+        let state = calcD(moms);
+        setD(state.newD);
+        setMids0(state.newMids0);
+    }, [moms]);
+
+    useEffect(() => {
+        let state = handlerShape(shape);
+        setShape(state.newShape);
+        setZAxis(state.newZAxis);
+        setRunning(state.newRunning);
+        setTime(state.newTime);
+
+        setFirstMoms(state.newFirstMoms);
+        setMomsInput(state.newMomsInput);
+
+        setTypes(state.newTypes);
+        state = calcSwitchedMoms(state.newZAxis, state.newMoms);
+        setMoms(state.newMoms);
+        setDegeneracies(state.newDegeneracies);
+
+        state = calcD(state.newMoms);
+        setD(state.newD);
+        setMids0(state.newMids0);
+    }, []);
 
     const rotationStuff = () => {
         setMids(mids0.map((mid, i) => mult1(invRot(ths), mid)));
@@ -120,32 +166,7 @@ const App = () => {
         return [angle, axisVec];
     }
 
-    const handlerShape = newShape => {
-        // let newShape = Number(e.target.value);
-        setShape(newShape);
-        setZAxis(newShape === 1 ? 1 : 0);
-        setRunning(false);
-        setTime(0);
-        setDegeneracies([[false, false, false], [true, true, true], [false, true, true],    [false,    false, false]][newShape]);
-        let newMoms = [...moms];
-        if (newShape === 1) newMoms = newMoms.map((mom, i, moms) => moms[0])
-        if (newShape === 2) {
-            newMoms[1] = newMoms[1] === newMoms[0] ? Math.round(newMoms[0] + 0.6) : newMoms[1]  ;
-            newMoms[2] = newMoms[1];
-        }
-        if (newShape === 3) {
-            newMoms.sort((a, b) => a - b);
-            newMoms[1] = newMoms[1] === newMoms[0] ? Math.round(newMoms[0] + 0.6) : newMoms[1]  ;
-            newMoms[2] = newMoms[2] <= newMoms[1] ? Math.round(newMoms[1] + 0.6) : newMoms[2];
-        }
-        setMomsInput(newMoms.map(mom => String(mom)));
-        setFirstMoms(newMoms);
-        setMoms(newMoms);
-        setTypes([[''], ['generic'], ['parallel', 'transverse'], ['longest',    'intermediate',    'shortest']][newShape]);
-    }
-
     const handlerMom = e => {
-        // let xyOrZ = Number(e.target.name);
         let newIsotropic = false;
         let newMoms = [...firstMoms];
         let name = Number(e.target.name);
@@ -164,28 +185,35 @@ const App = () => {
         setAreLegalMoms(newMoms.reduce((legal, mom, i, moms) => (legal && mom <= (moms[(i+1)%3] + moms[(i+2)%3])), true));
         setIsotropic(newIsotropic);
         setFirstMoms(newMoms);
-        setMoms(newMoms);
+        setMoms([...newMoms]);
     };
 
-    const handlerZAxis = newZAxis => {
-        // let newZAxis = Number(e.target.value);
+    const calcSwitchedMoms = (zAxis, moms) => {
         let newMoms = [...moms];
-        newMoms[2] = firstMoms[newZAxis - 1];
-        newMoms[0] = firstMoms[newZAxis % 3];
-        newMoms[1] = firstMoms[(newZAxis + 1) % 3];
-        setMoms(newMoms);
-        setZAxis(newZAxis);
-        setRunning(false);
-        setTime(0);
-        // setOms([0, 0, 0]);
-        setOmfs([0, 0, 0]);
+        newMoms[2] = firstMoms[(zAxis - 1) % 3];
+        newMoms[0] = firstMoms[(zAxis + 0) % 3];
+        newMoms[1] = firstMoms[(zAxis + 1) % 3];
         // set as "true" for all axes for which moments of inertia are degenerate
         let newDegeneracies = newMoms.map((momI, i) => {
             return newMoms.reduce((degenerate, momJ, j) => {
                 return degenerate || (momJ === momI && i !== j);
             }, false);
         })
-        setDegeneracies(newDegeneracies);
+        return {newMoms, newDegeneracies};
+    }
+    useEffect(() => {
+        let state = calcSwitchedMoms(zAxis, moms);
+        setMoms(state.newMoms);
+        setDegeneracies(state.newDegeneracies);
+    }, [zAxis]);
+
+    const handlerZAxis = newZAxis => {
+        calcSwitchedMoms(newZAxis, moms);
+        setZAxis(newZAxis);
+        setRunning(false);
+        setTime(0);
+        // setOms([0, 0, 0]);
+        setOmfs([0, 0, 0]);
     }
 
     const handlerTh = e => {
@@ -335,7 +363,18 @@ const App = () => {
                 <div>
                     <ToggleInfo onClick={handleToggle} name="shape" toggle={showInfo.shape} />
                     Shape of box: &nbsp;&nbsp;&nbsp;
-                    <select value={shape} onChange={e => handlerShape(Number(e.target.value))} >
+                    <select value={shape} onChange={e => {
+                        let state = handlerShape(Number(e.target.value));
+                        setShape(state.newShape);
+                        setZAxis(state.newZAxis);
+                        setRunning(state.newRunning);
+                        setTime(state.newTime);
+                        setDegeneracies(state.newDegeneracies);
+                        setFirstMoms(state.newFirstMoms);
+                        setMomsInput(state.newMomsInput);
+                        setMoms(state.newMoms);
+                        setTypes(state.newTypes);
+                    }} >
                         {["choose shape", 'isotropic', 'axisymmetric', 'asymmetric'].map((option, i) => (
                             <option key={i} title={"more info"} value={i}>
                                 {option}
