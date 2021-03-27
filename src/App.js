@@ -69,9 +69,7 @@ const App = () => {
     const invRot=ths=> mult2(mult2(zRot(-ths[0]),xRot(-ths[1])), zRot(-ths[2]));
 
     const handlerShape = newShape => {
-        // let newShape = Number(e.target.value);
         setShape(newShape);
-        // if (newShape === 1) setZAxis(1);
         let newZAxis = !newShape ? 0 : (newShape === 1 || newShape === 2) ? 1 : 2;
         let newRunning = false;
         let newTime = 0;
@@ -89,7 +87,7 @@ const App = () => {
         }
         let newMomsInput = newFirstMoms.map(mom => String(mom));
         let newMoms = [...newFirstMoms];
-        let newTypes = [[''], ['generic'], ['parallel', 'transverse'], ['longest',    'intermediate',    'shortest']][newShape];
+        let newTypes = [[''], ['generic'], ['parallel', 'transverse'], ['longest',    'intermediate', 'shortest']][newShape];
         return {newShape, newZAxis, newRunning, newTime, newDegeneracies, newFirstMoms, newMomsInput, newMoms, newTypes};
     }
 
@@ -98,7 +96,6 @@ const App = () => {
         let newD = moms.map(mom => Math.max(0.000001, Math.sqrt((sumMom / 2 - mom))));
         let dMax = newD.reduce((max, d) => Math.max(d, max));
         newD = newD.map(d => npx * d / dMax / 4);
-        // setD(newD);
         const newMids0 = [];
         xyz.forEach((row, i) => {
             let mid1 = [...xyz];
@@ -107,9 +104,14 @@ const App = () => {
             mid2[i] = -newD[i];
             newMids0.push(mid1, mid2);
         })
-        // setMids0(newMids0);
         return {newD, newMids0};
     }
+
+    useEffect(() => {
+        let state = calcD(moms);
+        setD(state.newD);
+        setMids0(state.newMids0);
+    }, [moms]);
 
     useEffect(() => {
         let state = handlerShape(shape);
@@ -129,26 +131,7 @@ const App = () => {
         state = calcD(state.newMoms);
         setD(state.newD);
         setMids0(state.newMids0);
-        // calcSwitchedMoms(zAxis);
-        // let sumMom = moms[0] + moms[1] + moms[2];
-        // let newD = moms.map(mom => Math.max(0.000001, Math.sqrt((sumMom / 2 - mom))));
-        // let dMax = newD.reduce((max, d) => Math.max(d, max));
-        // newD = newD.map(d => npx * d / dMax / 4);
-        // setD(newD);
-        // replace this with reduce?
-        // const newMids0 = [];
-        // xyz.forEach((row, i) => {
-        //     let mid1 = [...xyz];
-        //     mid1[i] = newD[i];
-        //     let mid2 = [...xyz];
-        //     mid2[i] = -newD[i];
-        //     newMids0.push(mid1, mid2);
-        // })
-        // setMids0(newMids0);
     }, []);
-
-    // useEffect(calcD, [moms]);
-    // useEffect(zAxis => calcSwitchedMoms(zAxis), [zAxis])
 
     const rotationStuff = () => {
         setMids(mids0.map((mid, i) => mult1(invRot(ths), mid)));
@@ -184,7 +167,6 @@ const App = () => {
     }
 
     const handlerMom = e => {
-        // let xyOrZ = Number(e.target.name);
         let newIsotropic = false;
         let newMoms = [...firstMoms];
         let name = Number(e.target.name);
@@ -207,47 +189,31 @@ const App = () => {
     };
 
     const calcSwitchedMoms = (zAxis, moms) => {
-        console.log("moms = ", moms);
-        console.log("firstMoms = ", firstMoms);
-        console.log("zAxis = ", zAxis);
         let newMoms = [...moms];
         newMoms[2] = firstMoms[(zAxis - 1) % 3];
         newMoms[0] = firstMoms[(zAxis + 0) % 3];
         newMoms[1] = firstMoms[(zAxis + 1) % 3];
-        // console.log("newMoms = ", newMoms);
-        // setMoms(newMoms);
         // set as "true" for all axes for which moments of inertia are degenerate
         let newDegeneracies = newMoms.map((momI, i) => {
             return newMoms.reduce((degenerate, momJ, j) => {
                 return degenerate || (momJ === momI && i !== j);
             }, false);
         })
-        // setDegeneracies(newDegeneracies);
         return {newMoms, newDegeneracies};
     }
-    useEffect(() => calcSwitchedMoms(zAxis, moms), [zAxis]);
+    useEffect(() => {
+        let state = calcSwitchedMoms(zAxis, moms);
+        setMoms(state.newMoms);
+        setDegeneracies(state.newDegeneracies);
+    }, [zAxis]);
 
     const handlerZAxis = newZAxis => {
-        console.log("top of handlerZAxis says that newZAxis = ", newZAxis);
         calcSwitchedMoms(newZAxis, moms);
-        // let newZAxis = Number(e.target.value);
-        // let newMoms = [...moms];
-        // newMoms[2] = firstMoms[newZAxis - 1];
-        // newMoms[0] = firstMoms[newZAxis % 3];
-        // newMoms[1] = firstMoms[(newZAxis + 1) % 3];
-        // setMoms(newMoms);
         setZAxis(newZAxis);
         setRunning(false);
         setTime(0);
         // setOms([0, 0, 0]);
         setOmfs([0, 0, 0]);
-        // set as "true" for all axes for which moments of inertia are degenerate
-        // let newDegeneracies = newMoms.map((momI, i) => {
-        //     return newMoms.reduce((degenerate, momJ, j) => {
-        //         return degenerate || (momJ === momI && i !== j);
-        //     }, false);
-        // })
-        // setDegeneracies(newDegeneracies);
     }
 
     const handlerTh = e => {
@@ -397,7 +363,18 @@ const App = () => {
                 <div>
                     <ToggleInfo onClick={handleToggle} name="shape" toggle={showInfo.shape} />
                     Shape of box: &nbsp;&nbsp;&nbsp;
-                    <select value={shape} onChange={e => handlerShape(Number(e.target.value))} >
+                    <select value={shape} onChange={e => {
+                        let state = handlerShape(Number(e.target.value));
+                        setShape(state.newShape);
+                        setZAxis(state.newZAxis);
+                        setRunning(state.newRunning);
+                        setTime(state.newTime);
+                        setDegeneracies(state.newDegeneracies);
+                        setFirstMoms(state.newFirstMoms);
+                        setMomsInput(state.newMomsInput);
+                        setMoms(state.newMoms);
+                        setTypes(state.newTypes);
+                    }} >
                         {["choose shape", 'isotropic', 'axisymmetric', 'asymmetric'].map((option, i) => (
                             <option key={i} title={"more info"} value={i}>
                                 {option}
