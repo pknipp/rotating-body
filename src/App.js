@@ -20,7 +20,7 @@ const App = () => {
     const [ths, setThs] = useState(thsInput.map(elem => Number(elem)));
     const [momsInput, setMomsInput] = useState(["2", "3", "4"]);
     const [firstMoms, setFirstMoms] = useState(momsInput.map(elem => Number(elem)));
-    const [moms, setMoms] = useState(momsInput.map(elem => Number(elem)));
+    const [moms, setMoms] = useState([...firstMoms]);
     const [oms, setOms] = useState([]);
     const [omfs, setOmfs] = useState([0, 0, 0]);
     const [omfLat, setomfLat] = useState(0);
@@ -42,7 +42,7 @@ const App = () => {
     const [degeneracies, setDegeneracies] = useState(new Array(3).fill(false));
     const [shape, setShape] = useState(3);
     const [types, setTypes] = useState(allTypes[shape]);
-    const [zAxis, setZAxis] = useState(0);
+    const [zAxis, setZAxis] = useState(2);
     const [legalOrder, setLegalOrder] = useState(true);
     const [isotropic, setIsotropic] = useState(false);
     const [logDt, setLogDt] = useState(7);
@@ -72,10 +72,10 @@ const App = () => {
         // let newShape = Number(e.target.value);
         setShape(newShape);
         // if (newShape === 1) setZAxis(1);
-        setZAxis(!newShape ? 0 : (newShape === 1 || newShape === 2) ? 1 : 2);
-        setRunning(false);
-        setTime(0);
-        setDegeneracies([[false, false, false], [true, true, true], [false, true, true],    [false,    false, false]][newShape]);
+        let newZAxis = !newShape ? 0 : (newShape === 1 || newShape === 2) ? 1 : 2;
+        let newRunning = false;
+        let newTime = 0;
+        let newDegeneracies = [[false, false, false], [true, true, true], [false, true, true],    [false,    false, false]][newShape];
         let newFirstMoms = [...firstMoms];
         if (newShape === 1) newFirstMoms = firstMoms.map((mom, i, moms) => moms[0])
         if (newShape === 2) {
@@ -87,18 +87,18 @@ const App = () => {
             newFirstMoms[1] += (newFirstMoms[1] === newFirstMoms[0] ? 1 : 0);
             newFirstMoms[2] += (newFirstMoms[2] === newFirstMoms[1] ? 1 : newFirstMoms[2] < newFirstMoms[1] ? 2 : 0);
         }
-        setMomsInput(newFirstMoms.map(mom => String(mom)));
-        setFirstMoms(newFirstMoms);
-        setMoms(newFirstMoms);
-        setTypes([[''], ['generic'], ['parallel', 'transverse'], ['longest',    'intermediate',    'shortest']][newShape]);
+        let newMomsInput = newFirstMoms.map(mom => String(mom));
+        let newMoms = [...newFirstMoms];
+        let newTypes = [[''], ['generic'], ['parallel', 'transverse'], ['longest',    'intermediate',    'shortest']][newShape];
+        return {newShape, newZAxis, newRunning, newTime, newDegeneracies, newFirstMoms, newMomsInput, newMoms, newTypes};
     }
 
-    const calcD = () => {
+    const calcD = moms => {
         let sumMom = moms[0] + moms[1] + moms[2];
         let newD = moms.map(mom => Math.max(0.000001, Math.sqrt((sumMom / 2 - mom))));
         let dMax = newD.reduce((max, d) => Math.max(d, max));
         newD = newD.map(d => npx * d / dMax / 4);
-        setD(newD);
+        // setD(newD);
         const newMids0 = [];
         xyz.forEach((row, i) => {
             let mid1 = [...xyz];
@@ -107,12 +107,28 @@ const App = () => {
             mid2[i] = -newD[i];
             newMids0.push(mid1, mid2);
         })
-        setMids0(newMids0);
+        // setMids0(newMids0);
+        return {newD, newMids0};
     }
 
     useEffect(() => {
-        handlerShape(shape);
-        calcD();
+        let state = handlerShape(shape);
+        setShape(state.newShape);
+        setZAxis(state.newZAxis);
+        setRunning(state.newRunning);
+        setTime(state.newTime);
+
+        setFirstMoms(state.newFirstMoms);
+        setMomsInput(state.newMomsInput);
+
+        setTypes(state.newTypes);
+        state = calcSwitchedMoms(state.newZAxis, state.newMoms);
+        setMoms(state.newMoms);
+        setDegeneracies(state.newDegeneracies);
+
+        state = calcD(state.newMoms);
+        setD(state.newD);
+        setMids0(state.newMids0);
         // calcSwitchedMoms(zAxis);
         // let sumMom = moms[0] + moms[1] + moms[2];
         // let newD = moms.map(mom => Math.max(0.000001, Math.sqrt((sumMom / 2 - mom))));
@@ -131,8 +147,8 @@ const App = () => {
         // setMids0(newMids0);
     }, []);
 
-    useEffect(calcD, [moms]);
-    useEffect(zAxis => calcSwitchedMoms(zAxis), [zAxis])
+    // useEffect(calcD, [moms]);
+    // useEffect(zAxis => calcSwitchedMoms(zAxis), [zAxis])
 
     const rotationStuff = () => {
         setMids(mids0.map((mid, i) => mult1(invRot(ths), mid)));
@@ -187,26 +203,33 @@ const App = () => {
         setAreLegalMoms(newMoms.reduce((legal, mom, i, moms) => (legal && mom <= (moms[(i+1)%3] + moms[(i+2)%3])), true));
         setIsotropic(newIsotropic);
         setFirstMoms(newMoms);
-        setMoms(newMoms);
+        setMoms([...newMoms]);
     };
 
-    const calcSwitchedMoms = zAxis => {
+    const calcSwitchedMoms = (zAxis, moms) => {
+        console.log("moms = ", moms);
+        console.log("firstMoms = ", firstMoms);
+        console.log("zAxis = ", zAxis);
         let newMoms = [...moms];
-        newMoms[2] = firstMoms[zAxis - 1];
-        newMoms[0] = firstMoms[zAxis % 3];
+        newMoms[2] = firstMoms[(zAxis - 1) % 3];
+        newMoms[0] = firstMoms[(zAxis + 0) % 3];
         newMoms[1] = firstMoms[(zAxis + 1) % 3];
-        setMoms(newMoms);
+        // console.log("newMoms = ", newMoms);
+        // setMoms(newMoms);
         // set as "true" for all axes for which moments of inertia are degenerate
         let newDegeneracies = newMoms.map((momI, i) => {
             return newMoms.reduce((degenerate, momJ, j) => {
                 return degenerate || (momJ === momI && i !== j);
             }, false);
         })
-        setDegeneracies(newDegeneracies);
+        // setDegeneracies(newDegeneracies);
+        return {newMoms, newDegeneracies};
     }
+    useEffect(() => calcSwitchedMoms(zAxis, moms), [zAxis]);
 
     const handlerZAxis = newZAxis => {
-        calcSwitchedMoms(newZAxis);
+        console.log("top of handlerZAxis says that newZAxis = ", newZAxis);
+        calcSwitchedMoms(newZAxis, moms);
         // let newZAxis = Number(e.target.value);
         // let newMoms = [...moms];
         // newMoms[2] = firstMoms[newZAxis - 1];
