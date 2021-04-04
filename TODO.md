@@ -9,8 +9,6 @@ Adjust colors, transparency, edges (solid or dashed)
 Figure out what - if anything - gets broken if a moment equals zero
 Use "titles" for each of the dropdown options for body shape
 Make length of omfs less than those of axes, so that they both appear for axisymmetric case.
-Transfer some logic from event handler to ue, to allow the setting of default values
-(Eventually) adjust defaults to asymmetric rotor rotating about intermediate axis.
 
 MAYBE:
 Implement a lagrangian and/or hamiltonian version of this?
