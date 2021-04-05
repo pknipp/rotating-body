@@ -9,7 +9,8 @@ import Body from "./Body";
 import info from "./info.png";
 import cancel from "./cancel.jpeg";
 const App = () => {
-    const allTypes = [[''], ['generic'], ['parallel', 'transverse'], ['longest',    'intermediate',    'shortest']];
+    const allTypes = [[], ['generic'], ['parallel', 'transverse'], ['longest',    'intermediate',    'shortest']];
+    const allStabilities = [[], ['constant'], ['precession', 'marginally unstable'], ['precession', 'unstable', 'precession']];
     // following is solely needed for list comprehensions
     const [xyz] = useState(new Array(3).fill(0));
     const [npx, setNpx] = useState(700);
@@ -41,6 +42,7 @@ const App = () => {
     const [degeneracies, setDegeneracies] = useState(new Array(3).fill(false));
     const [shape, setShape] = useState(3);
     const [types, setTypes] = useState(allTypes[shape]);
+    const [stabilities, setStabilities] = useState(allStabilities[shape]);
     const [zAxis, setZAxis] = useState(2);
     const [legalOrder, setLegalOrder] = useState(true);
     const [isotropic, setIsotropic] = useState(false);
@@ -82,8 +84,10 @@ const App = () => {
         }
         let newMomsInput = newFirstMoms.map(mom => String(mom));
         let newMoms = [...newFirstMoms];
-        let newTypes = [[''], ['generic'], ['parallel', 'transverse'], ['longest',    'intermediate', 'shortest']][newShape];
-        return {newShape, newZAxis, newRunning, newTime, newDegeneracies, newFirstMoms, newMomsInput, newMoms, newTypes};
+        // let newTypes = [[''], ['generic'], ['parallel', 'transverse'], ['longest',    'intermediate', 'shortest']][newShape];
+        let newTypes = allTypes[newShape];
+        let newStabilities = allStabilities[newShape];
+        return {newShape, newZAxis, newRunning, newTime, newDegeneracies, newFirstMoms, newMomsInput, newMoms, newTypes, newStabilities};
     }
     const calcD = moms => {
         let sumMom = moms[0] + moms[1] + moms[2];
@@ -114,6 +118,7 @@ const App = () => {
         setFirstMoms(state.newFirstMoms);
         setMomsInput(state.newMomsInput);
         setTypes(state.newTypes);
+        setStabilities(state.newStabilities);
         state = calcSwitchedMoms(state.newZAxis, state.newMoms);
         setMoms(state.newMoms);
         setDegeneracies(state.newDegeneracies);
@@ -348,9 +353,11 @@ const App = () => {
                             setMomsInput(state.newMomsInput);
                             setMoms(state.newMoms);
                             setTypes(state.newTypes);
+                            setStabilities(state.newStabilities);
                         }} >
                             {["choose shape", 'isotropic', 'axisymmetric', 'asymmetric'].map((option, i) => (
-                                <option key={i} title={"more info"} value={i}>
+                                <option key={i} value={i}
+                                    title={["", "cubic", "box for pizza or champagne", "book-shaped"][i]}>
                                     {option}
                                 </option>
                             ))}
@@ -396,7 +403,12 @@ const App = () => {
                                         Choose <i>z</i>-axis to be near ...&nbsp;&nbsp;&nbsp;
                                         <select value={zAxis} onChange={e => handlerZAxis(Number(e.target.value))} >
                                             {["which", ...types].map((option, i) => (
-                                                <option key={i} value={i}>{option} </option>
+                                                <option
+                                                    key={i} value={i}
+                                                    title={['', ...stabilities][i]}
+                                                >
+                                                    {option}
+                                                </option>
                                             ))}
                                         </select> axis.
                                     </div>

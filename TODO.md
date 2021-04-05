@@ -7,7 +7,6 @@ Have y&z point up and out, respectively.
 Insert meta-tags.
 Adjust colors, transparency, edges (solid or dashed)
 Figure out what - if anything - gets broken if a moment equals zero
-Use "titles" for each of the dropdown options for body shape
 Make length of omfs less than those of axes, so that they both appear for axisymmetric case.
 
 MAYBE:
