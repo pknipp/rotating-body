@@ -14,8 +14,8 @@ const App = () => {
     // following is solely needed for list comprehensions
     const [xyz] = useState(new Array(3).fill(0));
     const [npx, setNpx] = useState(700);
-    const [LzInput, setLzInput] = useState("4");
-    const [Lz, setLz] = useState(Number(LzInput));
+    // const [LzInput, setLzInput] = useState("4");
+    const [Lz, setLz] = useState(4);
     const [thsInput, setThsInput] = useState(["0.2", "0.3", "0.4"]);
     const [ths, setThs] = useState(thsInput.map(elem => Number(elem)));
     const [momsInput, setMomsInput] = useState(["2", "3", "4"]);
@@ -32,7 +32,7 @@ const App = () => {
     // const [L2, setL2] = useState(0);
     const [K, setK] = useState(0);
     const [mids0, setMids0] = useState([]);
-    const [mids, setMids] = useState([]);
+    const [, setMids] = useState([]);
     const [running, setRunning] = useState(false);
     const [time, setTime] = useState(0);
     // const [angleVecs, setAngleVecs] = useState([[]]);
@@ -217,7 +217,7 @@ const App = () => {
         if (running) interval = setInterval(() => setTime(time + dt/1000), dt);
         if (!running && time !== 0) clearInterval(interval);
         return () => clearInterval(interval);
-    }, [running, time]);
+    }, [running, time, dt]);
     const Fs = ths => {
         let cs = [];
         let ss = [];
@@ -283,13 +283,13 @@ const App = () => {
     }
     return (
         <>
-            <div className="top"><p align="center"><h1>Free-body rotation</h1></p></div>
+            <div className="top"><h1><p align="center">Free-body rotation</p></h1></div>
             {`The motion of a rigid body consists of two simultaneous processes: (1) "translation" of the center of mass and (2) rotation around the center of mass.  The trajectory of the first process is either a straight line (in outer space), a parabola (near the surface of a gravitating body like the earth), or a conic section such as a circle, ellipse, or hyperbola (at a greater distance from a gravitating body).  This simulation considers the second process: the torque-free rotation of an object.  Except for the simple case of a body shaped as either a sphere or cube, this rotation is not as simple as that of a globe which spins at a constant rate about its fixed axis.  Free rotation is governed by "Euler's torque-free equations", a system of three nonlinear differential equations which generally can only be solved numerically as I do in this simulation. Almost every control/input/output below has a place where you can click`}
             '<img src={info} alt="Show information." />/<img src={cancel} alt="Hide information." />'
             {`in order to toggle the display of information about the particular item. Enjoy!`}
             <div className="bottom">
                 <div className="left">
-                    <p align="center"><h3>Controls</h3></p>
+                    <h3><p align="center">Controls</p></h3>
                     {!zAxis ? null :
                         <>
                             <button onClick={() => setRunning(!running)}>{running ? "Stop" : "Start"}</button>
@@ -331,7 +331,7 @@ const App = () => {
                             little
                         </div>
                     </>
-                    <p align="center"><h3>Inputs</h3></p>
+                    <h3><p align="center">Inputs</p></h3>
                     <div>
                         <ToggleInfo onClick={handleToggle} name="momentum" toggle={showInfo.momentum} />
                         <i>z</i>-component of angular momentum: &nbsp;&nbsp;&nbsp;
@@ -372,14 +372,11 @@ const App = () => {
                             </div>
                             <div><i>{showInfo.moment ? text.moment : null}</i></div>
                             {xyz.filter((blah, i) => i < shape).map((blah, i) => (
-                                <div>
-                                    &nbsp;&nbsp;&nbsp;&nbsp;
-                                    <InputNumber
-                                        key={i} name={i} quantity={firstMoms[i]}
-                                        handler={handlerMom} exceedsZero={true}
-                                    />
-                                    {types[i]} axis
-                                </div>
+                                <InputNumber
+                                    key={i} name={i} quantity={firstMoms[i]}
+                                    handler={handlerMom} exceedsZero={true}
+                                    type={types[i] + " axis"}
+                                />
                             ))}
                             {legalOrder ? null :
                                 <div className="message">
@@ -413,7 +410,7 @@ const App = () => {
                                         </select> axis.
                                     </div>
                                     <i>{showInfo.choose ? text.choose : null}</i>
-                                    <p align="center"><h3>{zAxis && time ? "Data" : null}</h3></p>
+                                    <h3><p align="center">{zAxis && time ? "Data" : null}</p></h3>
                                     {!zAxis ? null :
                                         <>
                                             <div>
