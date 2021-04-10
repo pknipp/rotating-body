@@ -472,9 +472,9 @@ const App = () => {
                     <br/>creator: <a href="https://pknipp.github.io/" target="_blank">Peter Knipp</a>
                 </div>
                 <div className="container" style={{height:`${npx}px`, width:`${npx}px`, perspective:`${perspective}px`}}>
+                    <Dot x={npx/2} y={npx/2} d={10} />
                     <Line npx={npx} r={omfLat * npx / 2} angle={omfAng} dt={dt} time={time} />
                     <Body npx={npx} angleVec={angleVec} d={d} dt={dt} mids={mids0} degeneracies={degeneracies} running={running} />
-                    <Dot x={npx/2} y={npx/2} d={10} />
                 </div>
             </div>
         </>
