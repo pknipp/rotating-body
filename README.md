@@ -3,19 +3,59 @@
 
 [Heroku deployment](https://rotating-body.herokuapp.com)
 
+[Introduction](#introduction)
+
 [Physics](#physics)
 
 [Linear algebra](#linear-algebra)
 
 [3-d rendering](#3-d-rendering)
 
-[Miscellaneous](#miscellaneous)
+[Examples](#examples)
 
-I used this [skeleton](https://github.com/mars/create-react-app-buildpack#user-content-quick-start) for my front-end project, which uses JavaScript for the calculations and ReactJS (with functional components and hooks) to render the results.
+# Introduction
+
+[return to "Contents"](#contents)
+
+[go to next section ("Physics")](#physics)
+
+I used this [skeleton](https://github.com/mars/create-react-app-buildpack#user-content-quick-start) for my front-end project, which uses JavaScript for the calculations and ReactJS (with functional components and hooks) to render the results.  The most important piece of this simulation is the clock, inspired by [this](https://upmostly.com/tutorials/build-a-react-timer-component-using-hooks) and implemented as follows:
+```
+useEffect(() => {
+    let interval;
+    if (running) interval = setInterval(() => setTime(time + dt/1000), dt);
+    if (!running && time !== 0) clearInterval(interval);
+    return () => clearInterval(interval);
+}, [running, time, dt]);
+```
+... with the <tt>running</tt> condition controlled by this button:
+```
+<button onClick={() => setRunning(!running)}>{running ? "Stop" : "Start"}</button>
+```
+
+The most basic user-control for this simulation is the value of the requisite "time-step" <tt>dt</tt>, for which the following pair of considerations must always be balanced:
+ * Too large will lead to choppy animations and inaccurate calculations.
+ * Too small will lead to a backup of the [message queue](https://developer.mozilla.org/en-US/docs/Web/JavaScript/EventLoop) which'll manifest itself by the clock's running slowly.
+
+To make the animation less choppy (even for larger values of <tt>dt</tt>), I use
+css transitions (with <tt>[transition-timing-function: linear](https://developer.mozilla.org/en-US/docs/Web/CSS/transition-timing-function)</tt>) to interpolate the object's orientation between successive timesteps in order to allow for large values of &Delta;*t* without sacrificing animation smoothness.  Below is the relative code from the <tt>Body</tt> component
+```
+<div className="body"
+    style={{ transitionDuration: `${!running ? 0 : dt / 1000}s` }}
+>
+```
+... and from <tt>index.css</tt>:
+```
+.body {transition-timing-function: linear; transition-property: all; }
+```
+
+In the absence of air resistance (not present in this simulation) and aforementionned errors associated with the nonzero size of the time-step <tt>dt</tt>, the <tt>kinetic energy</tt> (monitored at the bottom of the page) should be constant. Hence monitoring the [constancy of this energy](https://en.wikipedia.org/wiki/Conservation_law) is the best way for the user to determine if <tt>dt</tt> is sufficiently small.
 
 # Physics
 
 [return to "Contents"](#contents)
+
+[return to previous section ("Introduction")](#introduction)
 
 [go to next section ("Linear algebra")](#linear-algebra)
 
@@ -77,7 +117,7 @@ Because this method is 4th-order, the algorithm's time complexity is proportiona
 
 [return to previous section ("Physics")](#physics)
 
-[go to next section ("Rendering")](#3-d-rendering)
+[go to next section ("3-d Rendering")](#3-d-rendering)
 
 The instantaneous value of the cuboid's rotation is characterized by a 3 x 3 "total" [rotation matrix](https://en.wikipedia.org/wiki/Rotation_matrix#Basic_rotations), which itself is the product of three simpler rotation matrices], each parametrized by one of the three Euler angles.  Below are the simpler rotation matrices, first for rotation about the *z*-axis (used twice) and second for rotation about the *x*-axis (used once).:
 ```
@@ -97,16 +137,16 @@ const mult1 = (mat, vec) => mat.map(row => dotproduct(row, vec));
 const transpose = mat => mat[0].map((blah, i) => mat.map(row => row[i]));
 const mult2 = (mat1, mat2) => mat1.map(x => transpose(mat2).map(y => dotproduct(x, y)));
 ```
-Below is the calculation of the total rotation matrix, which I will henceforth simply call the "rotation matrix" and symbolize by <tt>mat</tt>.
+Below is the calculation of the total rotation matrix, the return from which I will henceforth simply call the "rotation matrix" and symbolize by <tt>mat</tt>.
 ```
 const invRot=ths=> mult2(mult2(zRot(-ths[0]),xRot(-ths[1])), zRot(-ths[2]));
 ```
-Any rotation matrix such as <tt>mat</tt> may be characterized by two things: an axis (of rotation) and an angle, and I must obtain these two things to render the rotated cuboid using the css function <tt>rotate3d()</tt>.  The absolute value of the angle can be obtained easily from the trace of <tt>mat</tt>, as seen in the following lines from the helper function <tt>rotate</tt>.
+Any rotation matrix such as <tt>mat</tt> may be characterized by two things: an axis (of rotation) and an angle, and I must obtain these two things to render the rotated cuboid using the css function <tt>rotate3d(...)</tt>.  The absolute value of the angle can be obtained easily from the trace of <tt>mat</tt>, as seen in the following lines from the helper function <tt>rotate</tt>.
 ```
 let trace = mat[0][0] + mat[1][1] + mat[2][2];
 let angle = Math.acos((trace - 1) / 2);
 ```
-It is less straightforward to calculate the rotation axis, which is any non-null vector that is parallel to the eigenvector of <tt>mat</tt> whose eigenvalue equals 1.  To find this eigenvector I use the <tt>ml-matrix</tt> package.
+It is less straightforward to calculate the rotation axis, which can be any non-null vector that is parallel to the eigenvector of <tt>mat</tt> whose eigenvalue equals 1.  To find this eigenvector I use the <tt>ml-matrix</tt> package.
 ```
 import { EigenvalueDecomposition, Matrix } from "ml-matrix";
 ```
@@ -137,12 +177,11 @@ angle *= Math.sign(dotproduct(axisVec, rVecCrossVec));
 
 [return to previous section ("Linear algebra")](#linear-algebra)
 
-[go to next section ("Miscellaneous")](#miscellaneous)
+[go to next section ("Examples")](#examples)
 
 The coordinate system used for this project has *x* pointing to the right and *y* pointing down.  In order to maintain a right-handed coordinate system, I choose the *z*-axis to point *in*to the screen.  Hence a positive value for the angular momentum means that the object will rotate clockwise.
 In order to render the rotation within this coordinate system I followed this [example](https://3dtransforms.desandro.com/box).
-
-The <tt>App</tt> component contains the following lines of code to render the rotating cuboid.
+The <tt>App</tt> component contains the following lines of code to render the rotating cuboid
 ```
 <div className="container" style={{
         height:`${npx}px`,
@@ -154,10 +193,14 @@ The <tt>App</tt> component contains the following lines of code to render the ro
     <Body npx={npx} angleVec={angleVec} d={d} dt={dt} mids={mids0} degeneracies={degeneracies} running={running} />
 </div>
 ```
-The extent of the cuboid's [graphical perspective](https://en.wikipedia.org/wiki/Perspective_(graphical)#:~:text=Perspective%20works%20by%20representing%20the,seen%20directly%20onto%20the%20windowpane.) is achieved straightforwardly via the parent div's <tt>perspective</tt> property, which takes a value set by the user.  This value is manifest by how far away parallel lines seem to converge together (at a "vanishing point").
-The parent div is positionned relatively so that absolute positionning can be used by each of its three child components: <tt>Dot</tt>, <tt>Line</tt>, and <tt>Body</tt>.  The <tt>Dot</tt> component simply depicts the cuboid's [center of mass](https://en.wikipedia.org/wiki/Center_of_mass), and I'll describe the other two in turn.
+... here is from <tt>index.css</tt>:
+.body {position: absolute; transform-style: preserve-3d; }
+```
 
-The <tt>Line</tt> component depicts the cuboid's instantaneous angular-velocity vector.  (Of course it only represents the the *x*- and *y*-components of the vector.)  The code below is taken from <tt>Fs</tt>,  shown earlier to calculate the derivatives of the Euler angles.  This helper function is also convenient for calculating the body's angular velocity (typically symbolized by the Greek letter &omega;).  The letters <tt>Omf</tt> stand for "omega in the fixed frame".  The user is in a fixed frame of reference, I want to calculate &omega; in the same frame.
+The extent of the cuboid's [graphical perspective](https://en.wikipedia.org/wiki/Perspective_(graphical)#:~:text=Perspective%20works%20by%20representing%20the,seen%20directly%20onto%20the%20windowpane.) is achieved straightforwardly via the parent div's <tt>perspective</tt> property, which takes a value set by the user.  This value is manifest by how far away parallel lines seem to converge together (at a "vanishing point").
+Note above that the parent div is positionned relatively so that absolute positionning can be used by each of its three child components: <tt>Dot</tt>, <tt>Line</tt>, and <tt>Body</tt>.  The <tt>Dot</tt> component simply depicts the cuboid's [center of mass](https://en.wikipedia.org/wiki/Center_of_mass), and I'll describe the other two components next.
+
+The <tt>Line</tt> component depicts the cuboid's instantaneous angular-velocity vector.  (Of course it only represents the the *x*- and *y*-components of the vector.)  The code below is taken from <tt>Fs</tt>,  shown earlier to calculate the derivatives of the Euler angles.  This helper function is also convenient for calculating the body's angular velocity (typically symbolized by the Greek letter &omega;).  The letters <tt>Omf</tt> stand for "omega in the fixed frame".  The user is in a fixed frame of reference, and I want to calculate &omega; in the same frame.
 ```
 let newOmfs = [];
     newOmfs[0] = Fs[2] * ss[1] * ss[0] + Fs[1] * cs[0];
@@ -170,7 +213,6 @@ let newOmfs = [];
     let newOmfAng = Math.atan2(omfs[1], omfs[0]);
 ```
 The <tt>Lat</tt> suffix signifies the magnitude of &omega;'s lateral components, which is used (along with the angular direction of the vector, calculated trigonometrically above) for rendering the angular velocity as a line segment emanating from the cuboid's center of mass.
-
 Below is <tt>App</tt>'s call to the <tt>Line</tt> component.
 ```
 <Line npx={npx} r={omfLat * npx / 2} angle={omfAng} dt={dt} time={time} />
@@ -281,7 +323,9 @@ The six remaining children depict the cuboid's principal axes in an analogous ma
     </>
 }
 ```
-However an axis will not render if it is "degenerate" with another, by which I mean if the two axes have identical moments of inertia.  In this case it is not appropriate to speak in terms of separate principal axes, so it's best not to render them at all.  The code below determines whether or not a particular principal axis is degenerate with another.
+While it may seem sufficient to render each axis with a single div with a single 1-px border, I discovered that the subsequent "strip" would disappear when viewed "edge-on".  Accordingly I added a second div rotated 90 degrees from the first one, so that both divs would never be edge-on at the same time.
+
+An axis will not render if it is "degenerate" with another, by which I mean if the two axes have identical moments of inertia.  In this case it is not appropriate to speak in terms of separate principal axes, so it's best not to render them at all.  The code below determines whether or not a particular principal axis is degenerate with another.
 ```
 let newDegeneracies = newMoms.map((momI, i) => {
     return newMoms.reduce((degenerate, momJ, j) => {
@@ -290,17 +334,42 @@ let newDegeneracies = newMoms.map((momI, i) => {
 })
 ```
 
-Perturbation analysis and stabilities
-Kinetic energy
-transitions
-
-# Miscellaneous
+# Examples
 
 [return to "Contents"](#contents)
 
 [return to previous section ("3-d rendering")](#3-d-rendering)
 
-time-step
-Perturbation analysis and stabilities
-Kinetic energy
-transitions
+Several examples are worth examining because their qualitative results are often described in theoretical discussions of this system.  Each example differs in terms of its shape (isotropic, axisymmetric, or asymmetric), the particular axis which is chosen to be initially close (in direction) to the *z*-axis, and the initial value of &theta;.
+
+- ## any shape, *z*-axis (exactly) parallel to *any* principal axis (ie, &theta; = 0):
+
+The body undergoes pure rotation with &theta; = 0 (always), and &omega; is constant and always pointing parallel to the angular momentum (ie, into the page, which makes the lateral component of &omega; invisible).
+
+- ## isotropic, with any axis, and any value of &theta;:
+
+The body's motion is qualitatively idential to the previous example.
+
+- ## axisymmetric, with the parallel-axis pointing almost along the *z*-axis, and small values of &theta;:
+
+The body undergoes periodic ["precession"](https://en.wikipedia.org/wiki/Precession#Torque-free) around the *z*-axis.  &theta; never changes, so the precession is "stable".
+
+- ## asymmetric, with the transverse axis pointing almost along the *z*-axis, and small values of &theta;:
+
+The body undergoes unstable precession, because &theta; diverges.
+
+- ## asymmetric, with the *z*-axis near one of the principal axes, and small values of &theta;:
+
+The body undergoes precession which is either stable or unstable, considering the particular axis which is near the *z*-axis, as described in the next two bullets.  See [this](https://en.wikipedia.org/wiki/Tennis_racket_theorem) for a thorough discussion, including a fascinating video from a zero-*g* environment.
+
+- ### *z*-axis near either the longest or shortest axis:
+
+&theta; changes but does not diverge, so the precession is stable.
+
+- ### *z*-axis near the intermediate axis:
+
+The body's motion is chaotic, described better as "tumbling" rather than "precession".
+
+[return to "Contents"](#contents)
+
+[return to beginning of this section ("Examples")](#examples)

@@ -302,13 +302,13 @@ const App = () => {
                                 Time-step (now {dt} ms):&nbsp;&nbsp;&nbsp;
                                 1 ms
                                 <input
-                                    type="range" min="0" max="11" value={logDt} onChange={e => {
+                                    type="range" min="0" max="9" value={logDt} onChange={e => {
                                         let newLogDt = Number(e.target.value);
                                         setLogDt(newLogDt);
                                         setDt(2 ** newLogDt);
                                     }}
                                 />
-                                2 s
+                                0.5 s
                             </div>
                             <div><i>{showInfo.timestep ? text.timestep : null}</i></div>
                         </>
