@@ -194,7 +194,7 @@ const App = () => {
         return {newMoms, newDegeneracies};
     }
     useEffect(() => {
-        let state = calcSwitchedMoms(zAxis, moms);
+        let state = calcSwitchedMoms(zAxis, firstMoms);
         setMoms(state.newMoms);
         setDegeneracies(state.newDegeneracies);
     }, [zAxis]);
