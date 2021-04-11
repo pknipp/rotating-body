@@ -11,7 +11,7 @@
 
 [Miscellaneous](#miscellaneous)
 
-I used this [skeleton](https://github.com/mars/create-react-app-buildpack#user-content-quick-start) for my front-end project.
+I used this [skeleton](https://github.com/mars/create-react-app-buildpack#user-content-quick-start) for my front-end project, which uses JavaScript for the calculations and ReactJS (with functional components and hooks) to render the results.
 
 # Physics
 
@@ -19,15 +19,15 @@ I used this [skeleton](https://github.com/mars/create-react-app-buildpack#user-c
 
 [go to next section ("Linear algebra")](#linear-algebra)
 
-Just as the position of an object is specified by the values of three numbers (the *x*-, *y*-, and *z*- coordinates of the center of mass), the angular orientation of a [rigid body](https://en.wikipedia.org/wiki/Rigid_body) is specified by three numbers: the [Euler angles](https://en.wikipedia.org/wiki/Euler_angles), commonly designated by the Greek letters &phi;, &theta;, and &psi;.  In the absence of any [forces](https://en.wikipedia.org/wiki/Force), the [translational motion](https://en.wikipedia.org/wiki/Translation_(geometry)) of an object is quite simple: the values of *x*, *y*, and *z* each change at a constant rates.  These (independent) rates are the Cartesian components of the object's [velocity](https://en.wikipedia.org/wiki/Velocity).  In a similar manner the [rotation](https://en.wikipedia.org/wiki/Rotation) of a rigid body involves the rates of change of the Euler angles.  Unlike for translational motion, however, these rates of change are not constant, even when there is no [torque](https://en.wikipedia.org/wiki/Torque).  [Rigid-body rotation](https://en.wikipedia.org/wiki/Rigid_body_dynamics) is much more complicated than [rotation about a fixed axis](https://en.wikipedia.org/wiki/Rotation_around_a_fixed_axis), such as the spinning of a globe or of a hinged door.
+Just as the position of an object is specified by the values of three numbers (the *x*-, *y*-, and *z*- coordinates of the [center of mass](https://en.wikipedia.org/wiki/Center_of_mass)), the angular orientation of a [rigid body](https://en.wikipedia.org/wiki/Rigid_body) is specified by three numbers: the [Euler angles](https://en.wikipedia.org/wiki/Euler_angles), commonly designated by the Greek letters &phi;, &theta;, and &psi;.  In the absence of any [forces](https://en.wikipedia.org/wiki/Force), the [translational motion](https://en.wikipedia.org/wiki/Translation_(geometry)) of an object is quite simple: the values of *x*, *y*, and *z* each change at a constant rates.  These (independent) rates are the Cartesian components of the object's [velocity](https://en.wikipedia.org/wiki/Velocity).  In a similar manner the [rotation](https://en.wikipedia.org/wiki/Rotation) of a rigid body involves the rates of change of the Euler angles.  Unlike for translational motion, however, these rates of change are not constant, even when there is no [torque](https://en.wikipedia.org/wiki/Torque).  [Rigid-body rotation](https://en.wikipedia.org/wiki/Rigid_body_dynamics) is much more complicated than [rotation about a fixed axis](https://en.wikipedia.org/wiki/Rotation_around_a_fixed_axis), examples of the latter being the motion of a globe or of a hinged door.
 
-Of fundamental importance in rotations is the [inertia matrix](https://en.wikipedia.org/wiki/Moment_of_inertia#Motion_in_space_of_a_rigid_body,_and_the_inertia_matrix).  This 3 x 3 matrix is usually expressed in terms of three quantities: the [moment of inertia](https://en.wikipedia.org/wiki/Moment_of_inertia) for each of the body's three [principal axes](https://en.wikipedia.org/wiki/Moment_of_inertia#Principal_axes) of rotation.  The three principal axes are mutually perpendicular and - for symmetric objects - point along the object's axes of symmetry.
-In my app the object is a [rectangular cuboid](https://en.wikipedia.org/wiki/Parallelepiped), an example of such a symmetric structure.  For these shapes the moment of inertia for rotation about an axis equals [*m*(*a*<sup>2</sup> + *b*<sup>2</sup>)/12](https://en.wikipedia.org/wiki/List_of_moments_of_inertia#List_of_3D_inertia_tensors), in which *m* is the mass, and *a* and *b* are the dimensions of the cuboid face which is perpendicular to the axis.  However in my app the user specifies the moments of inertia, not the face sizes, so I need to invert that formula in order to obtain cuboid dimensions which I can use for rendering the cuboid.  To invert the formulas I set *m*/12 = 1 (to keep the arithmetic easy) and arrive at the result that the length of any axis equals the square root of the difference between half the sum of the (three) moments of inertia minus the moment of inertia for rotation about that axis. Below are the lines of code from my <tt>calcD</tt> helper function in the <tt>App</tt> component.
+Of fundamental importance in rotations is the [inertia matrix](https://en.wikipedia.org/wiki/Moment_of_inertia#Motion_in_space_of_a_rigid_body,_and_the_inertia_matrix).  This 3 x 3 matrix is usually expressed in terms of three quantities: the [moment of inertia](https://en.wikipedia.org/wiki/Moment_of_inertia) for rotation about each of the body's three [principal axes](https://en.wikipedia.org/wiki/Moment_of_inertia#Principal_axes).  The three principal axes are mutually perpendicular and - for symmetric objects - point along the object's axes of symmetry.
+In my app the object is a [rectangular cuboid](https://en.wikipedia.org/wiki/Parallelepiped), an example of such a symmetric structure.  For these shapes the moment of inertia equal [*m*(*a*<sup>2</sup> + *b*<sup>2</sup>)/12](https://en.wikipedia.org/wiki/List_of_moments_of_inertia#List_of_3D_inertia_tensors), in which *m* is the mass, and *a* and *b* are the dimensions of the cuboid face which is perpendicular to the particular axis.  However in my app the user specifies the moments of inertia, not the face sizes, so I need to invert that formula in order to obtain cuboid dimensions <tt>d</tt> which I can use for rendering the cuboid.  To invert the formulas I set *m*/12 = 1 (to simplify the arithmetic) and arrive at the result that the length of any cuboid axis equals the square root of the difference between half the sum of the (three) moments of inertia minus the moment for rotation about that particular axis. Below are the lines of code from my <tt>calcD</tt> helper function in the <tt>App</tt> component.
 ```
 let sumMom = moms[0] + moms[1] + moms[2];
 let newD = moms.map(mom => Math.max(0.000001, Math.sqrt((sumMom / 2 - mom))));
 ```
-Because certain singularities occur if any of the cuboid dimensions equal zero, I manually prevent this thru the use of <tt>Math.max</tt>.  Note that one constraint which must be satisfied by the moments of inertia is that no single moment of inertia may exceed the sum of the other two.  The line of code below (from <tt>handlerMom</tt>, the event handler for the inputs for moments of inertia (<tt>moms</tt>) makes - and sets in state - a determination of whether or not that constraint has been violated.
+Because singularities occur if any cuboid dimension equals zero (as would be the case for a flat shape cut from sheet metal of infinitessimal thickness), I manually prevent this thru the use of <tt>Math.max</tt>.  Note that one physical constraint which must be satisfied by the moments of inertia is that no single moment of inertia may exceed the sum of the other two.  The line of code below (from the input handler <tt>handlerMom</tt>) makes - and sets in state - a determination of whether or not that constraint has been violated for the moments of inertia <tt>moms</tt>
 ```
 setAreLegalMoms(newMoms.reduce((legal, mom, i, moms) => (legal && mom <= (moms[(i+1)%3] + moms[(i+2)%3])), true));
 ```
@@ -40,7 +40,7 @@ If such a violation occurs, the user is warned accordingly:
 }
 ```
 
-The [formula](https://ocw.mit.edu/courses/aeronautics-and-astronautics/16-07-dynamics-fall-2009/lecture-notes/MIT16_07F09_Lec29.pdf) for the rate of change of the Euler angles is a nonlinear function of the angles themselves.  The code for this function is below, in which <tt>ths</tt> is the three-component array with the instantaneous values of the radian measure of the Euler angles, <tt>moms</tt> is the three-component array of the moments of inertia, and <tt>Lz</tt> is the *z*-component of the [angular momentum](https://en.wikipedia.org/wiki/Angular_momentum#Solid_bodies).  (The other two components of the angular momentum are zero.)
+The [formula](https://ocw.mit.edu/courses/aeronautics-and-astronautics/16-07-dynamics-fall-2009/lecture-notes/MIT16_07F09_Lec29.pdf) (found on p. 7 of the linked reference) for the rate of change of the Euler angles is a nonlinear function of the angles themselves.  The code for this function is below, in which <tt>ths</tt> is the three-component array with the instantaneous values of the radian measure of the Euler angles, <tt>moms</tt> is the three-component array of the moments of inertia, and <tt>Lz</tt> is the *z*-component of the [angular momentum](https://en.wikipedia.org/wiki/Angular_momentum#Solid_bodies).  (The other two components of the angular momentum are zero.)
 ```
 const Fs = ths => {
     let cs = [];
@@ -58,7 +58,7 @@ const Fs = ths => {
 }
 ```
 This constitutes a system of three nonlinear first-order differential equations,
-which I solve this using a [4th-order Runge-Kutta method](https://en.wikipedia.org/wiki/Runge%E2%80%93Kutta_methods#Derivation_of_the_Runge%E2%80%93Kutta_fourth-order_method).
+which I solve using a [4th-order Runge-Kutta method](https://en.wikipedia.org/wiki/Runge%E2%80%93Kutta_methods#Derivation_of_the_Runge%E2%80%93Kutta_fourth-order_method).
 ```
 useEffect(() => {
     if (!running) return;
@@ -69,7 +69,7 @@ useEffect(() => {
     setThs([...ths].map((th, i) => th + (Fs1[i] + Fs4[i] + 2 * (Fs2[i] + Fs3[i])) * dt/ 1000 / 6));
 }, [time, running]);
 ```
-Because this is a 4th-order method, the simulation's accuracy in calculating <tt>ths</tt> is proportional to the fourth root of the timestep <tt>dt</tt>.
+Because this method is 4th-order, the algorithm's time complexity is proportional to the inverse of the fourth root of the simulation's desired accuracy for <tt>ths</tt>.  Put differently, the accuracy of its calculation of <tt>ths</tt> is proportional to the fourth power of the user-specified timestep <tt>dt</tt>.
 
 # Linear algebra
 
@@ -79,7 +79,7 @@ Because this is a 4th-order method, the simulation's accuracy in calculating <tt
 
 [go to next section ("Rendering")](#3-d-rendering)
 
-The cuboid's rotation is characterized by a 3 x 3 "total" rotation matrix, which itself is the product of three simpler rotation matrices, each of which is parametrized by one of the three Euler angles.  Below are the simpler rotation matrices, first for rotation about the *z*-axis and second for rotation about the *x*-axis.:
+The instantaneous value of the cuboid's rotation is characterized by a 3 x 3 "total" [rotation matrix](https://en.wikipedia.org/wiki/Rotation_matrix#Basic_rotations), which itself is the product of three simpler rotation matrices], each parametrized by one of the three Euler angles.  Below are the simpler rotation matrices, first for rotation about the *z*-axis (used twice) and second for rotation about the *x*-axis (used once).:
 ```
 const zRot = th => {
     let [c, s] = [Math.cos(th), Math.sin(th)];
@@ -97,16 +97,16 @@ const mult1 = (mat, vec) => mat.map(row => dotproduct(row, vec));
 const transpose = mat => mat[0].map((blah, i) => mat.map(row => row[i]));
 const mult2 = (mat1, mat2) => mat1.map(x => transpose(mat2).map(y => dotproduct(x, y)));
 ```
-Below is the calculation of the total rotation matrix, which I will henceforth simply call the "rotation matrix" and will symbolize by <tt>mat</tt>.
+Below is the calculation of the total rotation matrix, which I will henceforth simply call the "rotation matrix" and symbolize by <tt>mat</tt>.
 ```
 const invRot=ths=> mult2(mult2(zRot(-ths[0]),xRot(-ths[1])), zRot(-ths[2]));
 ```
-Any rotation matrix such as <tt>mat</tt> may be characterized by two things: an axis (of rotation) and an angle, and I must obtain these two things in order to render the rotated cuboid using the css function <tt>rotate3d()</tt>.  The absolute value of the angle can be obtained easily from the trace of <tt>R</tt>, as seen in the following lines from the helper function <tt>rotate</tt>.
+Any rotation matrix such as <tt>mat</tt> may be characterized by two things: an axis (of rotation) and an angle, and I must obtain these two things to render the rotated cuboid using the css function <tt>rotate3d()</tt>.  The absolute value of the angle can be obtained easily from the trace of <tt>mat</tt>, as seen in the following lines from the helper function <tt>rotate</tt>.
 ```
 let trace = mat[0][0] + mat[1][1] + mat[2][2];
 let angle = Math.acos((trace - 1) / 2);
 ```
-The rotation axis is less straightforward to calculate, being defined as parallel to an eigenvector of <tt>R</tt> whose eigenvalue equals 1.  To find this eigenvector I use the <tt>ml-matrix</tt> package.
+It is less straightforward to calculate the rotation axis, which is any non-null vector that is parallel to the eigenvector of <tt>mat</tt> whose eigenvalue equals 1.  To find this eigenvector I use the <tt>ml-matrix</tt> package.
 ```
 import { EigenvalueDecomposition, Matrix } from "ml-matrix";
 ```
@@ -114,14 +114,14 @@ The following line is another from the helper function <tt>rotate</tt>.
 ```
 let vectors = new EigenvalueDecomposition(new Matrix(mat)).eigenvectorMatrix.transpose().data;
 ```
-The <tt>vectors</tt> array contains the three eigenvectors of <tt>mat</tt>, but we only want the eigenvector whose eigenvalue equals 1, ie the vector <tt>vec</tt> with the property that <tt>mat><vec></tt> = <vec>.  This is accomplished by the following lines in <tt>rotate</tt>.
+The <tt>vectors</tt> array contains the three eigenvectors of <tt>mat</tt>, but I only need the eigenvector whose eigenvalue equals 1, ie the vector <tt>vec</tt> with the property that <tt>mat&middot;vec</tt> = <tt>vec</tt>.  This is accomplished by the following lines in <tt>rotate</tt>.
 ```
 let dVectors = vectors.map(vector => mult1(mat, vector).map((comp, i) => comp - vector[i]));
 let mags = dVectors.map(dVector => dVector.reduce((mag, comp) => mag + comp * comp, 0));
 let min = mags.reduce((min, mag, i) => mag < min[1] ? [i, mag] : min, [-1, Infinity]);
 let axisVec = vectors[min[0]];
 ```
-Recall that the earlier formula used for the rotation <tt>angle</tt> only provides its absolute value.  In order to determine I need to (1) define a vector (<tt>Vec</tt>) which is perpendicular to the rotation axis, (2) rotate that vector by multiplying it by the rotation matrix <tt>mat</tt>, (3) evaluate the cross-product of those two vectors, which'll then point either parallel to or antiparallel to the rotation axis, and (4) determine the dot product of that cross-product with the rotation-axis vector.  The dot product will be either +/-1, and that'll dictate whether or not <tt>angle</tt> needs to get multiplied by the same factor.
+Recall that the earlier formula used for the rotation <tt>angle</tt> only provides its absolute value.  In order to determine whether to multiply its absolute value by -1 I need to (1) define a vector (<tt>Vec</tt>) which is perpendicular to the rotation axis, (2) rotate that vector by multiplying it by the rotation matrix <tt>mat</tt>, (3) evaluate the cross-product of those two vectors, which'll then point either parallel to or antiparallel to the rotation axis, and (4) determine the dot product of that cross-product with the rotation-axis vector.  The dot product will be either +/-1, ie the factor by which I'll need to multiply <tt>angle</tt>.
 ```
 let vec = vectors[(min[0] + 1) % 3];
 let rVec = mult1(mat, vec);
@@ -139,21 +139,25 @@ angle *= Math.sign(dotproduct(axisVec, rVecCrossVec));
 
 [go to next section ("Miscellaneous")](#miscellaneous)
 
-The coordinate system used for this project has *x* pointing to the right and *y* pointing down.  In order to maintain a right-handed coordinate system, the *z*-axis points into the screen.  Hence a positive value for the angular momentum means that the object will rotate clockwise.
+The coordinate system used for this project has *x* pointing to the right and *y* pointing down.  In order to maintain a right-handed coordinate system, I choose the *z*-axis to point *in*to the screen.  Hence a positive value for the angular momentum means that the object will rotate clockwise.
+In order to render the rotation within this coordinate system I followed this [example](https://3dtransforms.desandro.com/box).
 
 The <tt>App</tt> component contains the following lines of code to render the rotating cuboid.
 ```
-<div className="container" style={{height:`${npx}px`, width:`${npx}px`, perspective:`${perspective}px`}}>
+<div className="container" style={{
+        height:`${npx}px`,
+        width:`${npx}px`,
+        perspective:`${perspective}px`
+}}>
     <Dot x={npx/2} y={npx/2} d={10} />
     <Line npx={npx} r={omfLat * npx / 2} angle={omfAng} dt={dt} time={time} />
     <Body npx={npx} angleVec={angleVec} d={d} dt={dt} mids={mids0} degeneracies={degeneracies} running={running} />
 </div>
 ```
-The <tt>container</tt> div is positionned relatively, so that absolute positionning can be used by each of its three children.
+The extent of the cuboid's [graphical perspective](https://en.wikipedia.org/wiki/Perspective_(graphical)#:~:text=Perspective%20works%20by%20representing%20the,seen%20directly%20onto%20the%20windowpane.) is achieved straightforwardly via the parent div's <tt>perspective</tt> property, which takes a value set by the user.  This value is manifest by how far away parallel lines seem to converge together (at a "vanishing point").
+The parent div is positionned relatively so that absolute positionning can be used by each of its three child components: <tt>Dot</tt>, <tt>Line</tt>, and <tt>Body</tt>.  The <tt>Dot</tt> component simply depicts the cuboid's [center of mass](https://en.wikipedia.org/wiki/Center_of_mass), and I'll describe the other two in turn.
 
-The <tt>Dot</tt> component simply signifies the cuboid's center of mass.
-
-The <tt>Line</tt> component signifies the cuboid's instantaneous angular-velocity vector.  (Of course it only represents the the *x*- and *y*-components of the vector.)  The code below is taken from <tt>Fs</tt>, which was shown earlier to calculate the derivatives of the Euler angles.  It is also convenient to use this helper function to calculate the body's angular velocity (which is typically symbolized by the Greek letter &omega;).  The letters <tt>Omf</tt> stand for "omega in the fixed frame".  Because the user is in a fixed from of reference, we also want that &omega; be calculated in the fixed frame.
+The <tt>Line</tt> component depicts the cuboid's instantaneous angular-velocity vector.  (Of course it only represents the the *x*- and *y*-components of the vector.)  The code below is taken from <tt>Fs</tt>,  shown earlier to calculate the derivatives of the Euler angles.  This helper function is also convenient for calculating the body's angular velocity (typically symbolized by the Greek letter &omega;).  The letters <tt>Omf</tt> stand for "omega in the fixed frame".  The user is in a fixed frame of reference, I want to calculate &omega; in the same frame.
 ```
 let newOmfs = [];
     newOmfs[0] = Fs[2] * ss[1] * ss[0] + Fs[1] * cs[0];
@@ -165,73 +169,86 @@ let newOmfs = [];
     setomfLat(Math.sqrt(newOmfs[0] * newOmfs[0] + newOmfs[1] * newOmfs[1]) / newOmf);
     let newOmfAng = Math.atan2(omfs[1], omfs[0]);
 ```
-The <tt>Lat</tt> suffix signifies the magnitude of &omega;'s lateral components, which is used (along with the angular direction of the vector) for rendering the angular velocity as a line segment emanating from the cuboid's center of mass.
+The <tt>Lat</tt> suffix signifies the magnitude of &omega;'s lateral components, which is used (along with the angular direction of the vector, calculated trigonometrically above) for rendering the angular velocity as a line segment emanating from the cuboid's center of mass.
 
 Below is <tt>App</tt>'s call to the <tt>Line</tt> component.
 ```
 <Line npx={npx} r={omfLat * npx / 2} angle={omfAng} dt={dt} time={time} />
 ```
-Below is the relevant code in the <tt>Line</tt> component showing how props are used trigonometrically to render the lateral components of &omega; as a rotated line segment.
+Below is the relevant code in the <tt>Line</tt> component, which uses props and the CSS functions <tt>rotate</tt> and <tt>translateX</tt> to compute the instantaneous value of the CSS <tt>transform</tt> property when rendering the lateral components of &omega; as a rotated line segment.
 ```
-return (
-    <div className="line" style={{
-        width:`${r}px`,
-        left: `${npx / 2 - r / 2}px`,
-        transform: `rotate(${angle * 180 / Math.PI}deg) translateX(${r / 2}px)`,
-        borderTopStyle: `${dashed ? "dashed" : "solid"}`,
-    }}/>
-)
+const Line = ({ npx, r, angle, dashed, dt }) => {
+    return (
+        <div className="line" style={{
+            width:`${r}px`,
+            left: `${npx / 2 - r / 2}px`,
+            transform: `rotate(${angle * 180 / Math.PI}deg) translateX(${r / 2}px)`,
+        }}/>
+    )
+}
 ```
 
-First and foremost the <tt>Body</tt> component contains a parent div whose opening tag is coded below.
+The <tt>Body</tt> component contains - first and foremost - a parent div whose opening tag is below.
 ```
 <div className="body"
     style={{
-        transform: `rotate3d(${axisVec[0]}, ${axisVec[1]}, ${-axisVec[2]},${angle}rad)`
+        translateX(${npx/2}px)
+        translateY(${npx/2}px)
+        transform: `rotate3d(${axisVec[0]}, ${axisVec[1]}, ${-axisVec[2]}, ${angle}rad)`
     }}
 >
 ```
-The <tt>rotate3d</tt> takes four arguments, the first three of which are the components of the vector which specifies the rotation axis.  I negate the last of those three components because CSS inexplicably uses a [left-handed coordinate system](https://en.wikipedia.org/wiki/Cartesian_coordinate_system#In_three_dimensions), whereas all of physics is done with a [right-handed](https://en.wikipedia.org/wiki/Cartesian_coordinate_system#In_three_dimensions) one.
-The rotation of this div then controls the orientations of the twelve (= 6 + 6) children divs.  The first six divs depict the cuboid's three pairs of parallel faces, with pairs colored red, green, and blue respectively.  The last six divs depict the three principal axes of rotation.  The three pairs of parallel faces are each initially rotated (or not) by 90 degrees about one of the principal axes, and subsequently their orientation is controlled by their parent div's <tt>rotate3d</tt>-ed orientation.
+The <tt>translateX</tt> and <tt>translateY</tt> functions are needed simply to center the <tt>Body</tt> component in its parent div.
+The <tt>rotate3d</tt> function takes four arguments, the first three of which are the components of the vector which specify the rotation axis.  I negate the last of those three components because CSS inexplicably uses a [left-handed coordinate system](https://en.wikipedia.org/wiki/Cartesian_coordinate_system#In_three_dimensions), whereas all physics is done with a [right-handed](https://en.wikipedia.org/wiki/Cartesian_coordinate_system#In_three_dimensions) one.  The fourth argument of <tt>rotate3d</tt> is the radian measure of the angle about which the cuboid is rotated, relative to its initial orientation.
+The rotation of this parent div then controls the orientations of the twelve (= 6 + 6) children divs.  The first six divs depict the cuboid's three pairs of parallel faces, with respective pairs colored red, green, and blue.  The last six divs depict the three principal axes of rotation.
+I'll cover these sequentially.
+
+ The three pairs of the cuboid's parallel faces are each initially perpendicular to the *z*- (red), *x*- (green), and *y*-axes (blue) respectively of the fixed frame.  The values of the <tt>width</tt> and <tt>height</tt> properties reflect the pixel-dimensions of the particular face of the cuboid.  The values of the <tt>left</tt> and <tt>top</tt> properties are then set in order to center the particular face properly within the parent div.  The value of the <tt>transform</tt> property is then set by the appropriate <tt>translate#</tt> and <tt>rotate#</tt> function in order to rotate and translate the face into its appropriate start position and orientation.  Subsequent rotation is controlled by the <tt>transform</tt> property of the parent div within the <tt>Body</tt> component, utilizing the <tt>rotate3d</tt> function shown earlier.
 ```
 <div className="side"
     style={{
+        width:`${2 * d[0]}px`, height:`${2 * d[1]}px`,
+        left: `${-d[0]}px`, top: `${-d[1]}px`,
         transform: `translateZ(${d[2]}px)`, background: "rgba(100,30,30,0.8)",
-        left: `${-d[0]}px`, top: `${-d[1]}px`, width:`${2 * d[0]}px`, height:`${2 * d[1]}px`
     }}
 />
 <div className="side"
     style={{
+        width:`${2*d[0]}px`, height:`${2*d[1]}px`,
+        left: `${-d[0]}px`, top: `${-d[1]}px`,
         transform: `translateZ(${-d[2]}px)`, background: "rgba(100,30,30,0.8)",
-        left: `${-d[0]}px`, top: `${-d[1]}px`, width:`${2*d[0]}px`, height:`${2*d[1]}px`
     }}
 />
 <div className="side"
     style={{
+        width:`${2 * d[2]}px`, height:`${2*d[1]}px`,
+        left: `${-d[2]}px`, top: `${-d[1]}px`,
         transform: `rotateY(90deg) translateZ(${d[0]}px)`, background: "rgba(40,100,40,0.8)",
-        left: `${-d[2]}px`, top: `${-d[1]}px`, width:`${2 * d[2]}px`, height:`${2*d[1]}px`
     }}
 />
 <div className="side"
     style={{
+        width:`${2*d[2]}px`, height:`${2*d[1]}px`,
+        left: `${-d[2]}px`, top: `${-d[1]}px`,
         transform: `rotateY(-90deg) translateZ(${d[0]}px)`, background: "rgba(40,100,40,0.8)",
-        left: `${-d[2]}px`, top: `${-d[1]}px`, width:`${2*d[2]}px`, height:`${2*d[1]}px`
     }}
 />
 <div className="side"
     style={{
+        width:`${2*d[0]}px`, height:`${2*d[2]}px`,
+        left: `${-d[0]}px`, top: `${-d[2]}px`,
         transform: `rotateX(90deg) translateZ(${d[1]}px)`, background: "rgba(50,50,100,0.8)",
-        left: `${-d[0]}px`, top: `${-d[2]}px`, width:`${2*d[0]}px`, height:`${2*d[2]}px`
     }}
 />
 <div className="side"
     style={{
+        width:`${2*d[0]}px`, height:`${2*d[2]}px`,
+        left: `${-d[0]}px`, top: `${-d[2]}px`,
         transform: `rotateX(-90deg) translateZ(${d[1]}px)`, background: "rgba(50,50,100,0.8)",
-        left: `${-d[0]}px`, top: `${-d[2]}px`, width:`${2*d[0]}px`, height:`${2*d[2]}px`
     }}
 />
 ```
-The six remaining children depict the principal axes in an analogous manner.
+The six remaining children depict the cuboid's principal axes in an analogous manner.
 ```
 {degeneracies[0] ? null
     :<>
@@ -264,7 +281,7 @@ The six remaining children depict the principal axes in an analogous manner.
     </>
 }
 ```
-However an axis will not render if it is "degenerate" with another, by which I mean if the two have identical moments of inertia.  In this case it is not appropriate to speak in terms of separate principal axes, so it's best not to render them at all.  The lines of code below are responsible for determining whether or not a particular principal axis is degenerate with another.
+However an axis will not render if it is "degenerate" with another, by which I mean if the two axes have identical moments of inertia.  In this case it is not appropriate to speak in terms of separate principal axes, so it's best not to render them at all.  The code below determines whether or not a particular principal axis is degenerate with another.
 ```
 let newDegeneracies = newMoms.map((momI, i) => {
     return newMoms.reduce((degenerate, momJ, j) => {
@@ -272,8 +289,6 @@ let newDegeneracies = newMoms.map((momI, i) => {
     }, false);
 })
 ```
-
-The last detail about 3-d rendering pertains to [perspective](https://en.wikipedia.org/wiki/Perspective_(graphical)#:~:text=Perspective%20works%20by%20representing%20the,seen%20directly%20onto%20the%20windowpane.).  This is manifested by how far away parallel lines seem to converge together (at a "vanishing point").  This property is used in the parent div of the <tt>Body</tt>, <tt>Line</tt>, and <tt>Dot</tt> components.
 
 Perturbation analysis and stabilities
 Kinetic energy

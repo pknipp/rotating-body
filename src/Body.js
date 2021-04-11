@@ -18,38 +18,44 @@ const Body = ({ npx, angleVec, d, dt, mids, degeneracies, running }) => {
         >
             <div className="side"
                 style={{
+                    width:`${2 * d[0]}px`, height:`${2 * d[1]}px`,
+                    left: `${-d[0]}px`, top: `${-d[1]}px`,
                     transform: `translateZ(${d[2]}px)`, background: "rgba(100,30,30,0.8)",
-                    left: `${-d[0]}px`, top: `${-d[1]}px`, width:`${2 * d[0]}px`, height:`${2 * d[1]}px`
                 }}
             />
             <div className="side"
                 style={{
+                    width:`${2*d[0]}px`, height:`${2*d[1]}px`,
+                    left: `${-d[0]}px`, top: `${-d[1]}px`,
                     transform: `translateZ(${-d[2]}px)`, background: "rgba(100,30,30,0.8)",
-                    left: `${-d[0]}px`, top: `${-d[1]}px`, width:`${2*d[0]}px`, height:`${2*d[1]}px`
                 }}
             />
             <div className="side"
                 style={{
+                    width:`${2 * d[2]}px`, height:`${2*d[1]}px`,
+                    left: `${-d[2]}px`, top: `${-d[1]}px`,
                     transform: `rotateY(90deg) translateZ(${d[0]}px)`, background: "rgba(40,100,40,0.8)",
-                    left: `${-d[2]}px`, top: `${-d[1]}px`, width:`${2 * d[2]}px`, height:`${2*d[1]}px`
                 }}
             />
             <div className="side"
                 style={{
+                    width:`${2*d[2]}px`, height:`${2*d[1]}px`,
+                    left: `${-d[2]}px`, top: `${-d[1]}px`,
                     transform: `rotateY(-90deg) translateZ(${d[0]}px)`, background: "rgba(40,100,40,0.8)",
-                    left: `${-d[2]}px`, top: `${-d[1]}px`, width:`${2*d[2]}px`, height:`${2*d[1]}px`
                 }}
             />
             <div className="side"
                 style={{
+                    width:`${2*d[0]}px`, height:`${2*d[2]}px`,
+                    left: `${-d[0]}px`, top: `${-d[2]}px`,
                     transform: `rotateX(90deg) translateZ(${d[1]}px)`, background: "rgba(50,50,100,0.8)",
-                    left: `${-d[0]}px`, top: `${-d[2]}px`, width:`${2*d[0]}px`, height:`${2*d[2]}px`
                 }}
             />
             <div className="side"
                 style={{
+                    width:`${2*d[0]}px`, height:`${2*d[2]}px`,
+                    left: `${-d[0]}px`, top: `${-d[2]}px`,
                     transform: `rotateX(-90deg) translateZ(${d[1]}px)`, background: "rgba(50,50,100,0.8)",
-                    left: `${-d[0]}px`, top: `${-d[2]}px`, width:`${2*d[0]}px`, height:`${2*d[2]}px`
                 }}
             />
             {degeneracies[0] ? null
