@@ -159,27 +159,29 @@ const App = () => {
     }
     const handlerMom = e => {
         let newIsotropic = false;
-        let newMoms = [...firstMoms];
+        let newFirstMoms = [...firstMoms];
         let name = Number(e.target.name);
         // singularities occur if a moment equals zero
-        let newMom = Math.max(0.00001, Number(e.target.value));
-        newMoms[name] = newMom;
+        let newFirstMom = Math.max(0.00001, Number(e.target.value));
+        newFirstMoms[name] = newFirstMom;
         if (shape === 1) {
-            newMoms[1] = newMom;
-            newMoms[2] = newMom;
+            newFirstMoms[1] = newFirstMom;
+            newFirstMoms[2] = newFirstMom;
         }
         if (shape === 2) {
-            if (name === 1) newMoms[2] = newMom;
-            if (newMoms[0] === newMoms[1]) newIsotropic = true;
+            if (name === 1) newFirstMoms[2] = newFirstMom;
+            if (newFirstMoms[0] === newFirstMoms[1]) newIsotropic = true;
         }
-        if (shape === 3) setLegalOrder(newMoms.reduce((legal, mom, i, moms) => (!i || (legal && mom > moms[i - 1])), true));
-        setAreLegalMoms(newMoms.reduce((legal, mom, i, moms) => (legal && mom <= (moms[(i+1)%3] + moms[(i+2)%3])), true));
+        if (shape === 3) setLegalOrder(newFirstMoms.reduce((legal, mom, i, moms) => (!i || (legal && mom > moms[i - 1])), true));
+        setAreLegalMoms(newFirstMoms.reduce((legal, mom, i, moms) => (legal && mom <= (moms[(i+1)%3] + moms[(i+2)%3])), true));
         setIsotropic(newIsotropic);
-        setFirstMoms(newMoms);
-        setMoms([...newMoms]);
+        let state = calcSwitchedMoms(zAxis, newFirstMoms)
+        setFirstMoms(newFirstMoms);
+        setDegeneracies(state.newDegeneracies);
+        setMoms(state.newMoms);
     };
-    const calcSwitchedMoms = (zAxis, moms) => {
-        let newMoms = [...moms];
+    const calcSwitchedMoms = (zAxis, firstMoms) => {
+        let newMoms = [...firstMoms];
         newMoms[2] = firstMoms[(zAxis - 1) % 3];
         newMoms[0] = firstMoms[(zAxis + 0) % 3];
         newMoms[1] = firstMoms[(zAxis + 1) % 3];
