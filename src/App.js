@@ -471,7 +471,7 @@ const App = () => {
                             }
                         </>
                     }
-                    <br/>creator: <a href="https://pknipp.github.io/" target="_blank">Peter Knipp</a>
+                    <br/>creator: <a href="https://pknipp.github.io/" target="_blank" rel="noreferrer">Peter Knipp</a>
                 </div>
                 <div className="container" style={{height:`${npx}px`, width:`${npx}px`, perspective:`${perspective}px`}}>
                     <Dot x={npx/2} y={npx/2} d={10} />
