@@ -1,4 +1,4 @@
-PAK's recipe (after creating a local repo):
+PAK's recipe (after creating a local  repo):
     first time:
         at heroku: create app
 		from CLI: heroku git:remote -a APP-NAME
